@@ -22,7 +22,7 @@
         .time-indicator { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
         .current-time { font-weight: bold; color: #667eea; }
         .period-indicator { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 5px 12px; border-radius: 15px; }
-        #widgets-container { display: none; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 200px; background: #f1f3f5; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .widget-title { font-size: 1em; font-weight: bold; color: #555; margin-bottom: 10px; }
         .widget-content { font-size: 1.8em; font-weight: bold; color: #667eea; }
@@ -175,7 +175,21 @@
         
         function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
         function renderWidgets(widgets) { const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
-        function renderResources(resources) { const container=document.getElementById("resources");if(!resources||0===resources.length)return void(container.innerHTML = '<div class="empty-state">등록된 자료가 없습니다.</div>');container.innerHTML = `<div class="resource-grid">${resources.map(res => `<a href="${res.link}" class="resource-card" target="_blank"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc">${res.description}</div></a>`).join("")}</div>`;}
+        
+        // [수정됨] 자료실 렌더링 함수: 스타일 적용을 위해 컨테이너에 클래스 추가
+        function renderResources(resources) {
+            const container = document.getElementById('resources');
+            if (!resources || resources.length === 0) {
+                container.innerHTML = '<div class="empty-state">등록된 자료가 없습니다.</div>';
+                return;
+            }
+            container.innerHTML = resources.map(res => `
+                <a href="${res.link}" class="resource-card" target="_blank">
+                    <div class="resource-title">${res.icon} ${res.title}</div>
+                    <div class="resource-desc">${res.description}</div>
+                </a>
+            `).join('');
+        }
 
         async function loadPersonalizedData() {
             let fullUrl = NOTIFICATION_URL + '?v=' + new Date().getTime();
@@ -199,6 +213,7 @@
             } catch (error) {
                 console.error('Error fetching data:', error);
                 document.getElementById('notices').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+                document.getElementById('tasks').innerHTML = ''; document.getElementById('resources').innerHTML = '';
             }
         }
         function updateDateTime() { const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
