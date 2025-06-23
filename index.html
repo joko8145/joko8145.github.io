@@ -67,7 +67,7 @@
     </div>
     
     <script>
-        const NOTIFICATION_URL = 'https://script.google.com/macros/s/AKfycbwnfcSr-4aMAgaC6UUDz6yh79yokA2ivQtE4GIq_JJpqlZU0HhjjXYDrPYX7TTZr1uI/exec';
+        const NOTIFICATION_URL = '여기에_오늘의알림_재배포된_웹_앱_URL을_넣어주세요';
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -176,11 +176,15 @@
         function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
         function renderWidgets(widgets) { const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
         
-        // [수정됨] 자료실 렌더링 함수: 스타일 적용을 위해 컨테이너에 클래스 추가
+        // [수정됨] 자료실 렌더링 함수: 레이아웃 문제를 해결하기 위해 최종 수정
         function renderResources(resources) {
             const container = document.getElementById('resources');
+            // 'resource-grid' 클래스가 있는지 확인하고 없으면 추가
+            if (!container.classList.contains('resource-grid')) {
+                container.classList.add('resource-grid');
+            }
             if (!resources || resources.length === 0) {
-                container.innerHTML = '<div class="empty-state">등록된 자료가 없습니다.</div>';
+                container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>';
                 return;
             }
             container.innerHTML = resources.map(res => `
@@ -210,10 +214,12 @@
                 renderItems('tasks', data.tasks, '바로 하기 →', true);
                 renderUnsubmitted(data.unsubmitted);
                 renderResources(data.resources);
+
             } catch (error) {
                 console.error('Error fetching data:', error);
                 document.getElementById('notices').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
-                document.getElementById('tasks').innerHTML = ''; document.getElementById('resources').innerHTML = '';
+                document.getElementById('tasks').innerHTML = ''; 
+                document.getElementById('resources').innerHTML = '';
             }
         }
         function updateDateTime() { const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
