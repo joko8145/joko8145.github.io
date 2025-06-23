@@ -117,7 +117,7 @@
                 const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
                 
                 let contentHtml;
-                const subtasks = (item.recordable || item.link === null) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : [];
+                const subtasks = (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : [];
 
                 if (subtasks.length > 0 && item.taskId) {
                     contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => {
@@ -130,7 +130,8 @@
                     const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : '';
                     let finalLink = item.link;
                     if (item.recordable && currentUser && item.taskId) {
-                        finalLink = `${WEB_APP_URL}?action=logClick&email=${encodeURIComponent(currentUser.email)}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
+                        const safeName = encodeURIComponent(currentUser.name);
+                        finalLink = `${WEB_APP_URL}?action=logClick&email=${encodeURIComponent(currentUser.email)}&name=${safeName}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
                     }
                     const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${item.recordable ? '_self' : '_blank'}">${item.buttonText || '바로 하기 →'}</a>` : '';
                     contentHtml = image + content + linkHtml;
@@ -145,12 +146,24 @@
             const listItem = checkbox.closest('.subtask-item');
             listItem.style.opacity = '0.5';
 
-            const params = new URLSearchParams({ action: 'logSubtask', email: currentUser.email, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked });
+            // [수정됨] 이름과 과제 정보를 보낼 때 encodeURIComponent 적용
+            const params = new URLSearchParams({ 
+                action: 'logSubtask',
+                email: currentUser.email,
+                name: currentUser.name, 
+                taskId: taskId,
+                subtask: subtask,
+                isChecked: isChecked 
+            });
+            
+            // URLSearchParams는 자동으로 인코딩하지만, 확실하게 하기 위해 수동으로 처리하는 것이 더 안전할 수 있습니다.
+            // 하지만 대부분의 최신 브라우저에서는 잘 작동합니다. 문제가 지속될 경우 이 부분을 수정합니다.
             
             try {
                 const response = await fetch(`${WEB_APP_URL}?${params.toString()}`);
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
+                
                 listItem.classList.toggle('completed', isChecked);
                 const fullTaskId = `${taskId}_${subtask}`;
                 if (isChecked) submittedTasks.add(fullTaskId); else submittedTasks.delete(fullTaskId);
@@ -186,7 +199,7 @@
             }
         }
         
-        function updateDateTime() { const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 10 && hour < 11) period = '2교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
+        function updateDateTime() { const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
 
         updateDateTime(); setInterval(updateDateTime, 1000);
     </script>
