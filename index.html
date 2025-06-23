@@ -72,15 +72,30 @@
                 loadPersonalizedData();
             } else {
                 google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
-                loadPersonalizedData();
+                loadPersonalizedData(); // 비로그인 상태로 데이터 로드
             }
         };
 
-        function handleCredentialResponse(response) {
+        async function handleCredentialResponse(response) {
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
-            currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
-            localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            location.reload();
+            const fullUrl = `${WEB_APP_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(userObject.email)}`;
+            try {
+                const apiResponse = await fetch(fullUrl);
+                const data = await apiResponse.json();
+                
+                if (data.user) {
+                    currentUser = { ...data.user, picture: userObject.picture };
+                } else {
+                    currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null };
+                }
+                localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            } catch (error) {
+                console.error("사용자 정보 조회 실패:", error);
+                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null };
+                localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            } finally {
+                location.reload();
+            }
         }
 
         function handleLogout() {
@@ -93,7 +108,11 @@
         function renderUserInfo(user) {
             document.getElementById('user-display').style.display = 'block';
             document.getElementById('gsi-container').style.display = 'none';
-            document.getElementById('user-display').innerHTML = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
+            let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
+            if (user.studentId === null) {
+                userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록 사용자)</span>`;
+            }
+            document.getElementById('user-display').innerHTML = userInfoHtml;
         }
         
         function renderNotices(items) {
@@ -129,8 +148,8 @@
                     const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
                     const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : '';
                     let finalLink = item.link;
-                    if (item.recordable && currentUser && item.taskId) {
-                        finalLink = `${WEB_APP_URL}?action=logClick&email=${encodeURIComponent(currentUser.email)}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
+                    if (item.recordable && currentUser && currentUser.studentId && item.taskId) {
+                        finalLink = `${WEB_APP_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
                     }
                     const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${item.recordable ? '_self' : '_blank'}">${item.buttonText || '바로 하기 →'}</a>` : '';
                     contentHtml = image + content + linkHtml;
@@ -140,15 +159,14 @@
         }
         
         async function toggleSubtask(checkbox, taskId, subtask) {
-            if (!currentUser) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; }
+            if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요 (학번 정보가 없습니다)."); checkbox.checked = !checkbox.checked; return; }
             const isChecked = checkbox.checked;
             const listItem = checkbox.closest('.subtask-item');
             listItem.style.opacity = '0.5';
 
-            // [수정됨] 보내는 모든 파라미터를 안전하게 인코딩합니다.
             const params = new URLSearchParams({
                 action: 'logSubtask',
-                email: currentUser.email,
+                studentId: currentUser.studentId,
                 name: currentUser.name, 
                 taskId: taskId,
                 subtask: subtask,
@@ -156,7 +174,6 @@
             });
             
             try {
-                // GET 요청은 URL에 파라미터를 붙여 보냅니다.
                 const response = await fetch(`${WEB_APP_URL}?${params.toString()}`);
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
@@ -178,13 +195,17 @@
         async function loadPersonalizedData() {
             let fullUrl = WEB_APP_URL + '?v=' + new Date().getTime();
             if (currentUser) fullUrl += '&email=' + encodeURIComponent(currentUser.email);
+            
             document.getElementById('notices').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            document.getElementById('tasks').innerHTML = '';
+            document.getElementById('unsubmitted-container').style.display = 'none';
+
             try {
                 const response = await fetch(fullUrl);
                 if (!response.ok) throw new Error('데이터 로드 실패');
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
-                if (data.user === null && currentUser) { document.getElementById('user-display').innerHTML += ` <span class="user-info" style="color: #ffc107;">(미등록 사용자)</span>`; }
+
                 submittedTasks = new Set(data.submittedTasks || []);
                 renderWidgets(data.widgets);
                 renderNotices(data.notices);
