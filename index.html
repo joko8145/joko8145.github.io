@@ -93,7 +93,7 @@
             setInterval(updateDateTime, 1000);
             window.addEventListener('focus', loadPersonalizedData);
             setInterval(loadPersonalizedData, 5 * 60 * 1000);
-        };
+        }
 
         async function handleCredentialResponse(response) {
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
