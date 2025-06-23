@@ -7,49 +7,67 @@
     <!-- Google 로그인 API 스크립트 추가 -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* ... 기존 스타일 ... */
+        /* 기본 스타일 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Malgun Gothic', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        /* 로그인/사용자 정보 스타일 추가 */
-        .auth-container { text-align: right; margin-bottom: 15px; }
-        .user-info, #login-btn { background-color: rgba(255,255,255,0.2); color: white; padding: 8px 15px; border-radius: 20px; display: inline-block; border: none; cursor: pointer; font-size: 0.9em; }
-        .user-info a { color: #fff; text-decoration: underline; margin-left: 10px; }
-        /* 미제출 과제 알림 스타일 추가 */
-        .unsubmitted-section { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
-        .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; }
-        .unsubmitted-list li { margin-bottom: 5px; }
-        /* ... 이하 기존 스타일 ... */
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        a { text-decoration: none; color: inherit; }
+        /* 컨테이너 및 헤더 */
         .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
         .header { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }
-        /* ... (중략) ... */
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .date-display { font-size: 1.2em; opacity: 0.9; }
+        .content { padding: 30px; }
+        /* 로그인 및 사용자 정보 */
+        .auth-container { padding: 10px 30px; text-align: right; background-color: rgba(0,0,0,0.1); }
+        .user-info { color: white; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
+        .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
+        .user-info a { color: #fff; text-decoration: underline; margin-left: 10px; font-weight: bold; }
+        #gsi-container { display: inline-block; }
+        /* 시간 및 위젯 */
+        .time-indicator { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
+        #widgets-container { display: none; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .widget { flex: 1; min-width: 200px; background: #f1f3f5; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .widget-title { font-size: 1em; font-weight: bold; color: #555; margin-bottom: 10px; }
+        .widget-content { font-size: 1.8em; font-weight: bold; color: #667eea; }
+        .widget-content.small-text { font-size: 1em; line-height: 1.5; color: #333; white-space: pre-wrap; text-align: left; }
+        /* 미제출 과제 */
+        #unsubmitted-container { display: none; }
+        .unsubmitted-section { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
+        .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; font-size: 1.2em; }
+        .unsubmitted-list { list-style: none; padding-left: 5px; }
+        .unsubmitted-list li { margin-bottom: 8px; }
+        /* 섹션 및 아이템 */
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+        .notice-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid #667eea; }
+        .notice-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 8px; }
+        .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
+        .notice-content { font-size: 1.1em; line-height: 1.6; color: #555; }
+        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; }
+        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 로그인/사용자 정보 표시 영역 추가 -->
         <div class="auth-container">
-            <div id="user-display" style="display: none;">
-                <span id="user-info" class="user-info"></span>
-            </div>
-            <div id="gsi-container" style="display: none;"></div>
+            <div id="user-display" style="display: none;"></div>
+            <div id="gsi-container"></div>
         </div>
-
         <div class="header"><h1>📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
         <div class="content">
             <div class="time-indicator"><div id="currentTime"></div><div id="periodIndicator"></div></div>
             <div id="widgets-container"></div>
-            <!-- 미제출 과제 알림 섹션 추가 -->
-            <div id="unsubmitted-container" style="display: none;"></div>
-            
+            <div id="unsubmitted-container"></div>
             <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
             <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
         </div>
     </div>
+    
     <script>
         // --- 1. 전역 변수 및 설정 ---
         const WEB_APP_URL = '여기에_선생님의_재배포된_웹_앱_URL을_넣어주세요';
-        const GOOGLE_CLIENT_ID = '여기에_선생님의_Google_Cloud_Client_ID를_넣어주세요';
-        let currentUser = null; // 현재 로그인한 사용자 정보를 저장할 변수
+        const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com'; // 선생님께서 발급받으신 ID로 교체했습니다!
+        let currentUser = null;
 
         // --- 2. Google 로그인 관련 함수 ---
         window.onload = function () {
@@ -57,28 +75,25 @@
             client_id: GOOGLE_CLIENT_ID,
             callback: handleCredentialResponse
           });
-          // 저장된 사용자 정보가 있는지 확인
           const storedUser = localStorage.getItem('userInfo');
           if (storedUser) {
             currentUser = JSON.parse(storedUser);
             renderUserInfo(currentUser);
             loadPersonalizedData();
           } else {
-            // 로그인 버튼 표시
             google.accounts.id.renderButton(
               document.getElementById("gsi-container"),
               { theme: "outline", size: "large", text: "signin_with", shape: "pill" } 
             );
-            document.getElementById("gsi-container").style.display = 'block';
-            loadPersonalizedData(); // 비로그인 상태로 데이터 로드
+            loadPersonalizedData();
           }
         };
 
         function handleCredentialResponse(response) {
-          const userObject = jwt_decode(response.credential);
-          // localStorage에 사용자 정보 저장
-          localStorage.setItem('userInfo', JSON.stringify({ name: userObject.name, email: userObject.email, picture: userObject.picture }));
-          location.reload(); // 로그인 후 페이지 새로고침하여 적용
+          const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+          currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
+          localStorage.setItem('userInfo', JSON.stringify(currentUser));
+          location.reload();
         }
 
         function handleLogout() {
@@ -87,68 +102,91 @@
           google.accounts.id.disableAutoSelect();
           location.reload();
         }
-        
-        // JWT 디코딩 헬퍼 함수
-        function jwt_decode (token) { /* ... 생략 ... */ }
 
         // --- 3. 화면 렌더링 함수들 ---
         function renderUserInfo(user) {
           document.getElementById('user-display').style.display = 'block';
           document.getElementById('gsi-container').style.display = 'none';
-          document.getElementById('user-info').innerHTML = `<strong>${user.name}</strong>님 환영합니다. <a href="#" onclick="handleLogout()">로그아웃</a>`;
+          document.getElementById('user-display').innerHTML = `
+            <span class="user-info">
+                <img src="${user.picture}" alt="profile">
+                <strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a>
+            </span>`;
         }
-
+        
         function renderItems(containerId, items, defaultButtonText) {
             const container = document.getElementById(containerId);
-            // ... (기존 renderItems 함수와 거의 동일하나, 링크 생성 부분 수정됨)
+            if (!items || items.length === 0) {
+                container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
+                return;
+            }
             container.innerHTML = items.map(item => {
-                // ... (생략)
-                // '기록여부'가 Y이고, 로그인 상태이며, 과제ID가 있을 때만 특별 링크 생성
+                const icon = item.icon ? `${item.icon} ` : '';
+                const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
+                const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
+                const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : '';
+                
                 let finalLink = item.link;
                 if (item.recordable && currentUser && item.taskId) {
-                    finalLink = `${WEB_APP_URL}?action=logClick&email=${currentUser.email}&name=${currentUser.name}&taskId=${item.taskId}&url=${encodeURIComponent(item.link)}`;
+                    finalLink = `${WEB_APP_URL}?action=logClick&email=${encodeURIComponent(currentUser.email)}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
                 }
-                const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="_blank">${item.buttonText || defaultButtonText}</a>` : '';
-                return `<div class="notice-item"> ... ${linkHtml}</div>`;
+                const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
+                
+                return `<div class="notice-item">${title}${image}${content}${linkHtml}</div>`;
             }).join('');
         }
-
+        
         function renderUnsubmitted(tasks) {
             const container = document.getElementById('unsubmitted-container');
-            if (!tasks || tasks.length === 0) {
+            if (!currentUser || !tasks || tasks.length === 0) {
                 container.style.display = 'none'; return;
             }
             container.style.display = 'block';
             container.innerHTML = `
                 <div class="unsubmitted-section">
-                    <div class="unsubmitted-title">🔔 아직 완료하지 않은 할 일이 있어요!</div>
+                    <div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div>
                     <ul class="unsubmitted-list">
                         ${tasks.map(task => `<li>${task.icon || '📌'} ${task.title || task.content}</li>`).join('')}
                     </ul>
                 </div>
             `;
         }
-        // ... (renderWidgets, updateDateTime 함수는 이전과 동일)
+        
+        function renderWidgets(widgets) { /* 변경 없음 */ const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
 
-        // --- 4. 데이터 로딩 함수 ---
+        // --- 4. 데이터 로딩 및 시간 업데이트 함수 ---
         async function loadPersonalizedData() {
             let fullUrl = WEB_APP_URL + '?v=' + new Date().getTime();
             if (currentUser) {
-                fullUrl += '&email=' + currentUser.email;
+                fullUrl += '&email=' + encodeURIComponent(currentUser.email);
             }
-            // ... (기존 loadTodayData와 유사하나, unsubmitted 렌더링 추가)
+            
+            document.getElementById('notices').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            
             try {
-                // ...
+                const response = await fetch(fullUrl);
+                if (!response.ok) throw new Error('데이터 로드 실패');
                 const data = await response.json();
-                // ...
-                renderUnsubmitted(data.unsubmitted); // 미제출 과제 렌더링
-                // ...
-            } catch (error) { /* ... */ }
-        }
+                if (data.error) throw new Error(data.error);
 
-        // 초기 실행
+                if (data.user === null && currentUser) { // 명단에 없는 사용자가 로그인한 경우
+                     document.getElementById('user-info').innerHTML += ` <span style="color: #ffc107;">(미등록 사용자)</span>`;
+                }
+
+                renderWidgets(data.widgets);
+                renderItems('notices', data.notices, '자세히 보기 →');
+                renderItems('tasks', data.tasks, '바로 하기 →');
+                renderUnsubmitted(data.unsubmitted);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('notices').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+            }
+        }
+        
+        function updateDateTime() { /* 변경 없음 */ const now=new Date;document.getElementById("dateDisplay").textContent=now.toLocaleDateString("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"long"}),document.getElementById("currentTime").textContent=now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});const t=now.getHours();let e="방과 후";8<=t&&t<9?e="1교시 준비":9<=t&&t<10?e="1교시":10<=t&&t<11?e="2교시":11<=t&&t<12?e="3교시":12<=t&&t<13?e="점심시간":13<=t&&t<14?e="4교시":14<=t&&t<15?e="5교시":15<=t&&t<16?e="6교시":16<=t&&t<17&&(e="7교시"),document.getElementById("periodIndicator").textContent=e}
+
+        // --- 5. 초기 실행 ---
         updateDateTime(); setInterval(updateDateTime, 1000);
-        // loadPersonalizedData는 로그인 상태 확인 후 실행되므로 여기서 호출하지 않음
     </script>
 </body>
 </html>
