@@ -3,74 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우리 반 알림 포털</title>
+    <title>우리 반 ONE_CLASS</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        a { text-decoration: none; color: inherit; }
-        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
-        .auth-container { padding: 10px 30px; text-align: right; background-color: rgba(0,0,0,0.1); min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
-        .user-info { color: white; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
-        .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
-        .user-info a { color: #fff; text-decoration: underline; margin-left: 10px; font-weight: bold; }
-        #gsi-container { display: inline-block; }
-        .header { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .date-display { font-size: 1.2em; opacity: 0.9; }
-        .content { padding: 30px; }
-        .time-indicator { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
-        .current-time { font-weight: bold; color: #667eea; }
-        .period-indicator { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 5px 12px; border-radius: 15px; }
-        #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
-        .widget { flex: 1; min-width: 200px; background: #f1f3f5; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .widget-title { font-size: 1em; font-weight: bold; color: #555; margin-bottom: 10px; }
-        .widget-content { font-size: 1.8em; font-weight: bold; color: #667eea; }
-        .widget-content.small-text { font-size: 1em; line-height: 1.5; color: #333; white-space: pre-wrap; text-align: left; }
-        #unsubmitted-container { display: none; }
-        .unsubmitted-section { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
-        .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; font-size: 1.2em; }
-        .unsubmitted-list { list-style: none; padding-left: 5px; }
-        .unsubmitted-list li { margin-bottom: 8px; }
-        .section { margin-bottom: 30px; }
-        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
-        .notice-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid #667eea; }
+        body { display: flex; min-height: 100vh; flex-direction: column; background-color: #eceff1; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; }
+        main { flex: 1 0 auto; padding-top: 10px; }
+        .container { width: 95%; max-width: 800px; margin: 0 auto; }
+        nav .brand-logo { font-size: 1.6rem; font-weight: bold; }
+        .card-panel { padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section-title { font-size: 1.8rem; font-weight: bold; color: #00796b; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #00796b;}
+        .auth-container { padding: 8px 15px; text-align: right; background-color: #00695c; color:white; margin-bottom:10px; border-radius: 4px 4px 0 0; display: flex; justify-content: flex-end; align-items: center; min-height: 48px;}
+        .user-info { color: white; padding: 6px 10px; display: inline-block; font-size: 0.9em; }
+        .user-info img { width: 22px; height: 22px; border-radius: 50%; vertical-align: middle; margin-right: 6px; }
+        .user-info a { color: #a7ffeb; text-decoration: underline; margin-left: 8px; }
+        #gsi-container { display: none; }
+        #gsi-container div { margin: 0 !important; }
+        .hidden { display: none !important; }
+        .login-prompt { margin-top: 5vh;}
+        #widgets-container { display: none; gap: 15px; flex-wrap: wrap; margin-bottom:20px }
+        .widget { flex: 1; min-width: 180px; background: #fff; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+        .widget-title { font-size: 0.95em; font-weight: bold; color: #37474f; margin-bottom: 8px; }
+        .widget-content { font-size: 1.6em; font-weight: bold; color: #00796b; }
+        .widget-content.small-text { font-size: 0.9em; line-height: 1.4; color: #455a64; white-space: pre-wrap; text-align: left; }
+        .notice-item { border-left: 4px solid #00796b; }
         .notice-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 8px; }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
-        .notice-content { font-size: 1.1em; line-height: 1.6; color: #555; }
-        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; }
-        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; }
-        .subtask-list { list-style: none; margin-top: 15px; padding-left: 5px; }
-        .subtask-item { display: flex; align-items: center; margin-bottom: 10px; }
-        .subtask-checkbox { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; accent-color: #764ba2; flex-shrink: 0; }
-        .subtask-label { flex-grow: 1; color: #333; }
-        .subtask-item.completed .subtask-label { text-decoration: line-through; color: #aaa; }
-        .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; text-decoration: none; color: inherit; display: block; transition: all 0.2s ease-in-out; }
-        .resource-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
-        .resource-desc { font-size: 0.9em; color: #666; }
+        .notice-content { font-size: 1.05em; line-height: 1.6; color: #424242; }
+        .notice-link { display: inline-block; background-color: #00796b; color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; }
+        .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .resource-card { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.12); padding:15px; border-radius:8px; text-decoration: none; color:inherit; display:block;}
+        .resource-card:hover { box-shadow: 0 3px 6px rgba(0,0,0,0.16); }
+        .resource-title {font-weight:bold; margin-bottom:5px; color: #00796b;}
+        .resource-desc {font-size:0.9em; color:#666;}
+        .admin-panel { background-color: #e3f2fd; border: 1px solid #90caf9; display: none; }
+        .admin-section { margin-bottom: 25px; padding-bottom: 20px; }
+        .admin-section:not(:last-child) { border-bottom: 1px solid #bbdefb; }
+        .admin-section h5 { color: #1565c0; border-bottom: 1px solid #90caf9; padding-bottom:10px; margin-bottom:20px;}
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .admin-card { background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-decoration:none; color:inherit; display:block; transition: box-shadow .2s; }
+        .admin-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .admin-card-title { font-weight: bold; font-size: 1.1em; color: #1e88e5; }
+        .admin-card-desc { font-size: 0.9em; color: #666; margin-top: 5px; }
+        .empty-state {text-align:center; color:#757575; padding:20px;}
+        .progress {margin-top:10px;}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
-        <div class="header"><h1>📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
-        <div class="content">
-            <div class="time-indicator"><div id="currentTime"></div><div id="periodIndicator"></div></div>
-            <div id="widgets-container"></div>
-            <div id="unsubmitted-container"></div>
-            <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
-            <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
-            <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
-        </div>
-    </div>
+    <div class="auth-container"><div id="user-display" style="display:none;"></div><div id="gsi-container"></div></div>
+    <nav><div class="nav-wrapper teal darken-2"><a href="#" onclick="location.reload()" class="brand-logo center">우리 반 ONE_CLASS</a></div></nav>
     
+    <main>
+        <div class="container">
+            <div id="admin-panel" class="card-panel admin-panel"></div>
+            <div id="student-view" class="hidden"></div>
+            <div id="login-prompt" class="card-panel center-align login-prompt hidden">
+                <h4><i class="material-icons medium">lock_outline</i> 로그인 필요</h4>
+                <p>모든 기능을 이용하려면 Google 계정으로 로그인해주세요.</p>
+            </div>
+        </div>
+    </main>
+    <footer class="page-footer teal darken-3"><div class="container center-align">© 2025 송내고등학교</div></footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
         const NOTIFICATION_URL = 'https://script.google.com/macros/s/AKfycbwnfcSr-4aMAgaC6UUDz6yh79yokA2ivQtE4GIq_JJpqlZU0HhjjXYDrPYX7TTZr1uI/exec';
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
-        let submittedTasks = new Set();
 
         window.onload = function () {
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
@@ -80,149 +81,130 @@
                 renderUserInfo(currentUser);
                 loadPersonalizedData();
             } else {
-                google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
-                loadPersonalizedData();
+                document.getElementById('gsi-container').style.display = 'inline-block';
+                document.getElementById('login-prompt').classList.remove('hidden');
             }
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
         };
 
         async function handleCredentialResponse(response) {
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
             const fullUrl = `${NOTIFICATION_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(userObject.email)}`;
             try {
-                const apiResponse = await fetch(fullUrl);
-                const data = await apiResponse.json();
-                if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; }
-                else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null }; }
+                const apiResponse = await fetch(fullUrl); const data = await apiResponse.json();
+                if (data.user && data.user.name) { 
+                    currentUser = { ...data.user, picture: userObject.picture };
+                } else { 
+                    currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: data.user ? data.user.studentId : null };
+                }
                 localStorage.setItem('userInfo', JSON.stringify(currentUser));
             } catch (error) {
                 currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null };
                 localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } finally {
-                location.reload();
+            } finally { location.reload(); }
+        }
+        
+        function handleLogout() { localStorage.removeItem('userInfo'); currentUser = null; google.accounts.id.disableAutoSelect(); location.reload(); }
+
+        async function loadPersonalizedData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            let fullUrl = NOTIFICATION_URL + '?v=' + new Date().getTime();
+            if (currentUser && currentUser.email) fullUrl += '&email=' + encodeURIComponent(currentUser.email);
+            
+            showLoadingState();
+
+            try {
+                const response = await fetch(fullUrl); if (!response.ok) throw new Error(`데이터 로드 실패 (${response.status})`);
+                const data = await response.json(); if (data.error) throw new Error(data.error);
+
+                document.getElementById('student-view').classList.remove('hidden');
+                document.getElementById('login-prompt').classList.add('hidden');
+
+                if (mode === 'teacher' && currentUser && data.teacherDashboard) {
+                    renderTeacherDashboard(data.teacherDashboard);
+                } else {
+                    renderStudentView(data);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('student-view').innerHTML = `<div class="card-panel center-align red-text">${error.message}</div>`;
             }
         }
-
-        function handleLogout() {
-            localStorage.removeItem('userInfo');
-            currentUser = null;
-            google.accounts.id.disableAutoSelect();
-            location.reload();
+        
+        function showLoadingState(){
+            document.getElementById('student-view').innerHTML = '<div class="progress"><div class="indeterminate"></div></div>';
         }
 
         function renderUserInfo(user) {
-            document.getElementById('user-display').style.display = 'block';
+            const userDisplay = document.getElementById('user-display'); userDisplay.style.display = 'block';
             document.getElementById('gsi-container').style.display = 'none';
-            let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
-            if (user.studentId === null) { userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록)</span>`; }
-            document.getElementById('user-display').innerHTML = userInfoHtml;
+            let html = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name || user.email.split('@')[0]}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
+            if (user.studentId === null && user.email) { html += ` <span class="user-info" style="color: #ffc107;">(명단에 없음)</span>`; }
+            userDisplay.innerHTML = html;
+        }
+
+        function renderStudentView(data) {
+            document.getElementById('admin-panel').style.display = 'none';
+            const studentView = document.getElementById('student-view');
+            studentView.style.display = 'block';
+
+            let studentHtml = `
+                <div id="widgets-container" class="card-panel">${renderWidgets(data.widgets)}</div>
+                <div class="section card-panel"><h5 class="section-title">📋 중요 공지사항</h5><div id="notices">${renderItems(data.notices, '자세히 보기 →')}</div></div>
+                <div class="section card-panel"><h5 class="section-title">📚 우리 반 자료실</h5><div id="resources" class="resource-grid">${renderResources(data.resources)}</div></div>
+            `;
+            studentView.innerHTML = studentHtml;
+        }
+
+        function renderTeacherDashboard(dashboardData) {
+            const container = document.getElementById('admin-panel'); container.style.display = 'block';
+            document.getElementById('student-view').style.display = 'none';
+            let html = `<div id="admin-dashboard-links" class="admin-section"><h2>교사 통합 대시보드</h2>`;
+            for (const category in dashboardData) {
+                if (dashboardData.hasOwnProperty(category)) {
+                    html += `<h5>${category}</h5><div class="admin-grid">`;
+                    dashboardData[category].forEach(item => {
+                        html += `<a href="${item.url}" target="_blank" class="admin-card waves-effect waves-block waves-light"><div class="admin-card-title">${item.title}</div><div class="resource-desc grey-text text-darken-1">${item.description || ''}</div></a>`;
+                    });
+                    html += `</div>`;
+                }
+            }
+            html += `</div>`;
+            container.innerHTML = html;
         }
         
-        function renderItems(containerId, items, defaultButtonText, isTask = false) {
-            const container = document.getElementById(containerId);
-            if (!items || items.length === 0) {
-                container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
-                return;
-            }
-            container.innerHTML = items.map(item => {
+        function renderItems(items, defaultButtonText) {
+            if (!items || items.length === 0) return `<div class="empty-state">등록된 내용이 없습니다.</div>`;
+            return items.map(item => {
                 const icon = item.icon ? `${item.icon} ` : '';
                 const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
-                let contentHtml = '';
-                
-                const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : [];
-
-                if (subtasks.length > 0 && item.taskId) {
-                    contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => {
-                        const fullTaskId = `${item.taskId}_${subtask}`;
-                        const isCompleted = submittedTasks.has(fullTaskId);
-                        return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`;
-                    }).join('') + `</ul>`;
-                } else {
-                    const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
-                    const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : '';
-                    let finalLink = item.link;
-                    if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
-                        finalLink = `${NOTIFICATION_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
-                    }
-                    const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
-                    contentHtml = image + content + linkHtml;
-                }
-                return `<div class="notice-item">${title}${contentHtml}</div>`;
+                const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="responsive-img notice-image">` : '';
+                const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : '';
+                const linkHtml = item.link ? `<a href="${item.link}" class="btn waves-effect waves-light teal lighten-1" style="margin-top:10px;" target="_blank">${item.buttonText || defaultButtonText}</a>` : '';
+                return `<div class="card-panel notice-item">${title}${image}${content}${linkHtml}</div>`;
             }).join('');
         }
-
-        async function toggleSubtask(checkbox, taskId, subtask) {
-            if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; }
-            const isChecked = checkbox.checked;
-            const listItem = checkbox.closest('.subtask-item');
-            listItem.style.opacity = '0.5';
-            const params = new URLSearchParams({ action: 'logSubtask', studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked });
-            try {
-                const response = await fetch(`${NOTIFICATION_URL}?${params.toString()}`);
-                const result = await response.json();
-                if (result.status !== 'success') throw new Error(result.message);
-                listItem.classList.toggle('completed', isChecked);
-                const fullTaskId = `${taskId}_${subtask}`;
-                if (isChecked) submittedTasks.add(fullTaskId); else submittedTasks.delete(fullTaskId);
-            } catch (error) {
-                alert(`오류: ${error.message}`);
-                checkbox.checked = !isChecked;
-            } finally {
-                listItem.style.opacity = '1';
-            }
+        
+        function renderWidgets(widgets) {
+            if(!widgets || widgets.length === 0) return '<div class="empty-state">표시할 위젯이 없습니다.</div>';
+            let html = '';
+            widgets.forEach(t => {
+                let e = "";
+                switch(t.type){
+                    case "디데이": const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;
+                    case "급식": e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;
+                    case "링크": e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;
+                    default: e=t.content;
+                }
+                html += `<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`;
+            });
+            return html;
         }
         
-        function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
-        function renderWidgets(widgets) { const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
-        
-        // [수정됨] 자료실 렌더링 함수: 레이아웃 문제를 해결하기 위해 최종 수정
         function renderResources(resources) {
-            const container = document.getElementById('resources');
-            // 'resource-grid' 클래스가 있는지 확인하고 없으면 추가
-            if (!container.classList.contains('resource-grid')) {
-                container.classList.add('resource-grid');
-            }
-            if (!resources || resources.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>';
-                return;
-            }
-            container.innerHTML = resources.map(res => `
-                <a href="${res.link}" class="resource-card" target="_blank">
-                    <div class="resource-title">${res.icon} ${res.title}</div>
-                    <div class="resource-desc">${res.description}</div>
-                </a>
-            `).join('');
+            if(!resources||0===resources.length) return '<div class="empty-state">등록된 자료가 없습니다.</div>';
+            return resources.map(res => `<a href="${res.link}" class="resource-card waves-effect waves-block waves-light"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc grey-text text-darken-1">${res.description || ''}</div></a>`).join("");
         }
-
-        async function loadPersonalizedData() {
-            let fullUrl = NOTIFICATION_URL + '?v=' + new Date().getTime();
-            if (currentUser) fullUrl += '&email=' + encodeURIComponent(currentUser.email);
-            
-            const sections = ['notices', 'tasks', 'resources'];
-            sections.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>'; });
-            
-            try {
-                const response = await fetch(fullUrl);
-                if (!response.ok) throw new Error('데이터 로드 실패');
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                
-                submittedTasks = new Set(data.submittedTasks || []);
-                renderWidgets(data.widgets);
-                renderItems('notices', data.notices, '자세히 보기 →', false);
-                renderItems('tasks', data.tasks, '바로 하기 →', true);
-                renderUnsubmitted(data.unsubmitted);
-                renderResources(data.resources);
-
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                document.getElementById('notices').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
-                document.getElementById('tasks').innerHTML = ''; 
-                document.getElementById('resources').innerHTML = '';
-            }
-        }
-        function updateDateTime() { const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
     </script>
 </body>
 </html>
