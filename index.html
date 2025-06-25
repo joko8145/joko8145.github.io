@@ -90,7 +90,7 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx0l_u9047AMFSrdHawZD7ogK7rI_GCPdkXXOnaBHldbRByAd2zgRk2W6_sKpHoodzf/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxw7ENB6xFhDl4WWqsUQHdZTuptKVekX9AW-IPpxOe0qRyRz8lvXgzBLGEBL_zwkTSp/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -115,15 +115,16 @@
         };
         
         async function fetchApi(action, params = {}) {
-            const payload = { action: action, ...params };
-
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                // ▼▼▼ 중요 ▼▼▼: 이 헤더가 사전 요청(Preflight)을 막습니다.
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-            });
+            // 모든 파라미터를 URL 쿼리 스트링으로 변환하여 GET 요청을 보냅니다.
+            const url = new URL(SCRIPT_URL);
+            url.searchParams.set('action', action);
+            for (const key in params) {
+                url.searchParams.set(key, params[key]);
+            }
+            url.searchParams.set('v', new Date().getTime()); // Cache busting
             
+            const response = await fetch(url, { method: 'GET' });
+
             if (!response.ok) throw new Error(`API 호출 실패: ${response.statusText}`);
             const data = await response.json();
             if (data.error) {
