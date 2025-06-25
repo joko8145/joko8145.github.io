@@ -166,7 +166,6 @@
             }
             document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>';
             try {
-                // 교사 API는 백엔드에서 Session.getActiveUser()를 사용하므로 추가 파라미터 불필요
                 const data = await fetchApi('getTeacherData');
                 renderTeacherDashboard(data);
             } catch (error) {
