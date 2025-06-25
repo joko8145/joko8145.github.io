@@ -90,7 +90,7 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWa7M3Gf2KTY4QTXqY7_0J_wpNxPJ6C2MCSjaofn07QjE89u2D9Lns3TS3rNMboFA0/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGeSgKa72Opjw1nhL5RHE5kIfionAlKN-8mi29PbHbztw3aJSuHQguF3agNBy5Mobv/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -116,12 +116,14 @@
         
         async function fetchApi(action, params = {}) {
             const payload = { action: action, ...params };
+
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
                 // ▼▼▼ 중요 ▼▼▼: 이 헤더가 사전 요청(Preflight)을 막습니다.
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
             });
+            
             if (!response.ok) throw new Error(`API 호출 실패: ${response.statusText}`);
             const data = await response.json();
             if (data.error) {
