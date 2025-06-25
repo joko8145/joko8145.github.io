@@ -90,7 +90,7 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxw7ENB6xFhDl4WWqsUQHdZTuptKVekX9AW-IPpxOe0qRyRz8lvXgzBLGEBL_zwkTSp/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkAprRH7h8uNSsoerAbzpRPRxqz52gB1gDd9CTnXYh_BqSiH_51Y-NknE6xc6UNf9X/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -119,7 +119,9 @@
             const url = new URL(SCRIPT_URL);
             url.searchParams.set('action', action);
             for (const key in params) {
-                url.searchParams.set(key, params[key]);
+                // 파라미터 값이 boolean일 경우 문자열로 변환
+                const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
+                url.searchParams.set(key, value);
             }
             url.searchParams.set('v', new Date().getTime()); // Cache busting
             
@@ -181,7 +183,7 @@
             document.getElementById('notices').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             try {
                 const params = currentUser ? { email: currentUser.email } : {};
-                const data = await fetchApi('getStudentData', params);
+                const data = await fetchApi(null, params); // action이 없는 기본 호출
                 submittedTasks = new Set(data.submittedTasks || []);
                 teacherStampUrl = data.teacherStampUrl || '';
                 renderWidgets(data.widgets);
