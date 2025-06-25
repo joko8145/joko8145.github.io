@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우리 반 ONE_CLASS</title>
+    <title>우리 반 알림 포털</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,15 +50,6 @@
         .resource-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
-        /* [추가] 교사용 대시보드 스타일 */
-        .admin-panel { background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 12px; padding: 20px; margin-bottom: 30px; display: none; }
-        .admin-section { margin-bottom: 25px; border-bottom: 1px solid #d9d9d9; padding-bottom: 20px; }
-        .admin-section:last-child { border-bottom: none; }
-        .admin-section h2 { margin-top: 0; margin-bottom: 15px; color: #0d6efd; }
-        .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .admin-card { background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .admin-card-title { font-weight: bold; font-size: 1.1em; color: #1e88e5; }
-        .admin-card-desc { font-size: 0.9em; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -66,25 +57,20 @@
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1>📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
         <div class="content">
-            <!-- [추가] 교사용 대시보드가 표시될 공간 -->
-            <div id="admin-panel" class="admin-panel"></div>
-
-            <!-- 학생용 콘텐츠를 감싸는 div 추가 -->
-            <div id="student-view">
-                <div class="time-indicator"><div id="currentTime"></div><div id="periodIndicator"></div></div>
-                <div id="widgets-container"></div>
-                <div id="unsubmitted-container"></div>
-                <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
-                <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
-                <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
-            </div>
+            <div class="time-indicator"><div id="currentTime"></div><div id="periodIndicator"></div></div>
+            <div id="widgets-container"></div>
+            <div id="unsubmitted-container"></div>
+            <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
+            <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
+            <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
         </div>
     </div>
     
     <script>
         const NOTIFICATION_URL = 'https://script.google.com/macros/s/AKfycbwnfcSr-4aMAgaC6UUDz6yh79yokA2ivQtE4GIq_JJpqlZU0HhjjXYDrPYX7TTZr1uI/exec';
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
-        let currentUser = null; let submittedTasks = new Set();
+        let currentUser = null;
+        let submittedTasks = new Set();
 
         window.onload = function () {
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
@@ -92,52 +78,129 @@
             if (storedUser) {
                 currentUser = JSON.parse(storedUser);
                 renderUserInfo(currentUser);
+                loadPersonalizedData();
             } else {
                 google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
+                loadPersonalizedData();
             }
-            loadPersonalizedData();
-            updateDateTime(); setInterval(updateDateTime, 1000);
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
         };
 
-        async function handleCredentialResponse(response) { /* v.1과 동일 */ const userObject = JSON.parse(atob(response.credential.split('.')[1])); const fullUrl = `${NOTIFICATION_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(userObject.email)}`; try { const apiResponse = await fetch(fullUrl); const data = await apiResponse.json(); if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; } else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null }; } localStorage.setItem('userInfo', JSON.stringify(currentUser)); } catch (error) { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); } finally { location.reload(); } }
-        function handleLogout() { /* v.1과 동일 */ localStorage.removeItem('userInfo'); currentUser = null; google.accounts.id.disableAutoSelect(); location.reload(); }
-        function renderUserInfo(user) { /* v.1과 동일 */ document.getElementById('user-display').style.display = 'block'; document.getElementById('gsi-container').style.display = 'none'; let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`; if (user.studentId === null) { userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록)</span>`; } document.getElementById('user-display').innerHTML = userInfoHtml; }
-        function renderItems(containerId, items, defaultButtonText, isTask) { /* v.1과 동일 */ const container = document.getElementById(containerId); if (!items || items.length === 0) { container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`; return; } container.innerHTML = items.map(item => { const icon = item.icon ? `${item.icon} ` : ''; const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : ''; let contentHtml = ''; const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : []; if (subtasks.length > 0 && item.taskId) { contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => { const fullTaskId = `${item.taskId}_${subtask}`; const isCompleted = submittedTasks.has(fullTaskId); return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`; }).join('') + `</ul>`; } else { const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : ''; const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : ''; let finalLink = item.link; if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) { finalLink = `${NOTIFICATION_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`; } const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : ''; contentHtml = image + content + linkHtml; } return `<div class="notice-item">${title}${contentHtml}</div>`; }).join(''); }
-        async function toggleSubtask(checkbox, taskId, subtask) { /* v.1과 동일 */ if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; } const isChecked = checkbox.checked; const listItem = checkbox.closest('.subtask-item'); listItem.style.opacity = '0.5'; const params = new URLSearchParams({ action: 'logSubtask', studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked }); try { const response = await fetch(`${NOTIFICATION_URL}?${params.toString()}`); const result = await response.json(); if (result.status !== 'success') throw new Error(result.message); listItem.classList.toggle('completed', isChecked); const fullTaskId = `${taskId}_${subtask}`; if (isChecked) submittedTasks.add(fullTaskId); else submittedTasks.delete(fullTaskId); } catch (error) { alert(`오류: ${error.message}`); checkbox.checked = !isChecked; } finally { listItem.style.opacity = '1'; } }
-        function renderUnsubmitted(tasks) { /* v.1과 동일 */ const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
-        function renderWidgets(widgets) { /* v.1과 동일 */ const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.innerHTML = ''); container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
-        function renderResources(resources) { /* v.1과 동일 */ const container = document.getElementById('resources'); if (!container.classList.contains('resource-grid')) { container.classList.add('resource-grid'); } if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; } container.innerHTML = resources.map(res => `<a href="${res.link}" class="resource-card" target="_blank"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc">${res.description}</div></a>`).join(''); }
-        function updateDateTime() { /* v.1과 동일 */ const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
-
-        // [새로 추가] 교사 대시보드를 그리는 함수
-        function renderTeacherDashboard(dashboardData) {
-            const adminPanel = document.getElementById('admin-panel');
-            const studentView = document.getElementById('student-view');
-            adminPanel.style.display = 'block';
-            studentView.style.display = 'none'; // 학생 뷰 숨김
-            
-            let html = `<div class="admin-section"><h2>교사 통합 대시보드</h2>`;
-            for (const category in dashboardData) {
-                if (dashboardData.hasOwnProperty(category)) {
-                    html += `<h3>${category}</h3><div class="admin-grid">`;
-                    dashboardData[category].forEach(item => {
-                        html += `<a href="${item.url}" target="_blank" class="admin-card"><div class="admin-card-title">${item.title}</div><div class="admin-card-desc">${item.description || ''}</div></a>`;
-                    });
-                    html += `</div>`;
-                }
+        async function handleCredentialResponse(response) {
+            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+            const fullUrl = `${NOTIFICATION_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(userObject.email)}`;
+            try {
+                const apiResponse = await fetch(fullUrl);
+                const data = await apiResponse.json();
+                if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; }
+                else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null }; }
+                localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            } catch (error) {
+                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null };
+                localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            } finally {
+                location.reload();
             }
-            html += `</div>`;
-            adminPanel.innerHTML = html;
         }
 
-        // [수정됨] 데이터 로딩 함수가 교사 모드를 판단하도록 변경
+        function handleLogout() {
+            localStorage.removeItem('userInfo');
+            currentUser = null;
+            google.accounts.id.disableAutoSelect();
+            location.reload();
+        }
+
+        function renderUserInfo(user) {
+            document.getElementById('user-display').style.display = 'block';
+            document.getElementById('gsi-container').style.display = 'none';
+            let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
+            if (user.studentId === null) { userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록)</span>`; }
+            document.getElementById('user-display').innerHTML = userInfoHtml;
+        }
+        
+        function renderItems(containerId, items, defaultButtonText, isTask = false) {
+            const container = document.getElementById(containerId);
+            if (!items || items.length === 0) {
+                container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
+                return;
+            }
+            container.innerHTML = items.map(item => {
+                const icon = item.icon ? `${item.icon} ` : '';
+                const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
+                let contentHtml = '';
+                
+                const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : [];
+
+                if (subtasks.length > 0 && item.taskId) {
+                    contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => {
+                        const fullTaskId = `${item.taskId}_${subtask}`;
+                        const isCompleted = submittedTasks.has(fullTaskId);
+                        return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`;
+                    }).join('') + `</ul>`;
+                } else {
+                    const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
+                    const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content}</div>` : '';
+                    let finalLink = item.link;
+                    if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
+                        finalLink = `${NOTIFICATION_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
+                    }
+                    const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
+                    contentHtml = image + content + linkHtml;
+                }
+                return `<div class="notice-item">${title}${contentHtml}</div>`;
+            }).join('');
+        }
+
+        async function toggleSubtask(checkbox, taskId, subtask) {
+            if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; }
+            const isChecked = checkbox.checked;
+            const listItem = checkbox.closest('.subtask-item');
+            listItem.style.opacity = '0.5';
+            const params = new URLSearchParams({ action: 'logSubtask', studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked });
+            try {
+                const response = await fetch(`${NOTIFICATION_URL}?${params.toString()}`);
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message);
+                listItem.classList.toggle('completed', isChecked);
+                const fullTaskId = `${taskId}_${subtask}`;
+                if (isChecked) submittedTasks.add(fullTaskId); else submittedTasks.delete(fullTaskId);
+            } catch (error) {
+                alert(`오류: ${error.message}`);
+                checkbox.checked = !isChecked;
+            } finally {
+                listItem.style.opacity = '1';
+            }
+        }
+        
+        function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
+        function renderWidgets(widgets) { const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
+        
+        // [수정됨] 자료실 렌더링 함수: 레이아웃 문제를 해결하기 위해 최종 수정
+        function renderResources(resources) {
+            const container = document.getElementById('resources');
+            // 'resource-grid' 클래스가 있는지 확인하고 없으면 추가
+            if (!container.classList.contains('resource-grid')) {
+                container.classList.add('resource-grid');
+            }
+            if (!resources || resources.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>';
+                return;
+            }
+            container.innerHTML = resources.map(res => `
+                <a href="${res.link}" class="resource-card" target="_blank">
+                    <div class="resource-title">${res.icon} ${res.title}</div>
+                    <div class="resource-desc">${res.description}</div>
+                </a>
+            `).join('');
+        }
+
         async function loadPersonalizedData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const mode = urlParams.get('mode');
             let fullUrl = NOTIFICATION_URL + '?v=' + new Date().getTime();
             if (currentUser) fullUrl += '&email=' + encodeURIComponent(currentUser.email);
             
-            document.getElementById('student-view').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            const sections = ['notices', 'tasks', 'resources'];
+            sections.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>'; });
             
             try {
                 const response = await fetch(fullUrl);
@@ -145,25 +208,21 @@
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
                 
-                // [추가] 교사 모드일 경우 대시보드 렌더링
-                if (mode === 'teacher' && currentUser && data.teacherDashboard) {
-                    renderTeacherDashboard(data.teacherDashboard);
-                } else { // 학생 모드일 경우 기존 뷰 렌더링
-                    document.getElementById('admin-panel').style.display = 'none';
-                    document.getElementById('student-view').style.display = 'block';
-                    submittedTasks = new Set(data.submittedTasks || []);
-                    renderWidgets(data.widgets);
-                    renderItems('notices', data.notices, '자세히 보기 →', false);
-                    renderItems('tasks', data.tasks, '바로 하기 →', true);
-                    renderUnsubmitted(data.unsubmitted);
-                    renderResources(data.resources);
-                }
+                submittedTasks = new Set(data.submittedTasks || []);
+                renderWidgets(data.widgets);
+                renderItems('notices', data.notices, '자세히 보기 →', false);
+                renderItems('tasks', data.tasks, '바로 하기 →', true);
+                renderUnsubmitted(data.unsubmitted);
+                renderResources(data.resources);
 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById('student-view').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+                document.getElementById('notices').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+                document.getElementById('tasks').innerHTML = ''; 
+                document.getElementById('resources').innerHTML = '';
             }
         }
+        function updateDateTime() { const now = new Date(); document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); const hour = now.getHours(); let period = '방과 후'; if (hour >= 8 && hour < 9) period = '1교시 준비'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '점심시간'; else if (hour >= 13 && hour < 14) period = '4교시'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시'; document.getElementById('periodIndicator').textContent = period; }
     </script>
 </body>
 </html>
