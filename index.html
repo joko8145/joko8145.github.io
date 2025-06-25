@@ -8,6 +8,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+        /* 나머지 CSS는 이전과 동일하여 생략하지 않고 모두 포함합니다. */
         a { text-decoration: none; color: inherit; }
         button, input, select, textarea { font-family: inherit; font-size: 1em; }
         .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.98); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
@@ -89,7 +90,7 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweI-B0uFk8gdqBQp_qiHcQlsbTaGZKKNOL2CAYQH0J-C9uyiRmdG2dD5WVto0lZVmlfg/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznjtBsXTHsMmNZudUFvOPypHsLHuOwyBQwrbjeo0REEU-L426e41XRhcVT2CwrYuLC/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -114,14 +115,21 @@
         };
         
         async function fetchApi(action, params = {}) {
-            const url = new URL(SCRIPT_URL);
-            url.searchParams.set('action', action);
-            for (const key in params) {
-                url.searchParams.set(key, params[key]);
-            }
-            url.searchParams.set('v', new Date().getTime());
-            
-            const response = await fetch(url);
+            // 모든 파라미터를 body에 담아 POST 요청으로 보냅니다.
+            const payload = {
+                action: action,
+                ...params
+            };
+
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                redirect: "follow", // 리디렉션을 따르도록 설정
+                body: JSON.stringify(payload),
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8", // Apps Script doPost는 이 Content-Type을 선호합니다.
+                }
+            });
+
             if (!response.ok) {
                 throw new Error(`API 호출 실패: ${response.statusText}`);
             }
@@ -203,6 +211,7 @@
             }
             document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>';
             try {
+                // 교사 API는 백엔드에서 Session.getActiveUser()를 사용하므로 추가 파라미터 불필요
                 const data = await fetchApi('getTeacherData');
                 renderTeacherDashboard(data);
             } catch (error) {
@@ -230,6 +239,7 @@
                 } else {
                     const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
                     const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : '';
+                    // logClick은 GET 방식만 지원하므로, 기존 GET URL 구조를 유지합니다.
                     let finalLink = item.link;
                     if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
                         const params = new URLSearchParams({ action: 'logClick', studentId: currentUser.studentId, name: encodeURIComponent(currentUser.name), taskId: encodeURIComponent(item.taskId), url: encodeURIComponent(item.link) });
@@ -289,10 +299,7 @@
                 let e = "";
                 switch (t.type) {
                     case "디데이":
-                        const n = new Date();
-                        n.setHours(0, 0, 0, 0);
-                        const o = new Date(t.content);
-                        o.setHours(0, 0, 0, 0);
+                        const n = new Date(); n.setHours(0, 0, 0, 0); const o = new Date(t.content); o.setHours(0, 0, 0, 0);
                         const i = Math.ceil((o - n) / 86400000);
                         e = i > 0 ? `D-${i}` : i < 0 ? `D+${-i}` : "D-Day";
                         break;
@@ -303,8 +310,7 @@
                         e = `<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;
                         break;
                     default:
-                        e = t.content;
-                        break;
+                        e = t.content; break;
                 }
                 return `<div class="widget"><div class="widget-title">${t.title}</div>${t.type !== "급식" ? `<div class="widget-content">${e}</div>` : e}</div>`;
             }).join("");
@@ -328,14 +334,7 @@
                 alert("로그인 후 신청할 수 있습니다.");
                 return;
             }
-            const params = {
-                studentId: currentUser.studentId,
-                name: currentUser.name,
-                email: currentUser.email,
-                leaveType: document.getElementById('leave-type').value,
-                leaveDate: document.getElementById('leave-date').value,
-                reason: document.getElementById('leave-reason').value
-            };
+            const params = { studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email, leaveType: document.getElementById('leave-type').value, leaveDate: document.getElementById('leave-date').value, reason: document.getElementById('leave-reason').value };
             try {
                 await fetchApi('submitLeaveRequest', params);
                 alert('신청이 완료되었습니다. 내역을 확인해주세요.');
@@ -355,15 +354,7 @@
             }
             container.innerHTML = requests.map(req => {
                 const commentHtml = req.status !== '신청' ? `<div class="leave-status-comment">${req.comment || '코멘트 없음'}${req.status === '허가' ? `<img src="${teacherStampUrl}" alt="확인">` : ''}</div>` : '';
-                return `
-                <div class="leave-status-card ${req.status}">
-                    <div class="leave-status-header">
-                        <span><strong>${req.date} ${req.type}</strong></span>
-                        <span class="leave-status-badge ${req.status}">${req.status}</span>
-                    </div>
-                    <div>사유: ${req.reason}</div>
-                    ${commentHtml}
-                </div>`;
+                return `<div class="leave-status-card ${req.status}"><div class="leave-status-header"><span><strong>${req.date} ${req.type}</strong></span><span class="leave-status-badge ${req.status}">${req.status}</span></div><div>사유: ${req.reason}</div>${commentHtml}</div>`;
             }).join('');
         }
 
@@ -371,10 +362,7 @@
             const container = document.getElementById('teacher-dashboard-container');
             const managementLinks = data.dashboard.filter(item => item.type === '관리');
             const workLinks = data.dashboard.filter(item => item.type === '업무');
-            container.innerHTML = `
-                <div class="section"><div class="section-title">🚀 새 구글폼 과제 자동 생성</div><div class="dashboard-card"><input type="text" id="new-form-title" class="form-creator-input" placeholder="새 과제 제목을 입력하세요"><button class="form-creator-button" onclick="createNewAssignment()">생성 및 알림 게시</button></div></div>
-                <div class="section"><div class="section-title">🔔 외출/조퇴 신청 현황</div><div class="dashboard-card">${renderLeaveRequestTable(data.leaveRequests)}</div></div>
-                <div class="section dashboard-grid"><div><div class="section-title">⚙️ 관리 시스템 바로가기</div><div class="dashboard-card">${managementLinks.map(link => `<a href="${link.url}" target="_blank" class="dashboard-link-item"><strong>${link.title}</strong><br><small>${link.description}</small></a>`).join('')}</div></div><div><div class="section-title">🗂️ 업무용 바로가기</div><div class="dashboard-card">${workLinks.map(link => `<a href="${link.url}" target="_blank" class="dashboard-link-item"><strong>${link.title}</strong><br><small>${link.description}</small></a>`).join('')}</div></div></div>`;
+            container.innerHTML = `<div class="section"><div class="section-title">🚀 새 구글폼 과제 자동 생성</div><div class="dashboard-card"><input type="text" id="new-form-title" class="form-creator-input" placeholder="새 과제 제목을 입력하세요"><button class="form-creator-button" onclick="createNewAssignment()">생성 및 알림 게시</button></div></div><div class="section"><div class="section-title">🔔 외출/조퇴 신청 현황</div><div class="dashboard-card">${renderLeaveRequestTable(data.leaveRequests)}</div></div><div class="section dashboard-grid"><div><div class="section-title">⚙️ 관리 시스템 바로가기</div><div class="dashboard-card">${managementLinks.map(link => `<a href="${link.url}" target="_blank" class="dashboard-link-item"><strong>${link.title}</strong><br><small>${link.description}</small></a>`).join('')}</div></div><div><div class="section-title">🗂️ 업무용 바로가기</div><div class="dashboard-card">${workLinks.map(link => `<a href="${link.url}" target="_blank" class="dashboard-link-item"><strong>${link.title}</strong><br><small>${link.description}</small></a>`).join('')}</div></div></div>`;
         }
 
         function renderLeaveRequestTable(requests) {
@@ -388,10 +376,7 @@
 
         async function createNewAssignment() {
             const title = document.getElementById('new-form-title').value;
-            if (!title) {
-                alert('과제 제목을 입력해주세요.');
-                return;
-            }
+            if (!title) { alert('과제 제목을 입력해주세요.'); return; }
             const btn = event.target;
             btn.disabled = true;
             btn.textContent = '생성 중...';
@@ -425,15 +410,9 @@
             const now = new Date();
             const dateString = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
             const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            if (document.getElementById('dateDisplay')) {
-                document.getElementById('dateDisplay').textContent = dateString;
-            }
-            if (document.getElementById('teacherDateDisplay')) {
-                document.getElementById('teacherDateDisplay').textContent = dateString;
-            }
-            if (document.getElementById('currentTime')) {
-                document.getElementById('currentTime').textContent = timeString;
-            }
+            if (document.getElementById('dateDisplay')) { document.getElementById('dateDisplay').textContent = dateString; }
+            if (document.getElementById('teacherDateDisplay')) { document.getElementById('teacherDateDisplay').textContent = dateString; }
+            if (document.getElementById('currentTime')) { document.getElementById('currentTime').textContent = timeString; }
             if (document.getElementById('periodIndicator')) {
                 const hour = now.getHours();
                 let period = '방과 후';
