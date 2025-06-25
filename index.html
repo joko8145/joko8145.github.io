@@ -116,11 +116,15 @@
         async function fetchApi(action, params = {}) {
             const url = new URL(SCRIPT_URL);
             url.searchParams.set('action', action);
-            for (const key in params) { url.searchParams.set(key, params[key]); }
+            for (const key in params) {
+                url.searchParams.set(key, params[key]);
+            }
             url.searchParams.set('v', new Date().getTime());
             
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`API 호출 실패: ${response.statusText}`);
+            if (!response.ok) {
+                throw new Error(`API 호출 실패: ${response.statusText}`);
+            }
             const data = await response.json();
             if (data.error) {
                 if (data.error === 'ACCESS_DENIED') {
@@ -134,8 +138,11 @@
         async function handleCredentialResponse(response) {
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
             const data = await fetchApi('getStudentData', { email: userObject.email });
-            if (data.user) currentUser = { ...data.user, picture: userObject.picture };
-            else currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' };
+            if (data.user) {
+                currentUser = { ...data.user, picture: userObject.picture };
+            } else {
+                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' };
+            }
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             location.reload();
         }
@@ -191,7 +198,8 @@
         
         async function loadTeacherDashboard() {
             if (!currentUser || currentUser.role !== 'teacher') {
-                document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">🔒 교사 계정으로 로그인해야 접근할 수 있습니다.</div>`; return;
+                document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">🔒 교사 계정으로 로그인해야 접근할 수 있습니다.</div>`;
+                return;
             }
             document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>';
             try {
@@ -247,8 +255,11 @@
                 await fetchApi('logSubtask', { studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked });
                 listItem.classList.toggle('completed', isChecked);
                 const fullTaskId = `${taskId}_${subtask}`;
-                if (isChecked) submittedTasks.add(fullTaskId);
-                else submittedTasks.delete(fullTaskId);
+                if (isChecked) {
+                    submittedTasks.add(fullTaskId);
+                } else {
+                    submittedTasks.delete(fullTaskId);
+                }
             } catch (error) {
                 alert(`오류: ${error.message}`);
                 checkbox.checked = !isChecked;
@@ -259,22 +270,30 @@
         
         function renderUnsubmitted(tasks) {
             const container = document.getElementById("unsubmitted-container");
-            if (!currentUser || !tasks || 0 === tasks.length) return void(container.style.display = "none");
-            container.style.display = "block", container.innerHTML = `<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t => `<li>${t.icon || "📌"} ${t.title || t.content}</li>`).join("")}</ul></div>`;
+            if (!currentUser || !tasks || tasks.length === 0) {
+                container.style.display = "none";
+                return;
+            }
+            container.style.display = "block";
+            container.innerHTML = `<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t => `<li>${t.icon || "📌"} ${t.title || t.content}</li>`).join("")}</ul></div>`;
         }
 
         function renderWidgets(widgets) {
             const container = document.getElementById("widgets-container");
-            if (!widgets || 0 === widgets.length) return void(container.style.display = "none");
-            container.style.display = "flex", container.innerHTML = widgets.map(t => {
+            if (!widgets || widgets.length === 0) {
+                container.style.display = "none";
+                return;
+            }
+            container.style.display = "flex";
+            container.innerHTML = widgets.map(t => {
                 let e = "";
                 switch (t.type) {
                     case "디데이":
-                        const n = new Date;
+                        const n = new Date();
                         n.setHours(0, 0, 0, 0);
                         const o = new Date(t.content);
                         o.setHours(0, 0, 0, 0);
-                        const i = Math.ceil((o - n) / 864e5);
+                        const i = Math.ceil((o - n) / 86400000);
                         e = i > 0 ? `D-${i}` : i < 0 ? `D+${-i}` : "D-Day";
                         break;
                     case "급식":
@@ -284,10 +303,11 @@
                         e = `<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;
                         break;
                     default:
-                        e = t.content
+                        e = t.content;
+                        break;
                 }
-                return `<div class="widget"><div class="widget-title">${t.title}</div>${"급식" !== t.type ? `<div class="widget-content">${e}</div>` : e}</div>`
-            }).join("")
+                return `<div class="widget"><div class="widget-title">${t.title}</div>${t.type !== "급식" ? `<div class="widget-content">${e}</div>` : e}</div>`;
+            }).join("");
         }
 
         function renderResources(resources) {
@@ -297,7 +317,9 @@
                 container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>';
                 return;
             }
-            container.innerHTML = resources.map(res => `<a href="${res.link}" class="resource-card" target="_blank"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc">${res.description}</div></a>`).join('');
+            container.innerHTML = resources.map(res => {
+                return `<a href="${res.link}" class="resource-card" target="_blank"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc">${res.description}</div></a>`;
+            }).join('');
         }
 
         async function submitLeaveRequest(event) {
@@ -403,9 +425,15 @@
             const now = new Date();
             const dateString = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
             const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            if (document.getElementById('dateDisplay')) document.getElementById('dateDisplay').textContent = dateString;
-            if (document.getElementById('teacherDateDisplay')) document.getElementById('teacherDateDisplay').textContent = dateString;
-            if (document.getElementById('currentTime')) document.getElementById('currentTime').textContent = timeString;
+            if (document.getElementById('dateDisplay')) {
+                document.getElementById('dateDisplay').textContent = dateString;
+            }
+            if (document.getElementById('teacherDateDisplay')) {
+                document.getElementById('teacherDateDisplay').textContent = dateString;
+            }
+            if (document.getElementById('currentTime')) {
+                document.getElementById('currentTime').textContent = timeString;
+            }
             if (document.getElementById('periodIndicator')) {
                 const hour = now.getHours();
                 let period = '방과 후';
