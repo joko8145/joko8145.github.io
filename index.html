@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>우리 반 알림 포털</title>
+    <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         /* CSS는 변경 없음 */
@@ -101,52 +102,58 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwgC_-9i-yDftjqpHFVDRJkZ5DyzcACkZ5H8cAr80y0S59nTotx0DhKPg5H9AQ7_uA7/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI0of5JtVQkf_qK1DhGULE7yYi7hMvnFeMKemLsiwV6_1T9bUXStgtXjHbLRFJE455/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
         let teacherStampUrl = '';
         const urlParams = new URLSearchParams(window.location.search);
         const isTeacherMode = urlParams.get('mode') === 'teacher';
-
-        // JSONP 요청을 위한 함수
-        function fetchApi(action, params = {}) {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
-                window[callbackName] = (data) => {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    if (data.error) {
-                        reject(new Error(data.error));
-                    } else {
-                        resolve(data);
-                    }
-                };
-
-                const script = document.createElement('script');
-                const url = new URL(SCRIPT_URL);
-                if (action) {
-                    url.searchParams.set('action', action);
-                }
-                for (const key in params) {
-                    const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
-                    url.searchParams.set(key, value);
-                }
-                url.searchParams.set('callback', callbackName);
-                url.searchParams.set('v', new Date().getTime());
-                
-                script.src = url.toString();
-                script.onerror = () => {
-                    delete window[callbackName];
-                    document.body.removeChild(script);
-                    reject(new Error('JSONP 요청 실패'));
-                };
-                
-                document.body.appendChild(script);
-            });
-        }
         
-        // 이하 다른 모든 Javascript 함수는 이전과 동일하며, 수정할 필요가 없습니다.
+        // ▼▼▼ 수정된 fetchApi 함수 ▼▼▼
+        // 학생용/익명용 API는 JSONP로, 교사용 API는 google.script.run으로 호출
+        async function fetchApi(action, params = {}) {
+            // 교사 인증이 필요한 Action 목록
+            const teacherActions = ['getTeacherData', 'createNewForm', 'updateLeaveStatus'];
+            
+            if (teacherActions.includes(action)) {
+                // 교사용 API는 google.script.run 사용
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(response => resolve(response))
+                        .withFailureHandler(error => reject(error))
+                        [action](params);
+                });
+            } else {
+                // 학생/익명용 API는 JSONP 사용
+                return new Promise((resolve, reject) => {
+                    const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        if (data.error) {
+                            reject(new Error(data.error));
+                        } else {
+                            resolve(data);
+                        }
+                    };
+                    const script = document.createElement('script');
+                    const url = new URL(SCRIPT_URL);
+                    if (action) url.searchParams.set('action', action);
+                    for (const key in params) {
+                        const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
+                        url.searchParams.set(key, value);
+                    }
+                    url.searchParams.set('callback', callbackName);
+                    url.searchParams.set('v', new Date().getTime());
+                    script.src = url.toString();
+                    script.onerror = () => reject(new Error('JSONP 요청 실패'));
+                    document.body.appendChild(script);
+                });
+            }
+        }
+
+        // 이하 나머지 Javascript 코드는 이전과 동일합니다.
         function toggleLeaveSection(sectionIdToShow) { const formWrapper = document.getElementById('leave-form-wrapper'); const statusWrapper = document.getElementById('leave-status-wrapper'); const targetWrapper = document.getElementById(sectionIdToShow); if (targetWrapper.style.display === 'block') { targetWrapper.style.display = 'none'; return; } formWrapper.style.display = 'none'; statusWrapper.style.display = 'none'; targetWrapper.style.display = 'block'; }
         window.onload = function () { google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse }); const storedUser = localStorage.getItem('userInfo'); if (storedUser) { currentUser = JSON.parse(storedUser); renderUserInfo(currentUser); loadPortal(); } else { google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" }); loadPortal(); } updateDateTime(); setInterval(updateDateTime, 1000); };
         async function handleCredentialResponse(response) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); try { const data = await fetchApi(null, { email: userObject.email }); if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; } else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; } localStorage.setItem('userInfo', JSON.stringify(currentUser)); } catch (error) { console.error("로그인 처리 중 오류:", error); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); } finally { location.reload(); } }
