@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>우리 반 알림 포털</title>
-    <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         /* CSS는 변경 없음 */
@@ -102,7 +101,7 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8KpldY5z-BdyC04RWj5cfy11CI4iOYnGhh4j66I_LZ9c6T9Y5MDynetl3tYBnCMYt/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_Igi6zSKZesbHoHkWdM2Xc2KmaDvGHYaIpxHI3sfCADQN5GIdrh-NTOAvpTeqEoWR/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -111,21 +110,20 @@
         const isTeacherMode = urlParams.get('mode') === 'teacher';
         
         // ▼▼▼ 수정된 fetchApi 함수 ▼▼▼
-        // 학생용/익명용 API는 JSONP로, 교사용 API는 google.script.run으로 호출
         async function fetchApi(action, params = {}) {
             // 교사 인증이 필요한 Action 목록
             const teacherActions = ['getTeacherData', 'createNewForm', 'updateLeaveStatus'];
             
             if (teacherActions.includes(action)) {
-                // 교사용 API는 google.script.run 사용
+                // 교사용 API는 google.script.run 사용 (인증 정보 자동 포함)
                 return new Promise((resolve, reject) => {
                     google.script.run
                         .withSuccessHandler(response => resolve(response))
                         .withFailureHandler(error => reject(error))
-                        [action](params);
+                        [action](params); // params만 전달
                 });
             } else {
-                // 학생/익명용 API는 JSONP 사용
+                // 학생/익명용 API는 JSONP 사용 (CORS 우회)
                 return new Promise((resolve, reject) => {
                     const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
                     window[callbackName] = (data) => {
