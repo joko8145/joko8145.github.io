@@ -53,13 +53,17 @@
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
         
-        /* ▼▼▼ 추가/수정된 스타일 ▼▼▼ */
         .leave-toggle-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .leave-toggle-button { padding: 15px; font-size: 1.1em; font-weight: bold; cursor: pointer; border: 2px solid #e0e0e0; border-radius: 12px; background-color: #f8f9fa; color: #667eea; transition: all 0.2s; text-align: center; }
         .leave-toggle-button:hover { background-color: #e9ecef; border-color: #667eea; }
         #leave-form-wrapper, #leave-status-wrapper { display: none; margin-top: 20px; }
-        /* ▲▲▲ 추가/수정된 스타일 ▲▲▲ */
-
+        
+        /* ▼▼▼ 추가된 스타일 ▼▼▼ */
+        #leave-management-section {
+            display: none; /* 기본적으로 숨김 */
+        }
+        /* ▲▲▲ 추가된 스타일 ▲▲▲ */
+        
         #leave-request-form { background-color: #f8f9fa; padding: 20px; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         #leave-request-form textarea { grid-column: 1 / -1; }
         #leave-request-form button { grid-column: 1 / -1; padding: 12px; border: none; background: #764ba2; color: white; border-radius: 8px; font-size: 1.1em; cursor: pointer; }
@@ -88,7 +92,7 @@
                 <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
                 
                 <!-- ▼▼▼ 수정된 '외출/조퇴' 섹션 ▼▼▼ -->
-                <div class="section">
+                <div class="section" id="leave-management-section">
                     <div class="section-title">✈️ 외출/조퇴 관리</div>
                     <div class="leave-toggle-container">
                         <div class="leave-toggle-button" onclick="toggleLeaveSection('leave-form-wrapper')">📝 신청하기</div>
@@ -134,26 +138,21 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-        // ▼▼▼ 추가된 UI 토글 함수 ▼▼▼
         function toggleLeaveSection(sectionIdToShow) {
             const formWrapper = document.getElementById('leave-form-wrapper');
             const statusWrapper = document.getElementById('leave-status-wrapper');
             const targetWrapper = document.getElementById(sectionIdToShow);
 
-            // 클릭한 섹션이 이미 보이고 있다면, 숨김
             if (targetWrapper.style.display === 'block') {
                 targetWrapper.style.display = 'none';
                 return;
             }
 
-            // 모든 섹션을 일단 숨김 (다른 섹션이 열려있을 경우를 대비)
             formWrapper.style.display = 'none';
             statusWrapper.style.display = 'none';
             
-            // 목표 섹션만 보여줌
             targetWrapper.style.display = 'block';
         }
-        // ▲▲▲ 추가된 UI 토글 함수 ▲▲▲
 
         window.onload = function () {
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
@@ -225,6 +224,13 @@
                 userInfoHtml += ` <span class="user-info" style="color: #ffc107; font-weight: bold;">(미등록)</span>`;
             }
             document.getElementById('user-display').innerHTML = userInfoHtml;
+
+            // ▼▼▼ 추가된 코드 ▼▼▼
+            // 로그인한 사용자이고, 학생인 경우에만 외출/조퇴 섹션을 보여줌
+            if(user && user.role === 'student'){
+                 document.getElementById('leave-management-section').style.display = 'block';
+            }
+            // ▲▲▲ 추가된 코드 ▲▲▲
         }
 
         function loadPortal() {
