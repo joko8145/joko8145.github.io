@@ -6,214 +6,450 @@
     <title>우리 반 알림 포털</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* CSS는 변경 없음 */
+        :root { --primary-color: #667eea; --secondary-color: #764ba2; --background-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: var(--background-gradient); min-height: 100vh; padding: 20px; color: #333; }
         a { text-decoration: none; color: inherit; }
-        button, input, select, textarea { font-family: inherit; font-size: 1em; }
-        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.98); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
+        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
         .auth-container { padding: 10px 30px; text-align: right; background-color: rgba(0,0,0,0.1); min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
-        .user-info { color: #333; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
+        .user-info { color: white; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
         .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
-        .user-info a { color: #667eea; text-decoration: underline; margin-left: 10px; font-weight: bold; }
+        .user-info a { color: #fff; text-decoration: underline; margin-left: 10px; font-weight: bold; }
         #gsi-container { display: inline-block; }
-        .header { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }
+        .header { background: var(--background-gradient); color: white; padding: 30px; text-align: center; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; }
         .date-display { font-size: 1.2em; opacity: 0.9; }
         .content { padding: 30px; }
-        .section { margin-bottom: 30px; }
-        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
-        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; background-color: #f8f9fa; border-radius: 12px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; font-size: 1.2em; }
         .time-indicator { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
-        .current-time { font-weight: bold; color: #667eea; }
-        .period-indicator { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 5px 12px; border-radius: 15px; }
+        .current-time { font-weight: bold; color: var(--primary-color); }
+        .period-indicator { background: var(--background-gradient); color: white; padding: 5px 12px; border-radius: 15px; }
         #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 200px; background: #f1f3f5; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .widget-title { font-size: 1em; font-weight: bold; color: #555; margin-bottom: 10px; }
-        .widget-content { font-size: 1.8em; font-weight: bold; color: #667eea; }
+        .widget-content { font-size: 1.8em; font-weight: bold; color: var(--primary-color); }
         .widget-content.small-text { font-size: 1em; line-height: 1.5; color: #333; white-space: pre-wrap; text-align: left; }
         #unsubmitted-container { display: none; }
         .unsubmitted-section { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
         .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; font-size: 1.2em; }
         .unsubmitted-list { list-style: none; padding-left: 5px; }
         .unsubmitted-list li { margin-bottom: 8px; }
-        .notice-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid #667eea; }
-        .notice-title { font-size: 1.2em; font-weight: bold; margin-bottom: 8px; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); }
+        .notice-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
+        .notice-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 8px; }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
-        .notice-content { font-size: 1.1em; line-height: 1.6; }
-        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; font-weight: bold; }
+        .notice-content { font-size: 1.1em; line-height: 1.6; color: #555; }
+        .notice-link, .btn { display: inline-block; background: var(--background-gradient); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; font-size: 1em; }
+        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; }
         .subtask-list { list-style: none; margin-top: 15px; padding-left: 5px; }
         .subtask-item { display: flex; align-items: center; margin-bottom: 10px; }
-        .subtask-checkbox { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; accent-color: #764ba2; flex-shrink: 0; }
-        .subtask-label { flex-grow: 1; }
+        .subtask-checkbox { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; accent-color: var(--secondary-color); flex-shrink: 0; }
+        .subtask-label { flex-grow: 1; color: #333; }
         .subtask-item.completed .subtask-label { text-decoration: line-through; color: #aaa; }
         .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; display: block; transition: all 0.2s ease-in-out; }
+        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; display: block; transition: all 0.2s; }
         .resource-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
+        .modal { position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 15px; }
+        .modal-content h3 { margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group select, .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .modal-buttons { text-align: right; }
+        .modal-buttons .btn { margin-left: 10px; }
+        .btn-secondary { background: #6c757d; }
+        #leave-history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        #leave-history-table th, #leave-history-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        #leave-history-table th { background-color: #f2f2f2; }
+        .status-신청 { color: #f0ad4e; font-weight: bold; }
+        .status-승인 { color: #5cb85c; font-weight: bold; }
+        .status-반려 { color: #d9534f; font-weight: bold; }
+        .leave-pass { border: 5px double #764ba2; padding: 20px; margin-top: 20px; border-radius: 10px; background-color: #fdfcff; text-align: center; position: relative; }
+        .leave-pass h3 { color: #764ba2; font-size: 2em; margin-bottom: 20px; }
+        .leave-pass-content { text-align: left; margin: 0 auto; max-width: 300px; line-height: 1.8; }
+        .leave-pass-stamp { position: absolute; right: 20px; bottom: 20px; width: 100px; height: 100px; opacity: 0.8; }
+        #teacher-dashboard .section { margin-bottom: 40px; }
+        #teacher-dashboard table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        #teacher-dashboard th, #teacher-dashboard td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        #teacher-dashboard th { background-color: #f2f2f2; }
+        #teacher-dashboard .btn { padding: 5px 10px; font-size: 0.9em; margin-top: 0; margin-right: 5px; }
     </style>
 </head>
 <body>
+    <div id="loading" class="loading-overlay" style="display: none;">🔄 데이터를 불러오는 중입니다...</div>
+    <div id="leave-request-modal" class="modal">
+        <div class="modal-content">
+            <h3>외출/조퇴 신청</h3>
+            <div class="form-group">
+                <label for="leave-type">신청 종류</label>
+                <select id="leave-type"><option value="외출">외출</option><option value="조퇴">조퇴</option></select>
+            </div>
+            <div class="form-group">
+                <label for="leave-date">희망 일자</label>
+                <input type="date" id="leave-date">
+            </div>
+            <div class="form-group">
+                <label for="leave-reason">사유</label>
+                <textarea id="leave-reason" rows="3" placeholder="자세한 사유를 입력해주세요."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('leave-request-modal')">취소</button>
+                <button type="button" class="btn" onclick="submitLeaveRequest()">제출</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
+        
         <div id="student-portal">
             <div class="header"><h1>📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
             <div class="content">
                 <div class="time-indicator"><div id="currentTime"></div><div id="periodIndicator"></div></div>
                 <div id="widgets-container"></div>
                 <div id="unsubmitted-container"></div>
+                <div id="leave-section" class="section"></div>
                 <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
                 <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
                 <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
             </div>
         </div>
+
         <div id="teacher-dashboard" style="display: none;">
             <div class="header"><h1>👑 교사 대시보드</h1><div class="date-display" id="teacherDateDisplay"></div></div>
-            <div id="teacher-dashboard-container"></div>
+            <div class="content">
+                <div id="teacher-leave-requests" class="section"></div>
+                <div id="teacher-links" class="section"></div>
+            </div>
         </div>
     </div>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzFn7y3CrMFoT3WjsiTtsTwB5F7xzWCbqGk91fhuBIBmSAGylYKEhOTOQCQPF0GgAd/exec';
+    const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
+    let currentUser = null;
+    let submittedTasks = new Set();
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+
+    window.onload = function () {
+        google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
+        const storedUser = localStorage.getItem('userInfo');
+        if (storedUser) {
+            currentUser = JSON.parse(storedUser);
+            renderUserInfo(currentUser);
+            loadData();
+        } else {
+            google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
+            if (mode !== 'teacher') { loadData(); }
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    };
+
+    function showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'flex' : 'none';
+    }
+
+    async function handleCredentialResponse(response) {
+        const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+        const tempUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
+        localStorage.setItem('tempUserInfo', JSON.stringify(tempUser));
+        location.reload();
+    }
     
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby5y-YjCdsZrdDOTCA2bbRWc0_NNyS187Y76aixKONqHPIcXoxRIZ1oad-uETk4r-XFWA/exec";
-        const LEAVE_SYSTEM_URL = "https://script.google.com/macros/s/AKfycbztPSlR6LjPFSlcQDum32Z6qC_9uXZliM0UzmPhphjH4_WO_zHtKK-DJnw3vVpOyNeXEA/exec";
-        
-        const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
-        let currentUser = null;
-        let submittedTasks = new Set();
-        const urlParams = new URLSearchParams(window.location.search);
-        const isTeacherMode = urlParams.get('mode') === 'teacher';
-        
-        async function fetchApi(action, params = {}) {
-            const url = new URL(SCRIPT_URL);
-            if (action) url.searchParams.set('action', action);
-            for (const key in params) {
-                const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
-                url.searchParams.set(key, value);
+    function handleLogout() {
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('tempUserInfo');
+        currentUser = null;
+        google.accounts.id.disableAutoSelect();
+        location.reload();
+    }
+    
+    async function loadData() {
+        showLoading(true);
+        let tempUserInfo = localStorage.getItem('tempUserInfo');
+        if (tempUserInfo) {
+            currentUser = JSON.parse(tempUserInfo);
+            localStorage.removeItem('tempUserInfo');
+            try {
+                const apiResponse = await fetch(`${SCRIPT_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}`);
+                const data = await apiResponse.json();
+                if (data.user) {
+                    currentUser = { ...data.user, picture: currentUser.picture, isTeacher: data.user.isTeacher };
+                } else {
+                    currentUser.studentId = null;
+                    currentUser.isTeacher = false;
+                }
+                localStorage.setItem('userInfo', JSON.stringify(currentUser));
+                renderUserInfo(currentUser);
+            } catch (error) {
+                console.error("Login data fetch error:", error);
+                currentUser.studentId = null; 
+                localStorage.setItem('userInfo', JSON.stringify(currentUser));
+                renderUserInfo(currentUser);
             }
-            url.searchParams.set('v', new Date().getTime());
-            
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`API 호출 실패: ${response.statusText}`);
+        }
+
+        let fullUrl = SCRIPT_URL + '?v=' + new Date().getTime();
+        if (currentUser) {
+            fullUrl += `&email=${encodeURIComponent(currentUser.email)}`;
+        }
+        if (mode === 'teacher') {
+            fullUrl += `&mode=teacher`;
+        }
+        
+        try {
+            const response = await fetch(fullUrl);
+            if (!response.ok) throw new Error(`데이터 로드 실패 (${response.status})`);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-            return data;
-        }
-
-        window.onload = function () {
-            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
-            const storedUser = localStorage.getItem('userInfo');
-            if (storedUser) {
-                currentUser = JSON.parse(storedUser);
-                renderUserInfo(currentUser);
-                loadPortal();
-            } else {
-                google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
-                loadPortal();
-            }
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-        };
-
-        async function handleCredentialResponse(response) {
-            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
-            try {
-                const data = await fetchApi(null, { email: userObject.email });
-                if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; } 
-                else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; }
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } catch (error) {
-                console.error("로그인 처리 중 오류:", error);
-                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' };
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } finally {
-                location.reload();
-            }
-        }
-        
-        function loadPortal() {
-            if (isTeacherMode) {
+            
+            if (mode === 'teacher') {
                 document.getElementById('student-portal').style.display = 'none';
                 document.getElementById('teacher-dashboard').style.display = 'block';
-                loadTeacherDashboard();
+                renderTeacherDashboard(data);
             } else {
-                document.getElementById('student-portal').style.display = 'block';
-                document.getElementById('teacher-dashboard').style.display = 'none';
-                loadStudentPortal();
-            }
-        }
-        
-        async function loadStudentPortal() {
-            const sections = ['notices', 'tasks', 'resources'];
-            sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">🔄 데이터를 불러오는 중...</div>`; });
-            try {
-                const params = currentUser ? { email: currentUser.email } : {};
-                const data = await fetchApi(null, params); 
                 submittedTasks = new Set(data.submittedTasks || []);
                 renderWidgets(data.widgets);
                 renderItems('notices', data.notices, '자세히 보기 →', false);
                 renderItems('tasks', data.tasks, '바로 하기 →', true);
                 renderUnsubmitted(data.unsubmitted);
-                
-                const resources = data.resources || [];
-                if (LEAVE_SYSTEM_URL) {
-                    resources.unshift({
-                        icon: '✈️',
-                        title: '외출/조퇴 신청 및 조회',
-                        description: '기존 시스템으로 이동하여 신청 및 결과를 확인합니다.',
-                        link: LEAVE_SYSTEM_URL
-                    });
-                }
-                renderResources(resources);
-            } catch (error) {
-                console.error('Error fetching student data:', error);
-                sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`; });
+                renderResources(data.resources);
+                renderLeaveSection(data.leaveData);
             }
-        }
 
-        async function loadTeacherDashboard() {
-            if (!currentUser || currentUser.role !== 'teacher') {
-                document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">🔒 교사 계정으로 로그인해야 접근할 수 있습니다.</div>`;
-                return;
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            const errorMsg = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})<br>잠시 후 다시 시도해주세요.</div>`;
+            if (mode === 'teacher') {
+                document.getElementById('teacher-dashboard').innerHTML = errorMsg;
+            } else {
+                document.getElementById('notices').innerHTML = errorMsg;
+                document.getElementById('tasks').innerHTML = '';
+                document.getElementById('resources').innerHTML = '';
             }
-            document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>';
-            try {
-                const data = await fetchApi('getTeacherData');
-                renderTeacherDashboard(data);
-            } catch (error) {
-                console.error('Error fetching teacher data:', error);
-                document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function renderUserInfo(user) {
+        document.getElementById('user-display').style.display = 'block';
+        document.getElementById('gsi-container').style.display = 'none';
+        let teacherLink = user.isTeacher ? ` <a href="?mode=teacher" style="color: #ffc107; font-weight: bold;">교사모드</a>` : '';
+        let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님${teacherLink} <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
+        if (user.studentId === null && !user.isTeacher) { userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록)</span>`; }
+        document.getElementById('user-display').innerHTML = userInfoHtml;
+    }
+
+    function renderItems(containerId, items, defaultButtonText, isTask = false) {
+        const container = document.getElementById(containerId);
+        if (!items || items.length === 0) {
+            container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
+            return;
+        }
+        container.innerHTML = items.map(item => {
+            const icon = item.icon ? `${item.icon} ` : '';
+            const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
+            let contentHtml = '';
+            const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : [];
+
+            if (subtasks.length > 0 && item.taskId) {
+                contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => {
+                    const fullTaskId = `${item.taskId}_${subtask}`;
+                    const isCompleted = submittedTasks.has(fullTaskId);
+                    return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`;
+                }).join('') + `</ul>`;
+            } else {
+                const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
+                const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : '';
+                let finalLink = item.link;
+                if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
+                    finalLink = `${SCRIPT_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
+                }
+                const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
+                contentHtml = image + content + linkHtml;
             }
+            return `<div class="notice-item">${title}${contentHtml}</div>`;
+        }).join('');
+    }
+
+    async function toggleSubtask(checkbox, taskId, subtask) {
+        if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; }
+        const isChecked = checkbox.checked;
+        const listItem = checkbox.closest('.subtask-item');
+        listItem.style.opacity = '0.5';
+        const params = new URLSearchParams({ action: 'logSubtask', studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked });
+        try {
+            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            listItem.classList.toggle('completed', isChecked);
+            const fullTaskId = `${taskId}_${subtask}`;
+            if (isChecked) submittedTasks.add(fullTaskId); else submittedTasks.delete(fullTaskId);
+        } catch (error) {
+            alert(`오류: ${error.message}`);
+            checkbox.checked = !isChecked;
+        } finally {
+            listItem.style.opacity = '1';
+        }
+    }
+
+    function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
+    function renderWidgets(widgets) { const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
+    function renderResources(resources) { const container = document.getElementById('resources'); if (!container.classList.contains('resource-grid')) { container.classList.add('resource-grid'); } if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; } container.innerHTML = resources.map(res => ` <a href="${res.link}" class="resource-card" target="_blank"> <div class="resource-title">${res.icon} ${res.title}</div> <div class="resource-desc">${res.description||''}</div> </a> `).join(''); }
+    
+    function renderLeaveSection(leaveData) {
+        if (!currentUser || !currentUser.studentId) return;
+        const container = document.getElementById('leave-section');
+        const today = new Date().toISOString().slice(0, 10);
+        const approvedLeaveForToday = leaveData.requests.find(r => r.status === '승인' && r.date === today);
+
+        let content = `<div class="section-title">✈️ 외출/조퇴 신청</div>`;
+        if (approvedLeaveForToday) {
+            content += `
+                <div class="leave-pass">
+                    <h3>${approvedLeaveForToday.type}증</h3>
+                    <img src="${leaveData.teacherStampUrl}" alt="교사 확인" class="leave-pass-stamp">
+                    <div class="leave-pass-content">
+                        <p><strong>- 성명:</strong> ${currentUser.name}</p>
+                        <p><strong>- 날짜:</strong> ${approvedLeaveForToday.date}</p>
+                        <p><strong>- 종류:</strong> ${approvedLeaveForToday.type}</p>
+                        <p><strong>- 사유:</strong> ${approvedLeaveForToday.reason}</p>
+                    </div>
+                    <p style="margin-top:20px;">위 학생의 ${approvedLeaveForToday.type}를 허가합니다.</p>
+                    <p style="margin-top:10px; font-weight:bold;">${new Date().getFullYear()}년 담임 교사</p>
+                </div>`;
+        } else {
+            content += `<button class="btn" onclick="openModal('leave-request-modal')">외출/조퇴 신청하기</button>`;
         }
         
-        function updateDateTime() {
-            const now = new Date(); 
-            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); 
-            document.getElementById('currentTime').textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); 
-            const hour = now.getHours(); 
-            let period = '방과 후'; 
-            if (hour >= 8 && hour < 9) period = '1교시 준비'; 
-            else if (hour >= 9 && hour < 10) period = '1교시'; 
-            else if (hour >= 10 && hour < 11) period = '2교시';
-            else if (hour >= 11 && hour < 12) period = '3교시'; 
-            else if (hour >= 12 && hour < 13) period = '4교시'; 
-            else if (hour >= 13 && hour < 14) period = '점심시간';
-            else if (hour >= 14 && hour < 15) period = '5교시'; 
-            else if (hour >= 15 && hour < 16) period = '6교시'; 
-            else if (hour >= 16 && hour < 17) period = '7교시'; 
-            document.getElementById('periodIndicator').textContent = period; 
+        if (leaveData.requests.length > 0) {
+            content += `<h4>신청 내역</h4><table id="leave-history-table">
+                <tr><th>신청일</th><th>종류</th><th>희망일자</th><th>상태</th><th>교사 코멘트</th></tr>
+                ${leaveData.requests.map(r => `
+                <tr>
+                    <td>${new Date(r.timestamp).toLocaleDateString('ko-KR')}</td>
+                    <td>${r.type}</td>
+                    <td>${r.date}</td>
+                    <td><span class="status-${r.status}">${r.status}</span></td>
+                    <td>${r.comment || ''}</td>
+                </tr>`).join('')}
+            </table>`;
         }
+        container.innerHTML = content;
+        document.getElementById('leave-date').value = today;
+    }
 
-        // 이하 모든 렌더링 및 이벤트 핸들러 함수는 이전과 동일하며, 오류가 없습니다.
-        function handleLogout() { localStorage.removeItem('userInfo'); currentUser = null; google.accounts.id.disableAutoSelect(); location.reload(); }
-        function renderUserInfo(user) { document.getElementById('user-display').style.display = 'block'; document.getElementById('gsi-container').style.display = 'none'; document.querySelector('.auth-container').style.color = '#333'; let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`; if (user.role === 'guest') { userInfoHtml += ` <span class="user-info" style="color: #ffc107; font-weight: bold;">(미등록)</span>`; } document.getElementById('user-display').innerHTML = userInfoHtml; }
-        function renderItems(containerId, items, defaultButtonText, isTask = false) { const container = document.getElementById(containerId); if (!items || items.length === 0) { container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`; return; } container.innerHTML = items.map(item => { const icon = item.icon ? `${item.icon} ` : ''; const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : ''; let contentHtml = ''; const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : []; if (subtasks.length > 0 && item.taskId) { contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => { const fullTaskId = `${item.taskId}_${subtask}`; const isCompleted = submittedTasks.has(fullTaskId); return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`; }).join('') + `</ul>`; } else { const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : ''; const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : ''; let finalLink = item.link; if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) { const params = new URLSearchParams({ action: 'logClick', studentId: currentUser.studentId, name: encodeURIComponent(currentUser.name), taskId: encodeURIComponent(item.taskId), url: encodeURIComponent(item.link) }); finalLink = `${SCRIPT_URL}?${params.toString()}`; } const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : ''; contentHtml = image + content + linkHtml; } return `<div class="notice-item">${title}${contentHtml}</div>`; }).join(''); }
-        async function toggleSubtask(checkbox, taskId, subtask) { if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; } const isChecked = checkbox.checked; const listItem = checkbox.closest('.subtask-item'); listItem.style.opacity = '0.5'; try { await fetchApi('logSubtask', { studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked }); listItem.classList.toggle('completed', isChecked); const fullTaskId = `${taskId}_${subtask}`; if (isChecked) { submittedTasks.add(fullTaskId); } else { submittedTasks.delete(fullTaskId); } } catch (error) { alert(`오류: ${error.message}`); checkbox.checked = !isChecked; } finally { listItem.style.opacity = '1'; } }
-        function renderUnsubmitted(tasks) { const container = document.getElementById("unsubmitted-container"); if (!currentUser || !tasks || tasks.length === 0) { container.style.display = "none"; return; } container.style.display = "block"; container.innerHTML = `<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t => `<li>${t.icon || "📌"} ${t.title || t.content}</li>`).join("")}</ul></div>`; }
-        function renderWidgets(widgets) { const container = document.getElementById("widgets-container"); if (!widgets || widgets.length === 0) { container.style.display = "none"; return; } container.style.display = "flex"; container.innerHTML = widgets.map(t => { let e = ""; switch (t.type) { case "디데이": const n = new Date(); n.setHours(0, 0, 0, 0); const o = new Date(t.content); o.setHours(0, 0, 0, 0); const i = Math.ceil((o - n) / 86400000); e = i > 0 ? `D-${i}` : i < 0 ? `D+${-i}` : "D-Day"; break; case "급식": e = `<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`; break; case "링크": e = `<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`; break; default: e = t.content; break; } return `<div class="widget"><div class="widget-title">${t.title}</div>${t.type !== "급식" ? `<div class="widget-content">${e}</div>` : e}</div>`; }).join(""); }
-        function renderResources(resources) { const container = document.getElementById('resources'); container.classList.add('resource-grid'); if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; } container.innerHTML = resources.map(res => { return `<a href="${res.link}" class="resource-card" target="_blank"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc">${res.description}</div></a>`; }).join(''); }
-        function renderTeacherDashboard(data) { const container = document.getElementById('teacher-dashboard-container'); const managementLinks = data.dashboard.filter(item => item.type === '관리'); const workLinks = data.dashboard.filter(item => item.type === '업무'); container.innerHTML = `<div class="section"><div class="section-title">🚀 새 구글폼 과제 자동 생성</div><div class="dashboard-card"><input type="text" id="new-form-title" class="form-creator-input" placeholder="새 과제 제목을 입력하세요"><button class="form-creator-button" onclick="createNewAssignment()">생성 및 알림 게시</button></div></div><div class="section dashboard-grid"><div><div class="section-title">⚙️ 관리 시스템 바로가기</div><div class="dashboard-card">${managementLinks.map(link => `<a href="${link.url}" target="_blank" class="dashboard-link-item"><strong>${link.title}</strong><br><small>${link.description}</small></a>`).join('')}</div></div><div><div class="section-title">🗂️ 업무용 바로가기</div><div class="dashboard-card">${workLinks.map(link => `<a href="${link.url}" target="_blank" class="dashboard-link-item"><strong>${link.title}</strong><br><small>${link.description}</small></a>`).join('')}</div></div></div>`; }
-        async function createNewAssignment() { const title = document.getElementById('new-form-title').value; if (!title) { alert('과제 제목을 입력해주세요.'); return; } const btn = event.target; btn.disabled = true; btn.textContent = '생성 중...'; try { const result = await fetchApi('createNewForm', { title: title }); alert(`'${result.title}' 과제가 생성되고 학생들에게 공지되었습니다.`); document.getElementById('new-form-title').value = ''; } catch (error) { alert(`과제 생성 중 오류: ${error.message}`); } finally { btn.disabled = false; btn.textContent = '생성 및 알림 게시'; } }
-    </script>
+    function renderTeacherDashboard(data) {
+        // 외출/조퇴 신청 관리
+        const leaveContainer = document.getElementById('teacher-leave-requests');
+        let leaveHtml = `<div class="section-title">✈️ 외출/조퇴 신청 관리 (${data.leaveRequests.length}건)</div>`;
+        if (data.leaveRequests.length > 0) {
+            leaveHtml += `<table>
+                <tr><th>신청시각</th><th>학번</th><th>이름</th><th>종류</th><th>사유</th><th>희망일자</th><th>처리</th></tr>
+                ${data.leaveRequests.map(r => `
+                <tr>
+                    <td>${new Date(r.timestamp).toLocaleString('ko-KR')}</td>
+                    <td>${r.studentId}</td>
+                    <td>${r.name}</td>
+                    <td>${r.type}</td>
+                    <td>${r.reason}</td>
+                    <td>${new Date(r.date).toLocaleDateString('ko-KR')}</td>
+                    <td>
+                        <button class="btn" onclick="updateLeaveStatus(${r.rowNum}, '승인')">승인</button>
+                        <button class="btn btn-secondary" onclick="updateLeaveStatus(${r.rowNum}, '반려')">반려</button>
+                    </td>
+                </tr>`).join('')}
+            </table>`;
+        } else {
+            leaveHtml += `<div class="empty-state">새로운 신청 내역이 없습니다.</div>`;
+        }
+        leaveContainer.innerHTML = leaveHtml;
+
+        // 업무용 링크
+        const linksContainer = document.getElementById('teacher-links');
+        let linksHtml = `<div class="section-title">🔗 업무 바로가기</div>`;
+        linksHtml += `<div class="resource-grid">
+            ${data.links.map(l => `
+            <a href="${l.url}" class="resource-card" target="_blank">
+                <div class="resource-title">${l.type} - ${l.title}</div>
+                <div class="resource-desc">${l.description}</div>
+            </a>`).join('')}
+        </div>`;
+        linksContainer.innerHTML = linksHtml;
+    }
+
+    async function updateLeaveStatus(rowNum, status) {
+        if (!currentUser || !currentUser.isTeacher) { alert('권한이 없습니다.'); return; }
+        let comment = '';
+        if (status === '반려') {
+            comment = prompt('반려 사유를 입력하세요 (선택 사항):');
+            if (comment === null) return; // 사용자가 취소한 경우
+        }
+        showLoading(true);
+        const params = new URLSearchParams({ action: 'updateLeaveStatus', userEmail: currentUser.email, rowNum, status, comment });
+        try {
+            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            alert(result.message);
+            loadData();
+        } catch (error) {
+            alert(`오류: ${error.message}`);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    
+    async function submitLeaveRequest() {
+        if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); return; }
+        const type = document.getElementById('leave-type').value;
+        const date = document.getElementById('leave-date').value;
+        const reason = document.getElementById('leave-reason').value;
+        if (!date || !reason) { alert('희망 일자와 사유를 모두 입력해주세요.'); return; }
+
+        showLoading(true);
+        const params = new URLSearchParams({
+            action: 'submitLeaveRequest', studentId: currentUser.studentId,
+            name: currentUser.name, email: currentUser.email,
+            type, date, reason
+        });
+        
+        try {
+            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+            alert('신청이 완료되었습니다.');
+            closeModal('leave-request-modal');
+            loadData();
+        } catch (error) {
+            alert(`오류가 발생했습니다: ${error.message}`);
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    function updateDateTime() {
+        const now = new Date();
+        const dateString = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const hour = now.getHours();
+        let period = '방과 후';
+        if (hour >= 8 && hour < 9) period = '조회'; else if (hour >= 9 && hour < 10) period = '1교시'; else if (hour >= 10 && hour < 11) period = '2교시'; else if (hour >= 11 && hour < 12) period = '3교시'; else if (hour >= 12 && hour < 13) period = '4교시'; else if (hour >= 13 && hour < 14) period = '점심시간'; else if (hour >= 14 && hour < 15) period = '5교시'; else if (hour >= 15 && hour < 16) period = '6교시'; else if (hour >= 16 && hour < 17) period = '7교시';
+
+        if (document.getElementById('dateDisplay')) document.getElementById('dateDisplay').textContent = dateString;
+        if (document.getElementById('teacherDateDisplay')) document.getElementById('teacherDateDisplay').textContent = dateString;
+        if (document.getElementById('currentTime')) document.getElementById('currentTime').textContent = timeString;
+        if (document.getElementById('periodIndicator')) document.getElementById('periodIndicator').textContent = period;
+    }
+</script>
 </body>
 </html>
