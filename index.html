@@ -112,12 +112,15 @@
                 <div id="unsubmitted-container" style="display: none;"></div>
                 <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
                 <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
-                <div class="section">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h2 class="section-title" style="margin: 0; border: none; padding: 0;">✈️ 외출/조퇴 신청</h2>
-                        <button class="leave-request-btn" id="openLeaveModal">새 신청하기</button>
+                <!-- [수정] 로그인한 학생에게만 보이도록 섹션을 div로 감싸고 id 부여 -->
+                <div id="leave-section" style="display: none;">
+                    <div class="section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h2 class="section-title" style="margin: 0; border: none; padding: 0;">✈️ 외출/조퇴 신청</h2>
+                            <button class="leave-request-btn" id="openLeaveModal">새 신청하기</button>
+                        </div>
+                        <div id="leave-requests"></div>
                     </div>
-                    <div id="leave-requests"></div>
                 </div>
                 <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
             </div>
@@ -142,9 +145,9 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoaiFNNuGsappbytIxCMQR-f_p3xaMMMKEMQmi5ap1mkK-dtW2u0tdZLcrJ8LEfzms/exec'; // 반드시 본인의 URL로 교체!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyk-QjSPEWhzv3X3G3j_2PyVPnB6qqvlsvFFzHYCq8C0vWZZBbI9G4zLSe3pzWcEHxA/exec'; // 반드시 본인의 URL로 교체!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
-    const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq';
+    const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq'; // [수정] 이미지 직접 접근 URL로 변경
 
     let currentUser = null;
     let submittedTasks = new Set();
@@ -218,7 +221,6 @@
         if (isTeacherMode) {
             studentPortal.style.display = 'none';
             teacherDashboard.style.display = 'block';
-            // [수정된 부분] 전체를 지우는 대신, 각 섹션에 로딩 메시지를 표시합니다.
             document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
@@ -236,11 +238,10 @@
             const data = await response.json();
             
             if (data.error) {
-                // 로그인 실패 시, 전체 대시보드를 에러 메시지로 덮어씁니다.
                 if (isTeacherMode) teacherDashboard.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
                 else studentPortal.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
 
-                if(data.user) { // 사용자 정보가 넘어온 경우
+                if(data.user) { 
                   currentUser.name = data.user.name; 
                   renderUserInfo(currentUser);
                 }
@@ -254,6 +255,13 @@
             if (isTeacherMode) {
                 renderTeacherDashboard(data);
             } else {
+                // [수정] 로그인한 학생(학번이 있는 경우)에게만 외출/조퇴 섹션을 보여줌
+                if (data.user && data.user.studentId) {
+                    document.getElementById('leave-section').style.display = 'block';
+                } else {
+                    document.getElementById('leave-section').style.display = 'none';
+                }
+                
                 submittedTasks = new Set(data.submittedTasks || []);
                 renderWidgets(data.widgets);
                 renderItems('notices', data.notices, '자세히 보기 →');
@@ -266,7 +274,6 @@
         } catch (error) {
             console.error('Error fetching data:', error);
             const targetEl = isTeacherMode ? teacherDashboard : document.getElementById('notices');
-            // 에러 발생 시, 전체 대시보드를 에러 메시지로 덮어씁니다.
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
         }
     }
