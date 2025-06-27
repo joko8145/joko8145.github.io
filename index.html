@@ -53,7 +53,6 @@
         .teacher-card-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
         .teacher-card p { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
         .teacher-card-button { display: block; text-align: center; margin-top: auto; }
-        .form-creator { padding-right: 20px !important; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
@@ -439,7 +438,7 @@
         const container = document.getElementById('resources');
         if (!container.classList.contains('resource-grid')) container.classList.add('resource-grid');
         if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; }
-        container.innerHTML = resources.map(res => `<a href="${res.link}" class="resource-card" target="_blank"><div class="resource-title">${res.icon} ${res.title}</div><div class="resource-desc">${res.description||""}</div></a>`).join('');
+        container.innerHTML = resources.map(res => `<a href="${res.link}" target="_blank" class="teacher-card resource-card"><div class="teacher-card-title">${res.icon} ${res.title}</div><p>${res.description||""}</p></a>`).join('');
     }
 
     function renderLeaveRequests(requests) {
@@ -504,7 +503,7 @@
                 </div>
             `).join('');
         } else { routineContainer.style.display = 'none'; }
-
+        
         const tabsContainer = document.getElementById('teacher-tabs-container');
         const linksContainer = document.getElementById('teacher-links');
         const accordionContainer = document.getElementById('accordion-container');
