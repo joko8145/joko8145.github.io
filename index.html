@@ -47,11 +47,11 @@
         .leave-history-item:first-child { padding-top: 0; }
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
-        .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
-        .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
-        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
+        .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .teacher-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
+        .teacher-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .teacher-card-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
+        .teacher-card p { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
@@ -117,15 +117,15 @@
             <div id="teacher-dashboard" style="display: none;">
                 <div id="routine-tasks-section" class="section"></div>
                 <div id="teacher-admin-section"></div>
-                <div class="section"><div class="section-title"><span class="icon">📝</span>과제별 제출 현황</div><div id="assignment-status"></div></div>
-                <div class="section"><div class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
+                <div class="section" id="assignment-section"><div class="section-title"><span class="icon">📝</span>과제별 제출 현황</div><div id="assignment-status"></div></div>
+                <div class="section" id="pending-leave-section"><div class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
                 <div id="teacher-links"></div>
             </div>
         </div>
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0bRa9ZdiA-EZpUO5QvjzozV3xPG5jZ_reooPeEANuqeY1_OvzoLm306oqXCYNBfE/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdQuAq2nW8MHcdx1x5tPWhfv5uPkD-8qY6zU5piXh1GZrVi1SnN6OBapFr03kt8pQq/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -416,8 +416,8 @@
     }
     
     function renderUnsubmitted(tasks) {
-        const container = document.getElementById("unsubmitted-container");
-        if(!currentUser || !currentUser.studentId || !tasks || tasks.length === 0) {
+        const container = document.getElementById('unsubmitted-container');
+        if(!currentUser||!currentUser.studentId||!tasks||tasks.length===0) {
             container.style.display="none";
             return;
         }
@@ -426,7 +426,7 @@
     }
 
     function renderWidgets(widgets) {
-        const container = document.getElementById("widgets-container");
+        const container = document.getElementById('widgets-container');
         if(!widgets||widgets.length===0)return void(container.style.display="none");
         container.style.display="flex";
         container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=0===i?"D-Day":i>0?`D-${i}`:`D+${-i}`;break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g,"<br>")}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("");
@@ -520,17 +520,13 @@
                         <div class="section-title"><span class="icon">🗂️</span>${group}</div>
                         <div class="teacher-dashboard-grid">
                             ${groupedItems[group].map(item => `
-                                <div class="teacher-card" id="${item.id}">
-                                    <button class="teacher-complete-btn" title="완료 처리" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✔</button>
+                                <a href="${item.url || '#'}" target="_blank" class="teacher-card">
                                     <div class="teacher-card-title">${item.title}</div>
                                     <p>${item.description || ' '}</p>
-                                    ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
-                                </div>
-                            `).join('')}
+                                </a>`).join('')}
                         </div>
                     </div>`;
         }).join('');
-
 
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
