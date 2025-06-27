@@ -27,7 +27,8 @@
         .notice-title { font-size: 1.2em; font-weight: bold; margin-bottom: 8px; }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
         .notice-content { font-size: 1.1em; line-height: 1.6; color: var(--text-light); }
-        .notice-link { display: inline-block; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; }
+        .notice-link, .certificate-link { display: inline-block; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; }
+        .certificate-link { background: #17a2b8; margin-left: 10px; }
         .unsubmitted-section { background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; }
         .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; font-size: 1.2em; }
         .unsubmitted-list { list-style: none; padding-left: 5px; } .unsubmitted-list li { margin-bottom: 8px; }
@@ -55,8 +56,10 @@
         .teacher-dashboard-item { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .teacher-dashboard-item a { font-weight: bold; font-size: 1.1em; color: var(--primary-color); }
         .teacher-dashboard-item p { margin-top: 5px; color: var(--text-light); }
-        .form-creator input { width: calc(100% - 100px); padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-right: 10px; }
-        .form-creator button { padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .form-creator input, .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
+        .form-creator { display: flex; }
+        .form-creator input { margin-top: 0; margin-right: 10px; }
+        .form-creator button { padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
         .leave-actions button { padding: 5px 10px; margin-left: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
         .approve-btn { background: #28a745; } .reject-btn { background: #dc3545; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
@@ -75,44 +78,22 @@
         <div id="modal-content">
             <h2>외출/조퇴 신청</h2>
             <form id="leave-request-form">
-                <div>
-                    <label for="leave-type">신청 종류</label>
-                    <select id="leave-type" name="type" required>
-                        <option value="외출">외출</option>
-                        <option value="조퇴">조퇴</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="leave-date">희망 일자</label>
-                    <input type="date" id="leave-date" name="date" required>
-                </div>
-                <div>
-                    <label for="leave-reason">사유</label>
-                    <textarea id="leave-reason" name="reason" rows="3" required></textarea>
-                </div>
+                <div><label for="leave-type">신청 종류</label><select id="leave-type" name="type" required><option value="외출">외출</option><option value="조퇴">조퇴</option></select></div>
+                <div><label for="leave-date">희망 일자</label><input type="date" id="leave-date" name="date" required></div>
+                <div><label for="leave-reason">사유</label><textarea id="leave-reason" name="reason" rows="3" required></textarea></div>
             </form>
-            <div id="modal-buttons">
-                <button id="closeModal">취소</button>
-                <button id="submitLeave">제출</button>
-            </div>
+            <div id="modal-buttons"><button id="closeModal">취소</button><button id="submitLeave">제출</button></div>
         </div>
     </div>
     <div class="container">
-        <div class="auth-container">
-            <div id="user-display" style="display: none;"></div>
-            <div id="gsi-container"></div>
-        </div>
-        <div class="header">
-            <h1 id="portal-title">📢 오늘의 알림</h1>
-            <div class="date-display" id="dateDisplay"></div>
-        </div>
+        <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
+        <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
         <div class="content">
             <div id="student-portal">
                 <div id="widgets-container"></div>
                 <div id="unsubmitted-container" style="display: none;"></div>
                 <div class="section"><div class="section-title">📋 중요 공지사항</div><div id="notices"></div></div>
                 <div class="section"><div class="section-title">✅ 오늘 할 일</div><div id="tasks"></div></div>
-                <!-- [수정] 로그인한 학생에게만 보이도록 섹션을 div로 감싸고 id 부여 -->
                 <div id="leave-section" style="display: none;">
                     <div class="section">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -125,29 +106,17 @@
                 <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
             </div>
             <div id="teacher-dashboard" style="display: none;">
-                <div class="section">
-                    <div class="section-title">🚀 새 구글폼 과제 자동 생성</div>
-                    <div class="teacher-dashboard-item form-creator">
-                        <input type="text" id="new-form-title" placeholder="새 과제 제목을 입력하세요">
-                        <button onclick="createFormAssignment()">생성</button>
-                    </div>
-                </div>
-                <div class="section">
-                    <div class="section-title">⏰ 외출/조퇴 신청 확인</div>
-                    <div id="pending-leave-requests"></div>
-                </div>
-                <div class="section">
-                    <div class="section-title">🧰 관리 시스템 및 업무</div>
-                    <div id="teacher-links"></div>
-                </div>
+                <div class="section"><div class="section-title">🚀 새 구글폼 과제 자동 생성</div><div class="teacher-dashboard-item form-creator"><input type="text" id="new-form-title" placeholder="새 과제 제목을 입력하세요"><button onclick="createFormAssignment()">생성</button></div></div>
+                <div class="section"><div class="section-title">⏰ 외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
+                <div class="section"><div class="section-title">🧰 관리 시스템 및 업무</div><div id="teacher-links"></div></div>
             </div>
         </div>
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyk-QjSPEWhzv3X3G3j_2PyVPnB6qqvlsvFFzHYCq8C0vWZZBbI9G4zLSe3pzWcEHxA/exec'; // 반드시 본인의 URL로 교체!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw64LoVN0XuWHFCRYSli9UcykGTfBWH189pqasaczjhZnqPftf6HToAa-pnBsQO4Td7/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
-    const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq'; // [수정] 이미지 직접 접근 URL로 변경
+    const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq';
 
     let currentUser = null;
     let submittedTasks = new Set();
@@ -241,7 +210,7 @@
                 if (isTeacherMode) teacherDashboard.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
                 else studentPortal.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
 
-                if(data.user) { 
+                if(data.user) {
                   currentUser.name = data.user.name; 
                   renderUserInfo(currentUser);
                 }
@@ -255,7 +224,6 @@
             if (isTeacherMode) {
                 renderTeacherDashboard(data);
             } else {
-                // [수정] 로그인한 학생(학번이 있는 경우)에게만 외출/조퇴 섹션을 보여줌
                 if (data.user && data.user.studentId) {
                     document.getElementById('leave-section').style.display = 'block';
                 } else {
@@ -351,6 +319,9 @@
             const statusClass = statusMap[req.상태] || '';
             const commentHtml = req.교사코멘트 ? `<div class="leave-comment"><strong>교사 의견:</strong> ${req.교사코멘트}</div>` : '';
             const approvedImg = req.상태 === '승인' ? `<img src="${TEACHER_STAMP_URL}" style="width:50px; height:50px; position:absolute; right:10px; top:10px; opacity:0.7;">` : '';
+            // [수정] 승인된 경우 확인증 출력 버튼 추가
+            const certificateButton = req.상태 === '승인' ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="certificate-link">확인증 출력</a>` : '';
+
             return `<div class="notice-item" style="position:relative;">
                 ${approvedImg}
                 <div class="leave-history-item">
@@ -358,7 +329,10 @@
                         <strong>${req.신청종류}</strong> (${new Date(req.희망일자).toLocaleDateString()})<br>
                         <small>사유: ${req.사유}</small>
                     </div>
-                    <span class="leave-status ${statusClass}">${req.상태}</span>
+                    <div>
+                        <span class="leave-status ${statusClass}">${req.상태}</span>
+                        ${certificateButton}
+                    </div>
                 </div>
                 ${commentHtml}
             </div>`;
@@ -376,7 +350,7 @@
             name: encodeURIComponent(currentUser.name),
             email: encodeURIComponent(currentUser.email),
             type: formData.get('type'),
-            reason: encodeURIComponent(formData.get('reason')),
+            reason: encodeURIComponent(formData.get('reason')), // [중요] 사유를 인코딩하여 전송
             date: formData.get('date')
         });
 
@@ -395,13 +369,23 @@
     }
     
     function renderTeacherDashboard(data) {
-        document.getElementById('teacher-links').innerHTML = data.dashboardItems.map(item => `
-            <div class="teacher-dashboard-item">
-                <a href="${item.url}" target="_blank">${item.type}: ${item.title}</a>
-                <p>${item.description}</p>
-            </div>
-        `).join('');
+        // [수정] 관리 시스템을 그룹별로 렌더링
+        const linksContainer = document.getElementById('teacher-links');
+        const typeIcons = { '학급': '🏫', '업무': '💼', '수업': '📖', '기타': '🔗' };
+        let linksHtml = '';
+        for (const type in data.dashboardItems) {
+            linksHtml += `<div class="section"><div class="section-title">${typeIcons[type] || '🔗'} ${type}</div>`;
+            linksHtml += data.dashboardItems[type].map(item => `
+                <div class="teacher-dashboard-item">
+                    <a href="${item.url}" target="_blank">${item.title}</a>
+                    <p>${item.description}</p>
+                </div>
+            `).join('');
+            linksHtml += `</div>`;
+        }
+        linksContainer.innerHTML = linksHtml || '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>';
 
+        // [수정] 신청 확인 UI 개선 (코멘트 입력란 추가)
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
             pendingContainer.innerHTML = '<div class="empty-state">확인 대기 중인 신청이 없습니다.</div>';
@@ -411,21 +395,21 @@
             <div class="teacher-dashboard-item">
                 <strong>${req.이름} (${req.학번})</strong> - ${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})
                 <p>사유: ${req.사유}</p>
-                <div class="leave-actions">
-                    <button class="approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인')">승인</button>
-                    <button class="reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려')">반려</button>
+                <input type="text" id="comment-${req.rowNum}" class="leave-comment-input" placeholder="코멘트 (선택 사항)">
+                <div class="leave-actions" style="text-align: right; margin-top: 10px;">
+                    <button class="approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'comment-${req.rowNum}')">승인</button>
+                    <button class="reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'comment-${req.rowNum}')">반려</button>
                 </div>
             </div>
         `).join('');
     }
 
-    async function updateLeaveStatus(rowNum, status) {
-        let comment = '';
-        if (status === '반려') {
-            comment = prompt('반려 사유를 입력하세요 (선택 사항):');
-            if (comment === null) return; // 사용자가 취소한 경우
-        }
-        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: encodeURIComponent(comment || '') });
+    async function updateLeaveStatus(rowNum, status, commentInputId) {
+        const commentEl = document.getElementById(commentInputId);
+        const comment = commentEl ? commentEl.value : '';
+
+        // [수정] 프롬프트 대신 입력 필드 값 사용
+        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: encodeURIComponent(comment) });
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
