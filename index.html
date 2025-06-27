@@ -114,9 +114,8 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5dzc6nixLsY1f8jelC9I3K8LkKdPgIRXXoodoJzuxy_ykEqhZetIGDvrIN3u19jVQ/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz93vj08c3N1prlVyho6d5KPugLKRWXLcRE2P-KKGMsuXZ8tDof8McdaqV9bRxEjqYE/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
-    const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq';
 
     let currentUser = null;
     let submittedTasks = new Set();
@@ -318,11 +317,10 @@
             const statusMap = { '신청': 'status-pending', '승인': 'status-approved', '반려': 'status-rejected' };
             const statusClass = statusMap[req.상태] || '';
             const commentHtml = req.교사코멘트 ? `<div class="leave-comment"><strong>교사 의견:</strong> ${req.교사코멘트}</div>` : '';
-            const approvedImg = req.상태 === '승인' ? `<img src="${TEACHER_STAMP_URL}" style="width:50px; height:50px; position:absolute; right:10px; top:10px; opacity:0.7;">` : '';
+            // [수정] 이미지 도장 제거
             const certificateButton = req.상태 === '승인' ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="certificate-link">확인증 출력</a>` : '';
 
-            return `<div class="notice-item" style="position:relative;">
-                ${approvedImg}
+            return `<div class="notice-item">
                 <div class="leave-history-item">
                     <div>
                         <strong>${req.신청종류}</strong> (${new Date(req.희망일자).toLocaleDateString()})<br>
@@ -371,17 +369,25 @@
         const linksContainer = document.getElementById('teacher-links');
         const typeIcons = { '학급': '🏫', '업무': '💼', '수업': '📖', '기타': '🔗' };
         let linksHtml = '';
+        linksContainer.innerHTML = ''; // 컨테이너 초기화
         for (const type in data.dashboardItems) {
-            linksHtml += `<div class="section"><div class="section-title">${typeIcons[type] || '🔗'} ${type}</div>`;
-            linksHtml += data.dashboardItems[type].map(item => `
+            const groupSection = document.createElement('div');
+            groupSection.className = 'section';
+            
+            let groupHtml = `<div class="section-title">${typeIcons[type] || '🔗'} ${type}</div>`;
+            groupHtml += data.dashboardItems[type].map(item => `
                 <div class="teacher-dashboard-item">
                     <a href="${item.url}" target="_blank">${item.title}</a>
                     <p>${item.description}</p>
                 </div>
             `).join('');
-            linksHtml += `</div>`;
+            groupSection.innerHTML = groupHtml;
+            linksContainer.appendChild(groupSection);
         }
-        linksContainer.innerHTML = linksHtml || '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>';
+        if (!linksContainer.hasChildNodes()) {
+             linksContainer.innerHTML = '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>';
+        }
+
 
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
@@ -404,8 +410,6 @@
     async function updateLeaveStatus(rowNum, status, commentInputId) {
         const commentEl = document.getElementById(commentInputId);
         const comment = commentEl ? commentEl.value : '';
-
-        // [수정] 코멘트를 인코딩하지 않고 전송
         const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: comment });
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
