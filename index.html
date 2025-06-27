@@ -48,11 +48,10 @@
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
         .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; text-decoration: none; }
+        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
         .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
         .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
         .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
-        .teacher-card-button { display: block; text-align: center; margin-top: auto; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
@@ -556,12 +555,10 @@
 
                 if (normalItems.length > 0) {
                   cardsHtml = `<div class="teacher-dashboard-grid" style="margin-top:20px;">` + normalItems.map(item => `
-                      <div class="teacher-card" id="${item.id}">
-                          <button class="teacher-complete-btn" title="목록에서 숨기기" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✖</button>
+                      <a href="${item.url || '#'}" target="_blank" class="teacher-card" id="${item.id}">
                           <div class="teacher-card-title">${item.title}</div>
                           <p>${item.description || ' '}</p>
-                          ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
-                      </div>
+                      </a>
                   `).join('') + `</div>`;
                 }
 
