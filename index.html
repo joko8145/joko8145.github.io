@@ -48,23 +48,12 @@
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
         .leave-request-buttons { display: flex; gap: 10px; }
-        /* [수정] 버튼 스타일 변경 */
         .leave-request-btn {
-            flex: 1;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            background: transparent;
-            border: 2px solid var(--secondary-color);
-            color: var(--secondary-color);
+            flex: 1; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;
+            background: transparent; border: 2px solid var(--secondary-color); color: var(--secondary-color);
             transition: all 0.2s ease-in-out;
         }
-        .leave-request-btn:hover {
-            background: var(--secondary-color);
-            color: white;
-        }
+        .leave-request-btn:hover { background: var(--secondary-color); color: white; }
         .leave-status { padding: 3px 8px; border-radius: 5px; color: white; font-size: 0.8em; }
         .status-pending { background-color: #ffc107; } .status-approved { background-color: #28a745; } .status-rejected { background-color: #dc3545; }
         .leave-history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
@@ -119,7 +108,6 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h2 class="section-title" style="margin: 0; border: none; padding: 0;">✈️ 외출/조퇴 신청</h2>
                             <div class="leave-request-buttons">
-                                <!-- [수정] 버튼 텍스트 단순화 -->
                                 <button class="leave-request-btn" id="request-go-out">외출</button>
                                 <button class="leave-request-btn" id="request-early-leave">조퇴</button>
                             </div>
@@ -138,7 +126,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKLaN8Qyw2DR1fKJhDB60tpRqjHjRe0FoFkgtRqsskPJu_PUHgYkvfaVIL6864cOul/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjK4a_d0HcaDLS7FNmMQ7JlgQ8zbo8v6aKl5rx6wGCfPOALG-o2T9tJ-j5KBaFEWU0/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -223,7 +211,7 @@
         if (isTeacherMode) {
             studentPortal.style.display = 'none';
             teacherDashboard.style.display = 'block';
-            document.getElementById('teacher-admin-section').innerHTML = ''; // 초기화
+            document.getElementById('teacher-admin-section').innerHTML = '';
             document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
@@ -280,6 +268,7 @@
         }
     }
     
+    // [수정] 과제 링크 생성 시, 미리 채워진 링크 템플릿을 동적으로 변환
     function renderItems(containerId, items, defaultButtonText, isTask = false) {
         const container = document.getElementById(containerId);
         if (!items || items.length === 0) {
@@ -304,10 +293,23 @@
                 const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
                 const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : '';
                 let finalLink = item.link;
-                if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
-                    finalLink = `${SCRIPT_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
+
+                // 미리 채워진 링크 처리 로직
+                if (isTask && finalLink && finalLink.includes('__STUDENT_ID__')) {
+                    if (currentUser && currentUser.studentId) {
+                        finalLink = finalLink
+                            .replace('__STUDENT_ID__', currentUser.studentId)
+                            .replace('__STUDENT_NAME__', encodeURIComponent(currentUser.name));
+                    } else {
+                        finalLink = null; // 로그인 안 한 학생에게는 링크 안보여줌
+                    }
                 }
-                const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
+                
+                // 제출 기록용 링크 처리
+                if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId && finalLink) {
+                    finalLink = `${SCRIPT_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(finalLink)}`;
+                }
+                const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${(isTask && item.recordable) ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
                 contentHtml = image + content + linkHtml;
             }
             return `<div class="notice-item">${title}${contentHtml}</div>`;
@@ -487,6 +489,7 @@
                 alert(result.message);
                 window.open(result.url, '_blank');
                 document.getElementById('new-form-title').value = '';
+                loadData(); // 대시보드를 새로고침하여 새 과제를 즉시 확인
             } else { throw new Error(result.message); }
         } catch(error) { alert('폼 생성 중 오류 발생: ' + error.message); }
     }
