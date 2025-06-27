@@ -108,13 +108,13 @@
             <div id="teacher-dashboard" style="display: none;">
                 <div class="section"><div class="section-title">🚀 새 구글폼 과제 자동 생성</div><div class="teacher-dashboard-item form-creator"><input type="text" id="new-form-title" placeholder="새 과제 제목을 입력하세요"><button onclick="createFormAssignment()">생성</button></div></div>
                 <div class="section"><div class="section-title">⏰ 외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
-                <div class="section"><div class="section-title">🧰 관리 시스템 및 업무</div><div id="teacher-links"></div></div>
+                <div id="teacher-links"></div>
             </div>
         </div>
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw64LoVN0XuWHFCRYSli9UcykGTfBWH189pqasaczjhZnqPftf6HToAa-pnBsQO4Td7/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5dzc6nixLsY1f8jelC9I3K8LkKdPgIRXXoodoJzuxy_ykEqhZetIGDvrIN3u19jVQ/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq';
 
@@ -319,7 +319,6 @@
             const statusClass = statusMap[req.상태] || '';
             const commentHtml = req.교사코멘트 ? `<div class="leave-comment"><strong>교사 의견:</strong> ${req.교사코멘트}</div>` : '';
             const approvedImg = req.상태 === '승인' ? `<img src="${TEACHER_STAMP_URL}" style="width:50px; height:50px; position:absolute; right:10px; top:10px; opacity:0.7;">` : '';
-            // [수정] 승인된 경우 확인증 출력 버튼 추가
             const certificateButton = req.상태 === '승인' ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="certificate-link">확인증 출력</a>` : '';
 
             return `<div class="notice-item" style="position:relative;">
@@ -347,10 +346,10 @@
         const params = new URLSearchParams({
             action: 'submitLeaveRequest',
             studentId: currentUser.studentId,
-            name: encodeURIComponent(currentUser.name),
-            email: encodeURIComponent(currentUser.email),
+            name: currentUser.name,
+            email: currentUser.email,
             type: formData.get('type'),
-            reason: encodeURIComponent(formData.get('reason')), // [중요] 사유를 인코딩하여 전송
+            reason: formData.get('reason'),
             date: formData.get('date')
         });
 
@@ -369,7 +368,6 @@
     }
     
     function renderTeacherDashboard(data) {
-        // [수정] 관리 시스템을 그룹별로 렌더링
         const linksContainer = document.getElementById('teacher-links');
         const typeIcons = { '학급': '🏫', '업무': '💼', '수업': '📖', '기타': '🔗' };
         let linksHtml = '';
@@ -385,7 +383,6 @@
         }
         linksContainer.innerHTML = linksHtml || '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>';
 
-        // [수정] 신청 확인 UI 개선 (코멘트 입력란 추가)
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
             pendingContainer.innerHTML = '<div class="empty-state">확인 대기 중인 신청이 없습니다.</div>';
@@ -408,8 +405,8 @@
         const commentEl = document.getElementById(commentInputId);
         const comment = commentEl ? commentEl.value : '';
 
-        // [수정] 프롬프트 대신 입력 필드 값 사용
-        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: encodeURIComponent(comment) });
+        // [수정] 코멘트를 인코딩하지 않고 전송
+        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: comment });
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
@@ -423,7 +420,7 @@
     async function createFormAssignment() {
         const title = document.getElementById('new-form-title').value;
         if (!title) { alert('과제 제목을 입력해주세요.'); return; }
-        const params = new URLSearchParams({ action: 'createFormAssignment', title: encodeURIComponent(title) });
+        const params = new URLSearchParams({ action: 'createFormAssignment', title: title });
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
