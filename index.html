@@ -50,8 +50,9 @@
         .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
         .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
-        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
+        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
+        .teacher-card-title a { text-decoration: none; color: inherit; } .teacher-card-title a:hover { text-decoration: underline; }
+        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
@@ -440,7 +441,7 @@
     function renderResources(resources) {
         const container = document.getElementById('resources');
         if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; }
-        container.innerHTML = resources.map(res => `<a href="${res.link}" target="_blank" class="teacher-card resource-card"><div class="teacher-card-title">${res.icon || '🔗'} ${res.title}</div><p>${res.description||" "}</p></a>`).join('');
+        container.innerHTML = resources.map(res => `<a href="${res.link}" target="_blank" class="resource-card"><div class="resource-title">${res.icon || '🔗'} ${res.title}</div><p>${res.description||" "}</p></a>`).join('');
     }
 
     function renderLeaveRequests(requests) {
