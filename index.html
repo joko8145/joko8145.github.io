@@ -250,12 +250,16 @@
             teacherDashboard.style.display = 'block';
             document.getElementById('routine-tasks-section').innerHTML = '';
             document.getElementById('teacher-admin-section').innerHTML = '';
+            
             const assignmentSection = document.getElementById('assignment-section');
-            if(assignmentSection) assignmentSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            if (assignmentSection) assignmentSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            
             const pendingLeaveSection = document.getElementById('pending-leave-section');
-            if(pendingLeaveSection) pendingLeaveSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            if (pendingLeaveSection) pendingLeaveSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+
             const teacherLinks = document.getElementById('teacher-links');
-            if(teacherLinks) teacherLinks.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            if (teacherLinks) teacherLinks.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+
         } else {
             studentPortal.style.display = 'block';
             teacherDashboard.style.display = 'none';
@@ -364,9 +368,6 @@
             let completeButton = '';
             if (item.type !== '공지' && currentUser && currentUser.studentId) {
                  completeButton = `<button class="complete-btn" title="확인/완료" onclick="completeItem('${item.id}')">✔</button>`;
-            }
-            if (isTeacherMode && item.type === '공지') {
-                completeButton = `<button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[데이터_알림]')">✖</button>`;
             }
 
             const icon = item.icon ? `<span class="icon">${item.icon}</span>` : '';
