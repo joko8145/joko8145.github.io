@@ -8,10 +8,9 @@
     <style>
         /* CSS는 변경 없음 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         a { text-decoration: none; color: inherit; }
-        button, input, select, textarea { font-family: inherit; font-size: 1em; }
-        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.98); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
+        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
         .auth-container { padding: 10px 30px; text-align: right; background-color: rgba(0,0,0,0.1); min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
         .user-info { color: #333; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
         .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
@@ -21,9 +20,6 @@
         .header h1 { font-size: 2.5em; margin-bottom: 10px; }
         .date-display { font-size: 1.2em; opacity: 0.9; }
         .content { padding: 30px; }
-        .section { margin-bottom: 30px; }
-        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
-        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; background-color: #f8f9fa; border-radius: 12px; }
         .time-indicator { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
         .current-time { font-weight: bold; color: #667eea; }
         .period-indicator { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 5px 12px; border-radius: 15px; }
@@ -37,18 +33,21 @@
         .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; font-size: 1.2em; }
         .unsubmitted-list { list-style: none; padding-left: 5px; }
         .unsubmitted-list li { margin-bottom: 8px; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
         .notice-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid #667eea; }
-        .notice-title { font-size: 1.2em; font-weight: bold; margin-bottom: 8px; }
+        .notice-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 8px; }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
-        .notice-content { font-size: 1.1em; line-height: 1.6; }
-        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; font-weight: bold; }
+        .notice-content { font-size: 1.1em; line-height: 1.6; color: #555; }
+        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; }
+        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; }
         .subtask-list { list-style: none; margin-top: 15px; padding-left: 5px; }
         .subtask-item { display: flex; align-items: center; margin-bottom: 10px; }
         .subtask-checkbox { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; accent-color: #764ba2; flex-shrink: 0; }
-        .subtask-label { flex-grow: 1; }
+        .subtask-label { flex-grow: 1; color: #333; }
         .subtask-item.completed .subtask-label { text-decoration: line-through; color: #aaa; }
         .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; display: block; transition: all 0.2s ease-in-out; }
+        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; text-decoration: none; color: inherit; display: block; transition: all 0.2s ease-in-out; }
         .resource-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
@@ -75,36 +74,52 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtXSPsJOvbyrbivcdx9k8QXHoXDQASZOYQQ80y_yztl1u7CMCyoqLWtblD21i9K640/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCNYtXSqhO4Accl7Oi6grWFJ7BisgzY5Y1iuO7V94A2nzdu8wVg9Xg-ESTB0yJ950/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
         const urlParams = new URLSearchParams(window.location.search);
         const isTeacherMode = urlParams.get('mode') === 'teacher';
-
-        // 학생/익명 API는 GET으로, 교사 API는 google.script.run으로 호출
-        async function fetchApi(action, params = {}) {
+        
+        // 학생/익명 API는 JSONP로, 교사 API는 google.script.run으로 호출
+        function fetchApi(action, params = {}) {
             const teacherActions = ['getTeacherData', 'createNewForm'];
+            
             if (teacherActions.includes(action)) {
                 return new Promise((resolve, reject) => {
                     google.script.run
-                        .withSuccessHandler(response => resolve(response))
+                        .withSuccessHandler(response => {
+                            if(response.error) reject(new Error(response.error));
+                            else resolve(response);
+                        })
                         .withFailureHandler(error => reject(new Error(error.message)))
                         [action](params);
                 });
             } else {
-                const url = new URL(SCRIPT_URL);
-                if (action) url.searchParams.set('action', action);
-                for (const key in params) {
-                    const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
-                    url.searchParams.set(key, value);
-                }
-                url.searchParams.set('v', new Date().getTime());
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`API 호출 실패: ${response.statusText}`);
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                return data;
+                return new Promise((resolve, reject) => {
+                    const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        if (data.error) {
+                            reject(new Error(data.error));
+                        } else {
+                            resolve(data);
+                        }
+                    };
+                    const script = document.createElement('script');
+                    const url = new URL(SCRIPT_URL);
+                    if (action) url.searchParams.set('action', action);
+                    for (const key in params) {
+                        const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
+                        url.searchParams.set(key, value);
+                    }
+                    url.searchParams.set('callback', callbackName);
+                    url.searchParams.set('v', new Date().getTime());
+                    script.src = url.toString();
+                    script.onerror = () => reject(new Error('JSONP 요청 실패'));
+                    document.body.appendChild(script);
+                });
             }
         }
 
@@ -176,7 +191,6 @@
             }
             document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>';
             try {
-                // 교사 데이터는 google.script.run을 통해 호출
                 const data = await fetchApi('getTeacherData');
                 renderTeacherDashboard(data);
             } catch (error) {
@@ -184,7 +198,7 @@
                 document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
             }
         }
-        
+
         // 이하 모든 렌더링 및 이벤트 핸들러 함수는 이전과 동일하며, 오류가 없습니다.
         function handleLogout() { localStorage.removeItem('userInfo'); currentUser = null; google.accounts.id.disableAutoSelect(); location.reload(); }
         function renderUserInfo(user) { document.getElementById('user-display').style.display = 'block'; document.getElementById('gsi-container').style.display = 'none'; document.querySelector('.auth-container').style.color = '#333'; let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`; if (user.role === 'guest') { userInfoHtml += ` <span class="user-info" style="color: #ffc107; font-weight: bold;">(미등록)</span>`; } document.getElementById('user-display').innerHTML = userInfoHtml; }
