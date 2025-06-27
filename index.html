@@ -60,13 +60,6 @@
         .approve-btn, .check-btn { background: #28a745; } .reject-btn { background: #dc3545; } .response-btn { background: #007bff; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
-        #modal-content h2 { margin-bottom: 20px; }
-        #modal-content form div { margin-bottom: 15px; }
-        #modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
-        #modal-content input, #modal-content select, #modal-content textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
-        #modal-buttons { text-align: right; margin-top: 20px; }
-        #modal-buttons button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-left: 10px; }
-        #submitLeave { background: var(--primary-color); color: white; }
         .routine-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: color 0.2s, background-color 0.2s; background: white; border-radius: 8px; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .routine-item:last-child { border-bottom: none; }
         .routine-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: var(--primary-color); }
@@ -132,7 +125,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5EkJKgF9RUTJslp42tLvGzsCko7g7xfcXconjJ00Tm1v3irTUGvRYq5JJVHfq6lOS/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0bRa9ZdiA-EZpUO5QvjzozV3xPG5jZ_reooPeEANuqeY1_OvzoLm306oqXCYNBfE/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -434,7 +427,7 @@
 
     function renderWidgets(widgets) {
         const container = document.getElementById("widgets-container");
-        if(!widgets || widgets.length === 0)return void(container.style.display="none");
+        if(!widgets||widgets.length===0)return void(container.style.display="none");
         container.style.display="flex";
         container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=0===i?"D-Day":i>0?`D-${i}`:`D+${-i}`;break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g,"<br>")}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("");
     }
@@ -524,16 +517,20 @@
         
         linksContainer.innerHTML = Object.keys(groupedItems).map(group => {
             return `<div class="section">
-                        <div class="section-title">${group}</div>
+                        <div class="section-title"><span class="icon">🗂️</span>${group}</div>
                         <div class="teacher-dashboard-grid">
                             ${groupedItems[group].map(item => `
-                                <a href="${item.url || '#'}" target="_blank" class="teacher-card">
+                                <div class="teacher-card" id="${item.id}">
+                                    <button class="teacher-complete-btn" title="완료 처리" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✔</button>
                                     <div class="teacher-card-title">${item.title}</div>
                                     <p>${item.description || ' '}</p>
-                                </a>`).join('')}
+                                    ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
+                                </div>
+                            `).join('')}
                         </div>
                     </div>`;
         }).join('');
+
 
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
