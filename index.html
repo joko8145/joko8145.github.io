@@ -23,13 +23,13 @@
         .section-title { font-size: 1.5em; font-weight: bold; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
         .section-title .icon { margin-right: 10px; }
         .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; background-color: #f8f9fa; border-radius: 8px; }
-        .notice-item, .teacher-leave-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
+        .notice-item, .teacher-leave-card, .assignment-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
         .notice-title { font-size: 1.25em; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; }
         .notice-title .icon { margin-right: 8px; }
         .notice-content { font-size: 1.1em; line-height: 1.7; color: var(--text-light); }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 15px; margin-bottom: 15px; display: block; }
-        .notice-link, .certificate-link, .teacher-card-button { display: inline-block; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white; padding: 10px 18px; border-radius: 25px; margin-top: 15px; cursor: pointer; border: none; font-weight: 500; transition: all 0.2s ease; text-decoration: none; }
-        .notice-link:hover, .certificate-link:hover, .teacher-card-button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .notice-link, .certificate-link { display: inline-block; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white; padding: 10px 18px; border-radius: 25px; margin-top: 15px; cursor: pointer; border: none; font-weight: 500; transition: all 0.2s ease; text-decoration: none; }
+        .notice-link:hover, .certificate-link:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .certificate-link { background: #17a2b8; margin-left: 10px; }
         .unsubmitted-section { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; }
         .unsubmitted-title { font-weight: bold; color: #856404; margin-bottom: 10px; font-size: 1.2em; }
@@ -48,32 +48,27 @@
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
         .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
+        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; cursor: pointer;}
         .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
-        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
-        .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
-        .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
+        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 8px; }
+        .teacher-card-title a { text-decoration: none; color: inherit; } .teacher-card-title a:hover { text-decoration: underline; }
+        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; font-size: 1em; }
+        .form-creator input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
+        .form-creator button { width: 100%; padding: 12px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
         .leave-actions, .assignment-actions { text-align: right; margin-top: 15px; }
-        .leave-actions button, .assignment-actions button { padding: 8px 12px; margin-left: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+        .leave-actions button, .assignment-actions button { padding: 8px 12px; margin-left: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 0.9em;}
         .approve-btn, .check-btn { background: #28a745; } .reject-btn { background: #dc3545; } .response-btn { background: #007bff; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
-        .complete-btn, .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 28px; text-align: center; opacity: 0.7; transition: opacity 0.2s;}
-        .complete-btn:hover, .teacher-complete-btn:hover { opacity: 1; }
-        .complete-btn { background: #28a745; }
-        .teacher-complete-btn { background: #dc3545; font-size: 18px; }
         #routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
-        .routine-item { display: inline-flex; align-items: center; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        .routine-item { display: inline-flex; align-items: center; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
         .routine-item input[type="checkbox"] { display: none; }
         .routine-item label { cursor: pointer; }
-        .routine-item.completed { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .routine-item.completed { background: transparent; color: #aaa; border-color: #ccc; }
         .routine-item.completed label { text-decoration: line-through; }
-        .accordion-title { cursor: pointer; padding: 15px; background: #f1f3f5; border-radius: 8px; font-weight: bold; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
-        .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px;}
-        .accordion-title::after { content: '▼'; font-size: 0.8em; }
-        .accordion-title.active::after { content: '▲'; }
+        .complete-btn { position: absolute; top: 15px; right: 15px; background: #28a745; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 28px; text-align: center; opacity: 0.7; transition: opacity 0.2s;}
+        .complete-btn:hover { opacity: 1; }
     </style>
 </head>
 <body>
@@ -122,15 +117,15 @@
             <div id="teacher-dashboard" style="display: none;">
                 <div id="routine-tasks-section" class="section"></div>
                 <div id="teacher-admin-section"></div>
-                <div class="section" id="assignment-section"><h2 class="section-title"><span class="icon">📝</span>과제별 제출 현황</h2><div id="assignment-status"></div></div>
-                <div class="section" id="pending-leave-section"><h2 class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</h2><div id="pending-leave-requests"></div></div>
+                <div class="section" id="assignment-section"><div class="section-title"><span class="icon">📝</span>과제별 제출 현황</div><div id="assignment-status"></div></div>
+                <div class="section" id="pending-leave-section"><div class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
                 <div id="teacher-links"></div>
             </div>
         </div>
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZvrDEuqTMwehewg-GV7Q97W0-_EWp85_IxWtnFLB-e2mBIEibiHlhk75-NiaooHfY/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfH2-dk1MTr28GzhsOqGCGptLZ0bJhAuB0EmZYVkHVKWS36T0nwbZnmSb6Km-mrRZr/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -198,16 +193,6 @@
 
         const submitLeaveBtn = document.getElementById('submitLeave');
         if(submitLeaveBtn) submitLeaveBtn.addEventListener('click', submitLeaveRequest);
-
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('accordion-title')) {
-                e.target.classList.toggle('active');
-                const content = e.target.nextElementSibling;
-                if (content) {
-                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
-                }
-            }
-        });
     }
 
     function openLeaveModal(type) {
@@ -264,9 +249,12 @@
             teacherDashboard.style.display = 'block';
             document.getElementById('routine-tasks-section').innerHTML = '';
             document.getElementById('teacher-admin-section').innerHTML = '';
-            document.getElementById('assignment-status').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-            document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-            document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            const assignmentSection = document.getElementById('assignment-section');
+            if (assignmentSection) assignmentSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            const pendingLeaveSection = document.getElementById('pending-leave-section');
+            if (pendingLeaveSection) pendingLeaveSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            const teacherLinks = document.getElementById('teacher-links');
+            if (teacherLinks) teacherLinks.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
             studentPortal.style.display = 'block';
             teacherDashboard.style.display = 'none';
@@ -533,13 +521,10 @@
                         <div class="section-title"><span class="icon">🗂️</span>${group}</div>
                         <div class="teacher-dashboard-grid">
                             ${groupedItems[group].map(item => `
-                                <div class="teacher-card" id="${item.id}">
-                                    <button class="teacher-complete-btn" title="완료 처리" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✔</button>
+                                <a href="${item.url || '#'}" target="_blank" class="teacher-card" id="${item.id}">
                                     <div class="teacher-card-title">${item.title}</div>
                                     <p>${item.description || ' '}</p>
-                                    ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
-                                </div>
-                            `).join('')}
+                                </a>`).join('')}
                         </div>
                     </div>`;
         }).join('');
