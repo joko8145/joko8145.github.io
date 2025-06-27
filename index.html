@@ -48,38 +48,37 @@
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
         .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; }
+        .teacher-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
         .teacher-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
         .teacher-card-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
         .teacher-card p { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
         .teacher-card-button { display: block; text-align: center; margin-top: auto; }
-        .form-creator button { padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+        .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
+        .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
         .leave-actions, .assignment-actions { text-align: right; margin-top: 15px; }
         .leave-actions button, .assignment-actions button { padding: 8px 12px; margin-left: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
         .approve-btn, .check-btn { background: #28a745; } .reject-btn { background: #dc3545; } .response-btn { background: #007bff; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
-        #modal-content h2 { margin-bottom: 20px; }
-        #modal-content form div { margin-bottom: 15px; }
-        #modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
-        #modal-content input, #modal-content select, #modal-content textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
-        #modal-buttons { text-align: right; margin-top: 20px; }
-        #modal-buttons button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-left: 10px; }
-        #submitLeave { background: var(--primary-color); color: white; }
-        .routine-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: color 0.2s; }
+        .routine-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: color 0.2s, background-color 0.2s; background: white; border-radius: 8px; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .routine-item:last-child { border-bottom: none; }
         .routine-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: var(--primary-color); }
         .routine-item label { font-size: 1.1em; flex-grow: 1; cursor: pointer; }
+        .routine-item.completed { background-color: #f8f9fa; }
         .routine-item.completed label { text-decoration: line-through; color: #aaa; }
         .complete-btn, .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 28px; text-align: center; opacity: 0.7; transition: opacity 0.2s;}
         .complete-btn:hover, .teacher-complete-btn:hover { opacity: 1; }
         .complete-btn { background: #28a745; }
         .teacher-complete-btn { background: #dc3545; font-size: 18px; }
-        .tab-btn { background: #e9ecef; border: 1px solid #dee2e6; padding: 10px 15px; margin-right: 5px; border-radius: 8px; cursor: pointer; font-size: 1em; }
-        .tab-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-        .accordion-title { cursor: pointer; padding: 15px; background: #f1f3f5; border-radius: 8px; font-weight: bold; margin-bottom: 2px;}
+        #teacher-tabs-container { margin-bottom: 10px; }
+        .tab-btn { background: #e9ecef; border: 1px solid #dee2e6; padding: 10px 15px; margin-right: 5px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 1em; border-bottom: none; }
+        .tab-btn.active { background: var(--white-bg); color: var(--primary-color); border-color: #dee2e6 #dee2e6 var(--white-bg) #dee2e6; font-weight: bold; position: relative; top: 1px; }
+        #teacher-links { border-top: 1px solid #dee2e6; padding-top: 20px; }
+        .accordion-title { cursor: pointer; padding: 15px; background: #f1f3f5; border-radius: 8px; font-weight: bold; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
         .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px;}
+        .accordion-title::after { content: '▼'; font-size: 0.8em; }
+        .accordion-title.active::after { content: '▲'; }
     </style>
 </head>
 <body>
@@ -119,8 +118,8 @@
             <div id="teacher-dashboard" style="display: none;">
                 <div id="routine-tasks-section" class="section"></div>
                 <div id="teacher-admin-section"></div>
-                <div class="section"><h2 class="section-title"><span class="icon">📝</span>과제별 제출 현황</h2><div id="assignment-status"></div></div>
-                <div class="section"><h2 class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</h2><div id="pending-leave-requests"></div></div>
+                <div class="section" id="assignment-section"><h2 class="section-title"><span class="icon">📝</span>과제별 제출 현황</h2><div id="assignment-status"></div></div>
+                <div class="section" id="pending-leave-section"><h2 class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</h2><div id="pending-leave-requests"></div></div>
                 <div id="teacher-tabs-container" class="section"></div>
                 <div id="teacher-links"></div>
             </div>
@@ -128,7 +127,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9uD_erKui2gbXrunA-ub2r61_NaLHK75TnhHxAQewsjoGsvyzVeWL_NJ9z9lophzF/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbworeIfyHBU3bTtLvyiWeuiDMIVbg1eNu-VkGjLsg6eJWbwiQxquMdPIcydZ4uO2PH_/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -304,10 +303,10 @@
     async function completeItem(itemId, isTeacherAction = false, rowNum, sheetName) {
         const itemElement = document.getElementById(itemId);
         if (!itemElement) return;
+        const colName = (sheetName === '[데이터_알림]') ? '게시여부' : '상태';
+        const value = (sheetName === '[데이터_알림]') ? 'N' : '완료';
 
         if (isTeacherAction) {
-            const colName = (sheetName === '[데이터_알림]') ? '게시여부' : '상태';
-            const value = (sheetName === '[데이터_알림]') ? 'N' : '완료';
             const params = new URLSearchParams({ action: 'updateTaskStatus', sheetName: sheetName, rowNum: rowNum, colName: colName, value: value });
             try {
                 const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
@@ -322,9 +321,12 @@
             saveCompletedItems();
         }
 
-        itemElement.style.transition = 'opacity 0.5s, transform 0.5s';
+        itemElement.style.transition = 'opacity 0.5s, transform 0.5s, max-height 0.5s';
         itemElement.style.opacity = '0';
         itemElement.style.transform = 'translateX(-50px)';
+        itemElement.style.maxHeight = '0px';
+        itemElement.style.padding = '0 20px';
+        itemElement.style.margin = '0';
         setTimeout(() => itemElement.remove(), 500);
     }
 
@@ -360,6 +362,7 @@
             if (isTeacherMode && item.type === '공지') {
                 completeButton = `<button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[데이터_알림]')">✖</button>`;
             }
+
             const icon = item.icon ? `<span class="icon">${item.icon}</span>` : '';
             const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
             let contentHtml = '';
@@ -429,9 +432,9 @@
         const todayRoutines = data.routines.filter(r => {
             if (!r.condition) return false;
             const conditions = r.condition.split(',').map(s=>s.trim());
-            if (conditions.includes('주중') && (dayOfWeek === '토' || dayOfWeek === '일')) return false;
-            if (conditions.includes('주말') && !(dayOfWeek === '토' || dayOfWeek === '일')) return false;
             if (conditions.includes('매일')) return true;
+            if (conditions.includes('주중') && (dayOfWeek !== '토' && dayOfWeek !== '일')) return true;
+            if (conditions.includes('주말') && (dayOfWeek === '토' || dayOfWeek === '일')) return true;
             return conditions.includes(dayOfWeek);
         });
 
@@ -449,6 +452,7 @@
 
         const assignmentContainer = document.getElementById('assignment-status');
         if(data.assignments && data.assignments.length > 0){
+            assignmentContainer.parentElement.style.display = 'block';
             assignmentContainer.innerHTML = data.assignments.map(a => {
                 const checkButton = (a.assignmentType === '단일제출') 
                     ? `<button class="check-btn" onclick="checkUnsubmitted(event, '${a.taskId}', '${a.title}', '${a.studentIdColumn}')">미제출자 확인</button>`
@@ -465,38 +469,41 @@
                         </div>`
             }).join('');
         } else {
-            assignmentContainer.innerHTML = '<div class="empty-state">확인할 과제가 없습니다.</div>';
+            assignmentContainer.parentElement.style.display = 'none';
         }
 
         const tabsContainer = document.getElementById('teacher-tabs-container');
         const linksContainer = document.getElementById('teacher-links');
         const tabs = Object.keys(data.dashboardItems);
-        tabsContainer.innerHTML = tabs.map(tab => `<button class="tab-btn" onclick="filterTeacherTasks(event, '${tab}')">${tab}</button>`).join('');
-        
-        window.filterTeacherTasks = (event, selectedTab) => {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            linksContainer.innerHTML = `<div class="teacher-dashboard-grid">` + 
-            data.dashboardItems[selectedTab].map(item => `
-                <div class="teacher-card" id="${item.id}">
-                    <button class="teacher-complete-btn" title="완료 처리" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✔</button>
-                    <div class="teacher-card-title">${item.title}</div>
-                    <p>${item.description}</p>
-                    ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
-                </div>
-            `).join('') + `</div>`;
-        };
-
         if (tabs.length > 0) {
+            tabsContainer.style.display = 'block';
+            tabsContainer.innerHTML = `<div class="section-title"><span class="icon">🗂️</span>업무 바로가기</div>` + tabs.map(tab => `<button class="tab-btn" onclick="filterTeacherTasks(event, '${tab}')">${tab}</button>`).join('');
+        
+            window.filterTeacherTasks = (event, selectedTab) => {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                linksContainer.innerHTML = `<div class="teacher-dashboard-grid">` + 
+                data.dashboardItems[selectedTab].map(item => `
+                    <div class="teacher-card" id="${item.id}">
+                        <button class="teacher-complete-btn" title="완료 처리" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✔</button>
+                        <div class="teacher-card-title">${item.title}</div>
+                        <p>${item.description}</p>
+                        ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
+                    </div>
+                `).join('') + `</div>`;
+            };
+
             document.querySelector('.tab-btn').click();
         } else {
+            tabsContainer.style.display = 'none';
             linksContainer.innerHTML = '';
         }
 
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
-            pendingContainer.innerHTML = '<div class="empty-state">확인 대기 중인 신청이 없습니다.</div>';
+            pendingContainer.parentElement.style.display = 'none';
         } else {
+            pendingContainer.parentElement.style.display = 'block';
             pendingContainer.innerHTML = data.pendingLeaveRequests.map(req => `<div class="teacher-leave-card"><strong>${req.이름} (${req.학번})</strong> - ${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})<p>사유: ${req.사유}</p><input type="text" id="comment-${req.rowNum}" class="leave-comment-input" placeholder="코멘트 (선택 사항)"><div class="leave-actions"><button class="approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'comment-${req.rowNum}')">승인</button><button class="reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'comment-${req.rowNum}')">반려</button></div></div>`).join('');
         }
     }
