@@ -142,7 +142,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoaiFNNuGsappbytIxCMQR-f_p3xaMMMKEMQmi5ap1mkK-dtW2u0tdZLcrJ8LEfzms/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoaiFNNuGsappbytIxCMQR-f_p3xaMMMKEMQmi5ap1mkK-dtW2u0tdZLcrJ8LEfzms/exec'; // 반드시 본인의 URL로 교체!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     const TEACHER_STAMP_URL = 'https://drive.google.com/uc?id=1VfLzYUB1AHbu-huCGRBGLmnVzQIa_mcq';
 
@@ -163,6 +163,8 @@
             if (!isTeacherMode) {
                 loadData();
             } else {
+                document.getElementById('teacher-dashboard').style.display = 'block';
+                document.getElementById('student-portal').style.display = 'none';
                 document.getElementById('teacher-dashboard').innerHTML = '<div class="empty-state">교사 계정으로 로그인해주세요.</div>';
             }
         }
@@ -216,7 +218,9 @@
         if (isTeacherMode) {
             studentPortal.style.display = 'none';
             teacherDashboard.style.display = 'block';
-            teacherDashboard.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            // [수정된 부분] 전체를 지우는 대신, 각 섹션에 로딩 메시지를 표시합니다.
+            document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
             studentPortal.style.display = 'block';
             teacherDashboard.style.display = 'none';
@@ -232,10 +236,14 @@
             const data = await response.json();
             
             if (data.error) {
+                // 로그인 실패 시, 전체 대시보드를 에러 메시지로 덮어씁니다.
                 if (isTeacherMode) teacherDashboard.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
                 else studentPortal.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
-                currentUser.name = data.user.name; // 이름 업데이트
-                renderUserInfo(currentUser);
+
+                if(data.user) { // 사용자 정보가 넘어온 경우
+                  currentUser.name = data.user.name; 
+                  renderUserInfo(currentUser);
+                }
                 return;
             }
 
@@ -258,6 +266,7 @@
         } catch (error) {
             console.error('Error fetching data:', error);
             const targetEl = isTeacherMode ? teacherDashboard : document.getElementById('notices');
+            // 에러 발생 시, 전체 대시보드를 에러 메시지로 덮어씁니다.
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
         }
     }
@@ -387,7 +396,7 @@
         `).join('');
 
         const pendingContainer = document.getElementById('pending-leave-requests');
-        if (data.pendingLeaveRequests.length === 0) {
+        if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
             pendingContainer.innerHTML = '<div class="empty-state">확인 대기 중인 신청이 없습니다.</div>';
             return;
         }
@@ -409,7 +418,7 @@
             comment = prompt('반려 사유를 입력하세요 (선택 사항):');
             if (comment === null) return; // 사용자가 취소한 경우
         }
-        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: encodeURIComponent(comment) });
+        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, comment: encodeURIComponent(comment || '') });
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
