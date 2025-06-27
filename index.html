@@ -53,6 +53,7 @@
         .teacher-card-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
         .teacher-card p { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
         .teacher-card-button { display: block; text-align: center; margin-top: auto; }
+        .form-creator { padding-right: 20px !important; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
@@ -126,7 +127,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQE1nBv9jgvWGm8xy5_vNML8foz1zy6pFbQD4SG_CD4yuDEk5jabRtx8nTZtJZjcOC/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRmFGodX4c_pY75FkbkvwmpQPLLnXxI7yZxk-CDrK-h3LvAOnt3RmcbIihfAn7SiWy/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -368,6 +369,7 @@
             if (item.type !== '공지' && currentUser && currentUser.studentId) {
                  completeButton = `<button class="complete-btn" title="확인/완료" onclick="completeItem('${item.id}')">✔</button>`;
             }
+            
             const icon = item.icon ? `<span class="icon">${item.icon}</span>` : '';
             const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
             let contentHtml = '';
@@ -502,10 +504,10 @@
                 </div>
             `).join('');
         } else { routineContainer.style.display = 'none'; }
-        
+
         const tabsContainer = document.getElementById('teacher-tabs-container');
-        const accordionContainer = document.getElementById('accordion-container');
         const linksContainer = document.getElementById('teacher-links');
+        const accordionContainer = document.getElementById('accordion-container');
         const tabs = Object.keys(data.dashboardItems);
         
         if (tabs.length > 0) {
@@ -530,7 +532,7 @@
                     } else if (item.special === 'assignment') {
                         content = data.assignments.length > 0 ? data.assignments.map(a => `<div class="assignment-card" id="${a.id}"><button class="teacher-complete-btn" title="목록에서 숨기기" onclick="completeItem('${a.id}', true, ${a.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${a.title}</div><div class="assignment-actions">${a.responseSheetUrl ? `<a href="${a.responseSheetUrl}" target="_blank"><button class="response-btn">응답 확인</button></a>` : ''}${(a.assignmentType === '단일제출') ? `<button class="check-btn" onclick="checkUnsubmitted(event, '${a.taskId}', '${a.title}', '${a.studentIdColumn}')">미제출자 확인</button>` : ''}</div></div>`).join('') : '<div class="empty-state">확인할 과제가 없습니다.</div>';
                     } else if (item.special === 'notice') {
-                        content = data.allNotices.length > 0 ? data.allNotices.map(n => `<div class="notice-item" id="${n.id}"><button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${n.id}', true, ${n.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${n.icon || ''} ${n.title}</div></div>`).join('') : '<div class="empty-state">게시된 공지가 없습니다.</div>';
+                        content = data.allNotices.length > 0 ? data.allNotices.map(n => `<div class="notice-item" id="${n.id}"><button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${n.id}', true, ${n.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${n.icon || ''} ${n.title}</div><div class="notice-content">${n.content}</div></div>`).join('') : '<div class="empty-state">게시된 공지가 없습니다.</div>';
                     }
                     accordionHtml += `<div class="accordion-title">${item.title}</div><div class="accordion-content">${content}</div>`;
                 });
@@ -575,11 +577,8 @@
             const result = await res.json();
             if (result.status !== 'success') throw new Error(result.message);
             let message = `[${taskTitle}] 미제출 학생:\n\n`;
-            if (result.students.length === 0) {
-                message = `[${taskTitle}]\n\n모든 학생이 제출을 완료했습니다!`;
-            } else {
-                message += result.students.map(s => `${s.name} (${s.id})`).join('\n');
-            }
+            if (result.students.length === 0) { message = `[${taskTitle}]\n\n모든 학생이 제출을 완료했습니다!`; } 
+            else { message += result.students.map(s => `${s.name} (${s.id})`).join('\n'); }
             alert(message);
         } catch (error) { alert('미제출자 확인 중 오류 발생: ' + error.message);
         } finally { button.disabled = false; }
