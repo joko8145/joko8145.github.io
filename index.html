@@ -23,7 +23,7 @@
         .section { margin-bottom: 30px; }
         .section-title { font-size: 1.4em; font-weight: bold; color: var(--text-dark); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); }
         .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; }
-        .notice-item, .teacher-leave-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
+        .notice-item, .teacher-leave-card, .assignment-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
         .notice-title { font-size: 1.2em; font-weight: bold; margin-bottom: 8px; }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
         .notice-content { font-size: 1.1em; line-height: 1.6; color: var(--text-light); }
@@ -48,11 +48,7 @@
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
         .leave-request-buttons { display: flex; gap: 10px; }
-        .leave-request-btn {
-            flex: 1; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;
-            background: transparent; border: 2px solid var(--secondary-color); color: var(--secondary-color);
-            transition: all 0.2s ease-in-out;
-        }
+        .leave-request-btn { flex: 1; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold; background: transparent; border: 2px solid var(--secondary-color); color: var(--secondary-color); transition: all 0.2s ease-in-out; }
         .leave-request-btn:hover { background: var(--secondary-color); color: white; }
         .leave-status { padding: 3px 8px; border-radius: 5px; color: white; font-size: 0.8em; }
         .status-pending { background-color: #ffc107; } .status-approved { background-color: #28a745; } .status-rejected { background-color: #dc3545; }
@@ -68,8 +64,7 @@
         .form-creator input { flex: 1; margin-top: 0; margin-right: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 8px;}
         .form-creator button { padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
-        .leave-actions { text-align: right; margin-top: 10px; }
-        .leave-actions button { padding: 5px 10px; margin-left: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+        .leave-actions button, .assignment-actions button { padding: 8px 12px; margin-left: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
         .approve-btn { background: #28a745; } .reject-btn { background: #dc3545; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
@@ -119,6 +114,7 @@
             </div>
             <div id="teacher-dashboard" style="display: none;">
                 <div id="teacher-admin-section"></div>
+                <div class="section"><div class="section-title">📝 과제별 제출 현황</div><div id="assignment-status"></div></div>
                 <div class="section"><div class="section-title">⏰ 외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
                 <div id="teacher-links"></div>
             </div>
@@ -126,7 +122,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjK4a_d0HcaDLS7FNmMQ7JlgQ8zbo8v6aKl5rx6wGCfPOALG-o2T9tJ-j5KBaFEWU0/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3NPkrZypW-S45k2tRHxtmYfGeXM06M9pvFqHPw9UjzGdq8bByDhKWbpPRxcB4PDQt/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -212,6 +208,7 @@
             studentPortal.style.display = 'none';
             teacherDashboard.style.display = 'block';
             document.getElementById('teacher-admin-section').innerHTML = '';
+            document.getElementById('assignment-status').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
@@ -231,11 +228,7 @@
             if (data.error) {
                 if (isTeacherMode) teacherDashboard.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
                 else studentPortal.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
-
-                if(data.user) {
-                  currentUser.name = data.user.name; 
-                  renderUserInfo(currentUser);
-                }
+                if(data.user) { currentUser.name = data.user.name; renderUserInfo(currentUser); }
                 return;
             }
 
@@ -268,7 +261,6 @@
         }
     }
     
-    // [수정] 과제 링크 생성 시, 미리 채워진 링크 템플릿을 동적으로 변환
     function renderItems(containerId, items, defaultButtonText, isTask = false) {
         const container = document.getElementById(containerId);
         if (!items || items.length === 0) {
@@ -294,18 +286,12 @@
                 const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : '';
                 let finalLink = item.link;
 
-                // 미리 채워진 링크 처리 로직
                 if (isTask && finalLink && finalLink.includes('__STUDENT_ID__')) {
                     if (currentUser && currentUser.studentId) {
-                        finalLink = finalLink
-                            .replace('__STUDENT_ID__', currentUser.studentId)
-                            .replace('__STUDENT_NAME__', encodeURIComponent(currentUser.name));
-                    } else {
-                        finalLink = null; // 로그인 안 한 학생에게는 링크 안보여줌
-                    }
+                        finalLink = finalLink.replace('__STUDENT_ID__', currentUser.studentId).replace('__STUDENT_NAME__', encodeURIComponent(currentUser.name));
+                    } else { finalLink = null; }
                 }
                 
-                // 제출 기록용 링크 처리
                 if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId && finalLink) {
                     finalLink = `${SCRIPT_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(finalLink)}`;
                 }
@@ -330,11 +316,8 @@
             const fullTaskId = `${taskId}_${subtask}`;
             if (isChecked) submittedTasks.add(fullTaskId); else submittedTasks.delete(fullTaskId);
         } catch (error) {
-            alert(`오류: ${error.message}`);
-            checkbox.checked = !isChecked;
-        } finally {
-            listItem.style.opacity = '1';
-        }
+            alert(`오류: ${error.message}`); checkbox.checked = !isChecked;
+        } finally { listItem.style.opacity = '1'; }
     }
     
     function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!currentUser.studentId||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
@@ -350,30 +333,14 @@
     function renderLeaveRequests(requests) {
         const container = document.getElementById('leave-requests');
         if (!requests || requests.length === 0) { container.innerHTML = '<div class="empty-state">신청 내역이 없습니다.</div>'; return; }
-        
         const todayStr = new Date().toISOString().split('T')[0];
-
         container.innerHTML = requests.map(req => {
             const statusMap = { '신청': 'status-pending', '승인': 'status-approved', '반려': 'status-rejected' };
             const statusClass = statusMap[req.상태] || '';
             const commentHtml = req.교사코멘트 ? `<div class="leave-comment"><strong>교사 의견:</strong> ${req.교사코멘트}</div>` : '';
-            
             const requestDate = new Date(req.희망일자).toISOString().split('T')[0];
             const certificateButton = (req.상태 === '승인' && requestDate === todayStr) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="certificate-link">확인증 출력</a>` : '';
-
-            return `<div class="notice-item">
-                <div class="leave-history-item">
-                    <div>
-                        <strong>${req.신청종류}</strong> (${new Date(req.희망일자).toLocaleDateString()})<br>
-                        <small>사유: ${req.사유}</small>
-                    </div>
-                    <div>
-                        <span class="leave-status ${statusClass}">${req.상태}</span>
-                        ${certificateButton}
-                    </div>
-                </div>
-                ${commentHtml}
-            </div>`;
+            return `<div class="notice-item"><div class="leave-history-item"><div><strong>${req.신청종류}</strong> (${new Date(req.희망일자).toLocaleDateString()})<br><small>사유: ${req.사유}</small></div><div><span class="leave-status ${statusClass}">${req.상태}</span>${certificateButton}</div></div>${commentHtml}</div>`;
         }).join('');
     }
 
@@ -383,15 +350,9 @@
         if (!form.checkValidity()) { alert('모든 필드를 채워주세요.'); return; }
         const formData = new FormData(form);
         const params = new URLSearchParams({
-            action: 'submitLeaveRequest',
-            studentId: currentUser.studentId,
-            name: currentUser.name,
-            email: currentUser.email,
-            type: formData.get('type'),
-            reason: formData.get('reason'),
-            date: formData.get('date')
+            action: 'submitLeaveRequest', studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email,
+            type: formData.get('type'), reason: formData.get('reason'), date: formData.get('date')
         });
-
         document.getElementById('submitLeave').disabled = true;
         try {
             const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
@@ -408,60 +369,52 @@
     
     function renderTeacherDashboard(data) {
         const adminSection = document.getElementById('teacher-admin-section');
-        adminSection.innerHTML = `
-            <div class="section">
-                <div class="section-title">⚙️ 관리자 도구</div>
-                <div class="teacher-dashboard-grid">
-                    <a href="${data.sheetUrl}" target="_blank" class="teacher-card">
-                        <div class="teacher-card-title">📊 데이터 시트 수정</div>
-                        <p>알림, 위젯, 자료실 등 모든 데이터를 수정합니다.</p>
-                    </a>
-                    <div class="teacher-card form-creator">
-                         <input type="text" id="new-form-title" placeholder="새 구글폼 과제 제목">
-                         <button onclick="createFormAssignment()">생성</button>
-                    </div>
-                </div>
-            </div>`;
+        adminSection.innerHTML = `<div class="section"><div class="section-title">⚙️ 관리자 도구</div><div class="teacher-dashboard-grid"><a href="${data.sheetUrl}" target="_blank" class="teacher-card"><div class="teacher-card-title">📊 데이터 시트 수정</div><p>알림, 위젯, 자료실 등 모든 데이터를 수정합니다.</p></a><div class="teacher-card form-creator"><input type="text" id="new-form-title" placeholder="새 구글폼 과제 제목"><button onclick="createFormAssignment()">생성</button></div></div></div>`;
+        
+        const assignmentContainer = document.getElementById('assignment-status');
+        if(data.assignments && data.assignments.length > 0){
+            assignmentContainer.innerHTML = data.assignments.map(a => `<div class="assignment-card"><div class="notice-title">${a.title}</div><div class="assignment-actions" style="text-align:right;"><button class="approve-btn" onclick="checkUnsubmitted('${a.taskId}', '${a.title}')">미제출자 확인</button></div></div>`).join('');
+        } else {
+            assignmentContainer.innerHTML = '<div class="empty-state">확인할 과제가 없습니다.</div>';
+        }
 
         const linksContainer = document.getElementById('teacher-links');
         linksContainer.innerHTML = ''; 
         const typeIcons = { '학급': '🏫', '업무': '💼', '수업': '📖', '기타': '🔗' };
-        
         for (const type in data.dashboardItems) {
             const groupSection = document.createElement('div');
             groupSection.className = 'section';
-            
             let groupHtml = `<div class="section-title">${typeIcons[type] || '🔗'} ${type}</div><div class="teacher-dashboard-grid">`;
-            groupHtml += data.dashboardItems[type].map(item => `
-                <a href="${item.url}" target="_blank" class="teacher-card">
-                    <div class="teacher-card-title">${item.title}</div>
-                    <p>${item.description}</p>
-                </a>
-            `).join('');
+            groupHtml += data.dashboardItems[type].map(item => `<a href="${item.url}" target="_blank" class="teacher-card"><div class="teacher-card-title">${item.title}</div><p>${item.description}</p></a>`).join('');
             groupHtml += `</div>`;
             groupSection.innerHTML = groupHtml;
             linksContainer.appendChild(groupSection);
         }
-        if (!linksContainer.hasChildNodes()) {
-             linksContainer.innerHTML = '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>';
-        }
+        if (!linksContainer.hasChildNodes()) { linksContainer.innerHTML = '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>'; }
 
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
             pendingContainer.innerHTML = '<div class="empty-state">확인 대기 중인 신청이 없습니다.</div>';
             return;
         }
-        pendingContainer.innerHTML = data.pendingLeaveRequests.map(req => `
-            <div class="teacher-leave-card">
-                <strong>${req.이름} (${req.학번})</strong> - ${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})
-                <p>사유: ${req.사유}</p>
-                <input type="text" id="comment-${req.rowNum}" class="leave-comment-input" placeholder="코멘트 (선택 사항)">
-                <div class="leave-actions">
-                    <button class="approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'comment-${req.rowNum}')">승인</button>
-                    <button class="reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'comment-${req.rowNum}')">반려</button>
-                </div>
-            </div>
-        `).join('');
+        pendingContainer.innerHTML = data.pendingLeaveRequests.map(req => `<div class="teacher-leave-card"><strong>${req.이름} (${req.학번})</strong> - ${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})<p>사유: ${req.사유}</p><input type="text" id="comment-${req.rowNum}" class="leave-comment-input" placeholder="코멘트 (선택 사항)"><div class="leave-actions"><button class="approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'comment-${req.rowNum}')">승인</button><button class="reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'comment-${req.rowNum}')">반려</button></div></div>`).join('');
+    }
+
+    async function checkUnsubmitted(taskId, taskTitle) {
+        const params = new URLSearchParams({ action: 'getUnsubmittedStudents', taskId: taskId });
+        try {
+            const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await res.json();
+            if (result.status !== 'success') throw new Error(result.message);
+
+            let message = `[${taskTitle}] 미제출 학생:\n\n`;
+            if (result.students.length === 0) {
+                message = `[${taskTitle}]\n\n모든 학생이 제출을 완료했습니다!`;
+            } else {
+                message += result.students.map(s => `${s.name} (${s.id})`).join('\n');
+            }
+            alert(message);
+        } catch (error) { alert('미제출자 확인 중 오류 발생: ' + error.message); }
     }
 
     async function updateLeaveStatus(rowNum, status, commentInputId) {
@@ -471,27 +424,26 @@
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
-            if (result.status === 'success') {
-                alert(`${status} 처리되었습니다.`);
-                loadData();
-            } else { throw new Error(result.message); }
+            if (result.status === 'success') { alert(`${status} 처리되었습니다.`); loadData(); } 
+            else { throw new Error(result.message); }
         } catch (error) { alert('처리 중 오류 발생: ' + error.message); }
     }
     
     async function createFormAssignment() {
         const title = document.getElementById('new-form-title').value;
         if (!title) { alert('과제 제목을 입력해주세요.'); return; }
+        const button = event.target; button.disabled = true; button.textContent = '생성 중...';
         const params = new URLSearchParams({ action: 'createFormAssignment', title: title });
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
             if (result.status === 'success') {
                 alert(result.message);
-                window.open(result.url, '_blank');
                 document.getElementById('new-form-title').value = '';
-                loadData(); // 대시보드를 새로고침하여 새 과제를 즉시 확인
+                loadData();
             } else { throw new Error(result.message); }
-        } catch(error) { alert('폼 생성 중 오류 발생: ' + error.message); }
+        } catch(error) { alert('폼 생성 중 오류 발생: ' + error.message);
+        } finally { button.disabled = false; button.textContent = '생성'; }
     }
     
     function updateDateDisplay() {
