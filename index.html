@@ -8,9 +8,9 @@
     <style>
         /* CSS는 변경 없음 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
         a { text-decoration: none; color: inherit; }
-        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
+        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.98); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
         .auth-container { padding: 10px 30px; text-align: right; background-color: rgba(0,0,0,0.1); min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
         .user-info { color: #333; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
         .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
@@ -20,6 +20,9 @@
         .header h1 { font-size: 2.5em; margin-bottom: 10px; }
         .date-display { font-size: 1.2em; opacity: 0.9; }
         .content { padding: 30px; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; background-color: #f8f9fa; border-radius: 12px; }
         .time-indicator { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
         .current-time { font-weight: bold; color: #667eea; }
         .period-indicator { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 5px 12px; border-radius: 15px; }
@@ -33,21 +36,18 @@
         .unsubmitted-title { font-weight: bold; color: #d46b08; margin-bottom: 10px; font-size: 1.2em; }
         .unsubmitted-list { list-style: none; padding-left: 5px; }
         .unsubmitted-list li { margin-bottom: 8px; }
-        .section { margin-bottom: 30px; }
-        .section-title { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
         .notice-item { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; overflow: hidden; border-left: 4px solid #667eea; }
-        .notice-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 8px; }
+        .notice-title { font-size: 1.2em; font-weight: bold; margin-bottom: 8px; }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 8px; margin-bottom: 12px; display: block; }
-        .notice-content { font-size: 1.1em; line-height: 1.6; color: #555; }
-        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; }
-        .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; }
+        .notice-content { font-size: 1.1em; line-height: 1.6; }
+        .notice-link { display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; margin-top: 15px; cursor: pointer; border: none; font-weight: bold; }
         .subtask-list { list-style: none; margin-top: 15px; padding-left: 5px; }
         .subtask-item { display: flex; align-items: center; margin-bottom: 10px; }
         .subtask-checkbox { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; accent-color: #764ba2; flex-shrink: 0; }
-        .subtask-label { flex-grow: 1; color: #333; }
+        .subtask-label { flex-grow: 1; }
         .subtask-item.completed .subtask-label { text-decoration: line-through; color: #aaa; }
         .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; text-decoration: none; color: inherit; display: block; transition: all 0.2s ease-in-out; }
+        .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; display: block; transition: all 0.2s ease-in-out; }
         .resource-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
@@ -82,6 +82,7 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-8hpNryUuj-o9qsXzO5T3sQXDi4l1HQlcyUKATs3X2KdmiSTrSbrzcTTXpqH8JidO/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
+        const LEAVE_SYSTEM_URL = "https://script.google.com/macros/s/AKfycbztPSlR6LjPFSlcQDum32Z6qC_9uXZliM0UzmPhphjH4_WO_zHtKK-DJnw3vVpOyNeXEA/exec";
         let currentUser = null;
         let submittedTasks = new Set();
         const urlParams = new URLSearchParams(window.location.search);
@@ -112,10 +113,10 @@
                 loadPortal();
             } else {
                 google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
-                if(!isTeacherMode) {
+                if (!isTeacherMode) {
                     loadPortal();
                 } else {
-                    document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">🔒 교사 계정으로 로그인해야 접근할 수 있습니다.</div>`;
+                     document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">🔒 교사 계정으로 로그인해야 접근할 수 있습니다.</div>`;
                 }
             }
             updateDateTime();
@@ -126,18 +127,49 @@
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
             try {
                 const data = await fetchApi(null, { email: userObject.email });
-                if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; } 
-                else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; }
+                if (data.user) { 
+                    currentUser = { ...data.user, picture: userObject.picture }; 
+                } else { 
+                    currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; 
+                }
                 localStorage.setItem('userInfo', JSON.stringify(currentUser));
+
+                // ▼▼▼ 수정된 부분 ▼▼▼
+                // 페이지 새로고침 대신, 화면과 데이터를 직접 갱신합니다.
+                renderUserInfo(currentUser);
+                loadPortal();
+                // ▲▲▲ 수정된 부분 ▲▲▲
+
             } catch (error) {
                 console.error("로그인 처리 중 오류:", error);
-                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' };
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } finally {
-                location.reload();
+                alert("로그인 처리 중 오류가 발생했습니다: " + error.message);
             }
         }
         
+        function handleLogout() {
+            localStorage.removeItem('userInfo');
+            currentUser = null;
+            google.accounts.id.disableAutoSelect();
+            location.reload();
+        }
+
+        function renderUserInfo(user) {
+            document.getElementById('user-display').style.display = 'block';
+            document.getElementById('gsi-container').style.display = 'none';
+            document.querySelector('.auth-container').style.color = '#333';
+            
+            // 이름 깨짐 방지를 위해 user.name을 사용
+            let displayName = user.name || '사용자'; 
+            let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${displayName}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
+            
+            if (user.role === 'guest' || (!user.studentId && user.role !== 'teacher')) {
+                userInfoHtml += ` <span class="user-info" style="color: #ffc107; font-weight: bold;">(미등록)</span>`;
+            } else if (user.role === 'teacher') {
+                 // 교사일 경우 별도 표시 없음
+            }
+            document.getElementById('user-display').innerHTML = userInfoHtml;
+        }
+
         function loadPortal() {
             if (isTeacherMode) {
                 document.getElementById('student-portal').style.display = 'none';
@@ -161,7 +193,17 @@
                 renderItems('notices', data.notices, '자세히 보기 →', false);
                 renderItems('tasks', data.tasks, '바로 하기 →', true);
                 renderUnsubmitted(data.unsubmitted);
-                renderResources(data.resources);
+                
+                const resources = data.resources || [];
+                if (LEAVE_SYSTEM_URL) {
+                    resources.unshift({
+                        icon: '✈️',
+                        title: '외출/조퇴 신청 및 조회',
+                        description: '기존 시스템으로 이동하여 신청 및 결과를 확인합니다.',
+                        link: LEAVE_SYSTEM_URL
+                    });
+                }
+                renderResources(resources);
             } catch (error) {
                 console.error('Error fetching student data:', error);
                 sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`; });
@@ -175,7 +217,7 @@
             }
             document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>';
             try {
-                // 교사 데이터 요청 시, 현재 로그인된 사용자의 이메일을 파라미터로 전달하여 인증
+                // 교사 데이터 요청 시, 현재 로그인된 사용자의 이메일을 파라미터로 전달
                 const data = await fetchApi('getTeacherData', { email: currentUser.email });
                 renderTeacherDashboard(data);
             } catch (error) {
@@ -185,8 +227,6 @@
         }
         
         // 이하 모든 Javascript 함수는 이전과 동일하며, 오류가 없습니다.
-        function handleLogout() { localStorage.removeItem('userInfo'); currentUser = null; google.accounts.id.disableAutoSelect(); location.reload(); }
-        function renderUserInfo(user) { document.getElementById('user-display').style.display = 'block'; document.getElementById('gsi-container').style.display = 'none'; document.querySelector('.auth-container').style.color = '#333'; let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`; if (user.role === 'guest' || !user.studentId) { userInfoHtml += ` <span class="user-info" style="color: #ffc107; font-weight: bold;">(미등록)</span>`; } document.getElementById('user-display').innerHTML = userInfoHtml; }
         function renderItems(containerId, items, defaultButtonText, isTask = false) { const container = document.getElementById(containerId); if (!items || items.length === 0) { container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`; return; } container.innerHTML = items.map(item => { const icon = item.icon ? `${item.icon} ` : ''; const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : ''; let contentHtml = ''; const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : []; if (subtasks.length > 0 && item.taskId) { contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => { const fullTaskId = `${item.taskId}_${subtask}`; const isCompleted = submittedTasks.has(fullTaskId); return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`; }).join('') + `</ul>`; } else { const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : ''; const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : ''; let finalLink = item.link; if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) { const params = new URLSearchParams({ action: 'logClick', studentId: currentUser.studentId, name: encodeURIComponent(currentUser.name), taskId: encodeURIComponent(item.taskId), url: encodeURIComponent(item.link) }); finalLink = `${SCRIPT_URL}?${params.toString()}`; } const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : ''; contentHtml = image + content + linkHtml; } return `<div class="notice-item">${title}${contentHtml}</div>`; }).join(''); }
         async function toggleSubtask(checkbox, taskId, subtask) { if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; } const isChecked = checkbox.checked; const listItem = checkbox.closest('.subtask-item'); listItem.style.opacity = '0.5'; try { await fetchApi('logSubtask', { studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked }); listItem.classList.toggle('completed', isChecked); const fullTaskId = `${taskId}_${subtask}`; if (isChecked) { submittedTasks.add(fullTaskId); } else { submittedTasks.delete(fullTaskId); } } catch (error) { alert(`오류: ${error.message}`); checkbox.checked = !isChecked; } finally { listItem.style.opacity = '1'; } }
         function renderUnsubmitted(tasks) { const container = document.getElementById("unsubmitted-container"); if (!currentUser || !tasks || tasks.length === 0) { container.style.display = "none"; return; } container.style.display = "block"; container.innerHTML = `<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t => `<li>${t.icon || "📌"} ${t.title || t.content}</li>`).join("")}</ul></div>`; }
