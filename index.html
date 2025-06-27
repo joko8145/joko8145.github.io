@@ -48,18 +48,32 @@
         .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
         .resource-desc { font-size: 0.9em; color: #666; }
         .leave-request-buttons { display: flex; gap: 10px; }
-        .leave-request-btn { flex: 1; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 1em; font-weight: bold; }
-        #request-go-out { background: #17a2b8; }
-        #request-early-leave { background: #fd7e14; }
+        /* [수정] 버튼 스타일 변경 */
+        .leave-request-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            background: transparent;
+            border: 2px solid var(--secondary-color);
+            color: var(--secondary-color);
+            transition: all 0.2s ease-in-out;
+        }
+        .leave-request-btn:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
         .leave-status { padding: 3px 8px; border-radius: 5px; color: white; font-size: 0.8em; }
         .status-pending { background-color: #ffc107; } .status-approved { background-color: #28a745; } .status-rejected { background-color: #dc3545; }
         .leave-history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
         .leave-history-item:last-child { border-bottom: none; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 5px; padding-left: 10px; border-left: 2px solid #ddd;}
         .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .teacher-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; }
+        .teacher-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; }
         .teacher-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .teacher-card a { font-weight: bold; font-size: 1.1em; color: var(--primary-color); }
+        .teacher-card-title { font-weight: 700; font-size: 1.25em; color: var(--primary-color); }
         .teacher-card p { margin-top: 5px; color: var(--text-light); }
         .form-creator { display: flex; }
         .form-creator input { flex: 1; margin-top: 0; margin-right: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 8px;}
@@ -105,8 +119,9 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h2 class="section-title" style="margin: 0; border: none; padding: 0;">✈️ 외출/조퇴 신청</h2>
                             <div class="leave-request-buttons">
-                                <button class="leave-request-btn" id="request-go-out">외출 신청</button>
-                                <button class="leave-request-btn" id="request-early-leave">조퇴 신청</button>
+                                <!-- [수정] 버튼 텍스트 단순화 -->
+                                <button class="leave-request-btn" id="request-go-out">외출</button>
+                                <button class="leave-request-btn" id="request-early-leave">조퇴</button>
                             </div>
                         </div>
                         <div id="leave-requests"></div>
@@ -115,7 +130,7 @@
                 <div class="section"><div class="section-title">📚 우리 반 자료실</div><div id="resources" class="resource-grid"></div></div>
             </div>
             <div id="teacher-dashboard" style="display: none;">
-                <div class="section"><div class="section-title">🚀 새 구글폼 과제 자동 생성</div><div class="teacher-card form-creator"><input type="text" id="new-form-title" placeholder="새 과제 제목을 입력하세요"><button onclick="createFormAssignment()">생성</button></div></div>
+                <div id="teacher-admin-section"></div>
                 <div class="section"><div class="section-title">⏰ 외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
                 <div id="teacher-links"></div>
             </div>
@@ -123,7 +138,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPHJoHqGV5DL8-39W0gQTezQmJODc4Xqje4eyuuIOYY88e6epmk5BUKZeV7s26m1z7/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKLaN8Qyw2DR1fKJhDB60tpRqjHjRe0FoFkgtRqsskPJu_PUHgYkvfaVIL6864cOul/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -208,6 +223,7 @@
         if (isTeacherMode) {
             studentPortal.style.display = 'none';
             teacherDashboard.style.display = 'block';
+            document.getElementById('teacher-admin-section').innerHTML = ''; // 초기화
             document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
@@ -389,6 +405,22 @@
     }
     
     function renderTeacherDashboard(data) {
+        const adminSection = document.getElementById('teacher-admin-section');
+        adminSection.innerHTML = `
+            <div class="section">
+                <div class="section-title">⚙️ 관리자 도구</div>
+                <div class="teacher-dashboard-grid">
+                    <a href="${data.sheetUrl}" target="_blank" class="teacher-card">
+                        <div class="teacher-card-title">📊 데이터 시트 수정</div>
+                        <p>알림, 위젯, 자료실 등 모든 데이터를 수정합니다.</p>
+                    </a>
+                    <div class="teacher-card form-creator">
+                         <input type="text" id="new-form-title" placeholder="새 구글폼 과제 제목">
+                         <button onclick="createFormAssignment()">생성</button>
+                    </div>
+                </div>
+            </div>`;
+
         const linksContainer = document.getElementById('teacher-links');
         linksContainer.innerHTML = ''; 
         const typeIcons = { '학급': '🏫', '업무': '💼', '수업': '📖', '기타': '🔗' };
@@ -400,7 +432,7 @@
             let groupHtml = `<div class="section-title">${typeIcons[type] || '🔗'} ${type}</div><div class="teacher-dashboard-grid">`;
             groupHtml += data.dashboardItems[type].map(item => `
                 <a href="${item.url}" target="_blank" class="teacher-card">
-                    <div>${item.title}</div>
+                    <div class="teacher-card-title">${item.title}</div>
                     <p>${item.description}</p>
                 </a>
             `).join('');
@@ -411,7 +443,6 @@
         if (!linksContainer.hasChildNodes()) {
              linksContainer.innerHTML = '<div class="empty-state">등록된 관리 시스템이 없습니다.</div>';
         }
-
 
         const pendingContainer = document.getElementById('pending-leave-requests');
         if (!data.pendingLeaveRequests || data.pendingLeaveRequests.length === 0) {
