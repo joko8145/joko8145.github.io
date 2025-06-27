@@ -23,7 +23,7 @@
         .section-title { font-size: 1.5em; font-weight: bold; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
         .section-title .icon { margin-right: 10px; }
         .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; background-color: #f8f9fa; border-radius: 8px; }
-        .notice-item, .teacher-leave-card, .assignment-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
+        .notice-item, .teacher-leave-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
         .notice-title { font-size: 1.25em; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; }
         .notice-title .icon { margin-right: 8px; }
         .notice-content { font-size: 1.1em; line-height: 1.7; color: var(--text-light); }
@@ -48,11 +48,10 @@
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
         .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
+        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
         .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
-        .teacher-card-title a { text-decoration: none; } .teacher-card-title a:hover { text-decoration: underline; }
-        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
+        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
+        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
@@ -61,15 +60,20 @@
         .approve-btn, .check-btn { background: #28a745; } .reject-btn { background: #dc3545; } .response-btn { background: #007bff; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
-        .routine-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: color 0.2s, background-color 0.2s; background: white; border-radius: 8px; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
-        .routine-item:last-child { border-bottom: none; }
-        .routine-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: var(--primary-color); }
-        .routine-item label { font-size: 1.1em; flex-grow: 1; cursor: pointer; }
-        .routine-item.completed label { text-decoration: line-through; color: #aaa; }
         .complete-btn, .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 28px; text-align: center; opacity: 0.7; transition: opacity 0.2s;}
         .complete-btn:hover, .teacher-complete-btn:hover { opacity: 1; }
         .complete-btn { background: #28a745; }
         .teacher-complete-btn { background: #dc3545; font-size: 18px; }
+        #routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .routine-item { display: inline-flex; align-items: center; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        .routine-item input[type="checkbox"] { display: none; }
+        .routine-item label { cursor: pointer; }
+        .routine-item.completed { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .routine-item.completed label { text-decoration: line-through; }
+        .accordion-title { cursor: pointer; padding: 15px; background: #f1f3f5; border-radius: 8px; font-weight: bold; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
+        .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px;}
+        .accordion-title::after { content: '▼'; font-size: 0.8em; }
+        .accordion-title.active::after { content: '▲'; }
     </style>
 </head>
 <body>
@@ -118,8 +122,8 @@
             <div id="teacher-dashboard" style="display: none;">
                 <div id="routine-tasks-section" class="section"></div>
                 <div id="teacher-admin-section"></div>
-                <div class="section" id="assignment-section"><div class="section-title"><span class="icon">📝</span>과제별 제출 현황</div><div id="assignment-status"></div></div>
-                <div class="section" id="pending-leave-section"><div class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
+                <div class="section" id="assignment-section"><h2 class="section-title"><span class="icon">📝</span>과제별 제출 현황</h2><div id="assignment-status"></div></div>
+                <div class="section" id="pending-leave-section"><h2 class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</h2><div id="pending-leave-requests"></div></div>
                 <div id="teacher-links"></div>
             </div>
         </div>
@@ -194,6 +198,16 @@
 
         const submitLeaveBtn = document.getElementById('submitLeave');
         if(submitLeaveBtn) submitLeaveBtn.addEventListener('click', submitLeaveRequest);
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('accordion-title')) {
+                e.target.classList.toggle('active');
+                const content = e.target.nextElementSibling;
+                if (content) {
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                }
+            }
+        });
     }
 
     function openLeaveModal(type) {
@@ -362,6 +376,9 @@
             if (item.type !== '공지' && currentUser && currentUser.studentId) {
                  completeButton = `<button class="complete-btn" title="확인/완료" onclick="completeItem('${item.id}')">✔</button>`;
             }
+            if (isTeacherMode && item.type === '공지') {
+                completeButton = `<button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[데이터_알림]')">✖</button>`;
+            }
 
             const icon = item.icon ? `<span class="icon">${item.icon}</span>` : '';
             const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
@@ -490,13 +507,11 @@
 
         if (todayRoutines.length > 0) {
             routineContainer.style.display = 'block';
-            routineContainer.innerHTML = `<div class="section-title"><span class="icon">🌟</span>오늘의 루틴 업무</div>` + 
-            todayRoutines.map(r => `
-                <div class="routine-item ${completedItems[r.id] ? 'completed' : ''}" id="${r.id}">
-                    <input type="checkbox" id="check-${r.id}" onchange="toggleRoutineComplete('${r.id}')" ${completedItems[r.id] ? 'checked' : ''}>
-                    <label for="check-${r.id}">${r.title}</label>
-                </div>
-            `).join('');
+            routineContainer.innerHTML = `<div class="section-title"><span class="icon">🌟</span>오늘의 루틴 업무</div><div id="routine-tasks-container">${todayRoutines.map(r => `
+                <label class="routine-item ${completedItems[r.id] ? 'completed' : ''}" id="${r.id}">
+                    <input type="checkbox" onchange="toggleRoutineComplete('${r.id}')" ${completedItems[r.id] ? 'checked' : ''}>
+                    <span>${r.title}</span>
+                </label>`).join('')}</div>`;
         } else { routineContainer.style.display = 'none'; }
         
         const assignmentContainer = document.getElementById('assignment-status');
@@ -540,8 +555,8 @@
     }
 
     function toggleRoutineComplete(itemId) {
-        const checkbox = document.getElementById(`check-${itemId}`);
         const itemElement = document.getElementById(itemId);
+        const checkbox = itemElement.querySelector('input[type="checkbox"]');
         if (checkbox.checked) { completedItems[itemId] = true; } 
         else { delete completedItems[itemId]; }
         saveCompletedItems();
