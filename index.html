@@ -48,10 +48,10 @@
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
         .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
+        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; text-decoration: none; }
         .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
-        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
+        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
+        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
         .teacher-card-button { display: block; text-align: center; margin-top: auto; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
@@ -64,7 +64,7 @@
         #modal-content h2 { margin-bottom: 20px; }
         #modal-content form div { margin-bottom: 15px; }
         #modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
-        #modal-content input, #modal-content select, #modal-content textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        #modal-content input, #modal-content select, #modal-content textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
         #modal-buttons { text-align: right; margin-top: 20px; }
         #modal-buttons button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-left: 10px; }
         #submitLeave { background: var(--primary-color); color: white; }
@@ -91,13 +91,22 @@
 <body>
     <div id="modal-overlay">
         <div id="modal-content">
-            <h2 id="modal-title">외출/조퇴 신청</h2>
+            <h2 id="modal-title">외출 신청</h2>
             <form id="leave-request-form">
-                <div style="display:none;"><label for="leave-type">신청 종류</label><input type="text" id="leave-type" name="type" readonly></div>
-                <div><label for="leave-date">희망 일자</label><input type="date" id="leave-date" name="date" required></div>
-                <div><label for="leave-reason">사유</label><textarea id="leave-reason" name="reason" rows="3" required></textarea></div>
+                <input type="hidden" id="leave-type" name="type">
+                <div>
+                    <label for="leave-date">희망 일자</label>
+                    <input type="date" id="leave-date" name="date" required>
+                </div>
+                <div>
+                    <label for="leave-reason">사유</label>
+                    <textarea id="leave-reason" name="reason" rows="4" required></textarea>
+                </div>
+                <div id="modal-buttons">
+                    <button type="button" id="closeModal">취소</button>
+                    <button type="button" id="submitLeave">제출</button>
+                </div>
             </form>
-            <div id="modal-buttons"><button id="closeModal">취소</button><button id="submitLeave">제출</button></div>
         </div>
     </div>
     <div class="container">
@@ -111,7 +120,7 @@
                 <div id="leave-section" style="display: none;">
                     <div class="section">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h2 class="section-title" style="margin: 0; border: none; padding: 0;"><span class="icon">✈️</span>외출/조퇴 신청</h2>
+                            <h2 class="section-title" style="margin: 0; border: none; padding: 0;"><span class="icon">✈️</span>외출/조퇴</h2>
                             <div class="leave-request-buttons">
                                 <button class="leave-request-btn" id="request-go-out">외출</button>
                                 <button class="leave-request-btn" id="request-early-leave">조퇴</button>
@@ -157,9 +166,11 @@
                 loadData();
             } else {
                 const teacherDashboard = document.getElementById('teacher-dashboard');
-                teacherDashboard.style.display = 'block';
-                document.getElementById('student-portal').style.display = 'none';
-                teacherDashboard.innerHTML = '<div class="empty-state">교사 계정으로 로그인해주세요.</div>';
+                if(teacherDashboard) {
+                    teacherDashboard.style.display = 'block';
+                    document.getElementById('student-portal').style.display = 'none';
+                    teacherDashboard.innerHTML = '<div class="empty-state">교사 계정으로 로그인해주세요.</div>';
+                }
             }
         }
         updateDateDisplay();
@@ -204,7 +215,9 @@
             if (e.target.classList.contains('accordion-title')) {
                 e.target.classList.toggle('active');
                 const content = e.target.nextElementSibling;
-                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                if (content) {
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                }
             }
         });
     }
@@ -311,7 +324,7 @@
         } catch (error) {
             console.error('Error fetching data:', error);
             const targetEl = isTeacherMode ? teacherDashboard : document.getElementById('notices');
-            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+            if(targetEl) targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
         }
     }
     
@@ -375,6 +388,7 @@
             if (item.type !== '공지' && currentUser && currentUser.studentId) {
                  completeButton = `<button class="complete-btn" title="확인/완료" onclick="completeItem('${item.id}')">✔</button>`;
             }
+            
             const icon = item.icon ? `<span class="icon">${item.icon}</span>` : '';
             const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
             let contentHtml = '';
@@ -525,7 +539,6 @@
                 let accordionHtml = '';
                 let cardsHtml = '';
                 const items = data.dashboardItems[selectedTab];
-
                 const specialItems = items.filter(item => item.special);
                 const normalItems = items.filter(item => !item.special);
                 
@@ -534,7 +547,7 @@
                     if (item.special === 'leave') {
                         content = data.pendingLeaveRequests.length > 0 ? data.pendingLeaveRequests.map(req => `<div class="teacher-leave-card"><strong>${req.이름} (${req.학번})</strong> - ${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})<p>사유: ${req.사유}</p><input type="text" id="comment-${req.rowNum}" class="leave-comment-input" placeholder="코멘트 (선택 사항)"><div class="leave-actions"><button class="approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'comment-${req.rowNum}')">승인</button><button class="reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'comment-${req.rowNum}')">반려</button></div></div>`).join('') : '<div class="empty-state">신청 내역이 없습니다.</div>';
                     } else if (item.special === 'assignment') {
-                        content = data.assignments.length > 0 ? data.assignments.map(a => `<div class="assignment-card" id="${a.id}"><button class="teacher-complete-btn" title="목록에서 숨기기" onclick="completeItem('${a.id}', true, ${a.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${a.title}</div><div class="assignment-actions">${a.responseSheetUrl ? `<a href="${a.responseSheetUrl}" target="_blank"><button class="response-btn">응답 확인</button></a>` : ''}${(a.assignmentType === '단일제출') ? `<button class="check-btn" onclick="checkUnsubmitted(event, '${a.taskId}', '${a.title}', '${a.studentIdColumn}')">미제출자 확인</button>` : ''}</div></div>`).join('') : '<div class="empty-state">확인할 과제가 없습니다.</div>';
+                        content = data.assignments.length > 0 ? data.assignments.map(a => `<div class="assignment-card" id="${a.id}"><button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${a.id}', true, ${a.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${a.title}</div><div class="assignment-actions">${a.responseSheetUrl ? `<a href="${a.responseSheetUrl}" target="_blank"><button class="response-btn">응답 확인</button></a>` : ''}${(a.assignmentType === '단일제출') ? `<button class="check-btn" onclick="checkUnsubmitted(event, '${a.taskId}', '${a.title}', '${a.studentIdColumn}')">미제출자 확인</button>` : ''}</div></div>`).join('') : '<div class="empty-state">확인할 과제가 없습니다.</div>';
                     } else if (item.special === 'notice') {
                         content = data.allNotices.length > 0 ? data.allNotices.map(n => `<div class="notice-item" id="${n.id}"><button class="teacher-complete-btn" title="게시 종료" onclick="completeItem('${n.id}', true, ${n.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${n.icon || ''} ${n.title}</div><div class="notice-content">${n.content}</div></div>`).join('') : '<div class="empty-state">게시된 공지가 없습니다.</div>';
                     }
@@ -551,7 +564,6 @@
                       </div>
                   `).join('') + `</div>`;
                 }
-
                 accordionContainer.innerHTML = accordionHtml;
                 linksContainer.innerHTML = cardsHtml;
             };
