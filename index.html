@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>우리 반 알림 포털</title>
+    <!-- ▼▼▼ google.script.run을 위해 추가 ▼▼▼ -->
+    <script src="https://apis.google.com/js/api.js"></script> 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         /* CSS는 변경 없음 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
         a { text-decoration: none; color: inherit; }
-        button, input, select, textarea { font-family: inherit; font-size: 1em; }
         .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.98); border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; backdrop-filter: blur(10px); }
         .auth-container { padding: 10px 30px; text-align: right; background-color: rgba(0,0,0,0.1); min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
         .user-info { color: #333; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
@@ -101,7 +102,7 @@
     </div>
     
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrLZbWH2i4nde1QMarLLqdTA4c2PVzymkMbMyw1Saw1DQFLd9mCA_T--hVat-twt40/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbym3z1jJHCKeP6bsGXo86omJReAMD2au6je47HLOFXqO5QKIcTDgSA7zc0vc2ElhEE1/exec";
         const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
         let currentUser = null;
         let submittedTasks = new Set();
@@ -110,58 +111,62 @@
         const isTeacherMode = urlParams.get('mode') === 'teacher';
         
         async function fetchApi(action, params = {}) {
-            const payload = { action, ...params };
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                mode: 'cors'
-            });
-            if (!response.ok) throw new Error(`API 호출 실패: ${response.statusText}`);
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
-            return data;
-        }
-
-        window.onload = function () {
-            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
-            const storedUser = localStorage.getItem('userInfo');
-            if (storedUser) {
-                currentUser = JSON.parse(storedUser);
-                renderUserInfo(currentUser);
-                loadPortal();
+            // 교사 인증이 필요한 Action 목록
+            const teacherActions = ['getTeacherData', 'createNewForm', 'updateLeaveStatus'];
+            
+            if (isTeacherMode && teacherActions.includes(action)) {
+                // 교사용 API는 google.script.run 사용
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(response => {
+                            if (response && response.error) {
+                                reject(new Error(response.error));
+                            } else {
+                                resolve(response);
+                            }
+                        })
+                        .withFailureHandler(error => reject(new Error(error.message || '서버 스크립트 실행 실패')))
+                        [action](params);
+                });
             } else {
-                google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
-                loadPortal();
-            }
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-        };
-
-        async function handleCredentialResponse(response) {
-            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
-            try {
-                const data = await fetchApi('getPersonalizedData', { email: userObject.email });
-                if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; } 
-                else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; }
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } catch (error) {
-                console.error("로그인 처리 중 오류:", error);
-                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' };
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } finally {
-                location.reload();
+                // 학생/익명용 API는 JSONP 사용
+                return new Promise((resolve, reject) => {
+                    const callbackName = 'jsonpCallback_' + Math.round(100000 * Math.random());
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        if (data.error) {
+                            reject(new Error(data.error));
+                        } else {
+                            resolve(data);
+                        }
+                    };
+                    const script = document.createElement('script');
+                    const url = new URL(SCRIPT_URL);
+                    if (action) url.searchParams.set('action', action);
+                    for (const key in params) {
+                        const value = typeof params[key] === 'boolean' ? String(params[key]) : params[key];
+                        url.searchParams.set(key, value);
+                    }
+                    url.searchParams.set('callback', callbackName);
+                    url.searchParams.set('v', new Date().getTime());
+                    script.src = url.toString();
+                    script.onerror = () => reject(new Error('JSONP 요청 실패'));
+                    document.body.appendChild(script);
+                });
             }
         }
         
         // 이하 모든 Javascript 코드는 이전과 동일하며, 오류가 없습니다.
         function toggleLeaveSection(sectionIdToShow) { const formWrapper = document.getElementById('leave-form-wrapper'); const statusWrapper = document.getElementById('leave-status-wrapper'); const targetWrapper = document.getElementById(sectionIdToShow); if (targetWrapper.style.display === 'block') { targetWrapper.style.display = 'none'; return; } formWrapper.style.display = 'none'; statusWrapper.style.display = 'none'; targetWrapper.style.display = 'block'; }
+        window.onload = function () { google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse }); const storedUser = localStorage.getItem('userInfo'); if (storedUser) { currentUser = JSON.parse(storedUser); renderUserInfo(currentUser); loadPortal(); } else { google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" }); loadPortal(); } updateDateTime(); setInterval(updateDateTime, 1000); };
+        async function handleCredentialResponse(response) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); try { const data = await fetchApi(null, { email: userObject.email }); if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; } else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; } localStorage.setItem('userInfo', JSON.stringify(currentUser)); } catch (error) { console.error("로그인 처리 중 오류:", error); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, role: 'guest' }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); } finally { location.reload(); } }
         function handleLogout() { localStorage.removeItem('userInfo'); currentUser = null; google.accounts.id.disableAutoSelect(); location.reload(); }
         function renderUserInfo(user) { document.getElementById('user-display').style.display = 'block'; document.getElementById('gsi-container').style.display = 'none'; document.querySelector('.auth-container').style.color = '#333'; let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`; if (user.role === 'guest') { userInfoHtml += ` <span class="user-info" style="color: #ffc107; font-weight: bold;">(미등록)</span>`; } document.getElementById('user-display').innerHTML = userInfoHtml; if(user && user.role === 'student'){ document.getElementById('leave-management-section').style.display = 'block'; } }
         function loadPortal() { if (isTeacherMode) { document.getElementById('student-portal').style.display = 'none'; document.getElementById('teacher-dashboard').style.display = 'block'; loadTeacherDashboard(); } else { document.getElementById('student-portal').style.display = 'block'; document.getElementById('teacher-dashboard').style.display = 'none'; loadStudentPortal(); } }
-        async function loadStudentPortal() { const sections = ['notices', 'tasks', 'resources', 'leave-status-container']; sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">🔄 데이터를 불러오는 중...</div>`; }); try { const params = currentUser ? { email: currentUser.email } : {}; const data = await fetchApi('getPersonalizedData', params); submittedTasks = new Set(data.submittedTasks || []); teacherStampUrl = data.teacherStampUrl || ''; renderWidgets(data.widgets); renderItems('notices', data.notices, '자세히 보기 →', false); renderItems('tasks', data.tasks, '바로 하기 →', true); renderUnsubmitted(data.unsubmitted); renderResources(data.resources); renderLeaveStatus(data.leaveRequests); document.getElementById('leave-date').value = new Date().toISOString().substring(0, 10); } catch (error) { console.error('Error fetching student data:', error); sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`; }); } }
+        async function loadStudentPortal() { const sections = ['notices', 'tasks', 'resources', 'leave-status-container']; sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">🔄 데이터를 불러오는 중...</div>`; }); try { const params = currentUser ? { email: currentUser.email } : {}; const data = await fetchApi(null, params); submittedTasks = new Set(data.submittedTasks || []); teacherStampUrl = data.teacherStampUrl || ''; renderWidgets(data.widgets); renderItems('notices', data.notices, '자세히 보기 →', false); renderItems('tasks', data.tasks, '바로 하기 →', true); renderUnsubmitted(data.unsubmitted); renderResources(data.resources); renderLeaveStatus(data.leaveRequests); document.getElementById('leave-date').value = new Date().toISOString().substring(0, 10); } catch (error) { console.error('Error fetching student data:', error); sections.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`; }); } }
         async function loadTeacherDashboard() { if (!currentUser || currentUser.role !== 'teacher') { document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">🔒 교사 계정으로 로그인해야 접근할 수 있습니다.</div>`; return; } document.getElementById('teacher-dashboard-container').innerHTML = '<div class="empty-state">🔄 대시보드 데이터를 불러오는 중...</div>'; try { const data = await fetchApi('getTeacherData'); renderTeacherDashboard(data); } catch (error) { console.error('Error fetching teacher data:', error); document.getElementById('teacher-dashboard-container').innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`; } }
-        function renderItems(containerId, items, defaultButtonText, isTask = false) { const container = document.getElementById(containerId); if (!items || items.length === 0) { container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`; return; } container.innerHTML = items.map(item => { const icon = item.icon ? `${item.icon} ` : ''; const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : ''; let contentHtml = ''; const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : []; if (subtasks.length > 0 && item.taskId) { contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => { const fullTaskId = `${item.taskId}_${subtask}`; const isCompleted = submittedTasks.has(fullTaskId); return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`; }).join('') + `</ul>`; } else { const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : ''; const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : ''; let finalLink = item.link; if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) { const url = new URL(SCRIPT_URL); url.searchParams.set('action', 'logClick'); url.searchParams.set('studentId', currentUser.studentId); url.searchParams.set('name', currentUser.name); url.searchParams.set('taskId', item.taskId); url.searchParams.set('url', item.link); finalLink = url.toString(); } const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : ''; contentHtml = image + content + linkHtml; } return `<div class="notice-item">${title}${contentHtml}</div>`; }).join(''); }
+        function renderItems(containerId, items, defaultButtonText, isTask = false) { const container = document.getElementById(containerId); if (!items || items.length === 0) { container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`; return; } container.innerHTML = items.map(item => { const icon = item.icon ? `${item.icon} ` : ''; const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : ''; let contentHtml = ''; const subtasks = isTask && (item.recordable || !item.link) && item.content.includes(',') ? item.content.split(',').map(s => s.trim()) : []; if (subtasks.length > 0 && item.taskId) { contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => { const fullTaskId = `${item.taskId}_${subtask}`; const isCompleted = submittedTasks.has(fullTaskId); return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`; }).join('') + `</ul>`; } else { const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : ''; const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : ''; let finalLink = item.link; if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) { const params = new URLSearchParams({ action: 'logClick', studentId: currentUser.studentId, name: encodeURIComponent(currentUser.name), taskId: encodeURIComponent(item.taskId), url: encodeURIComponent(item.link) }); finalLink = `${SCRIPT_URL}?${params.toString()}`; } const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : ''; contentHtml = image + content + linkHtml; } return `<div class="notice-item">${title}${contentHtml}</div>`; }).join(''); }
         async function toggleSubtask(checkbox, taskId, subtask) { if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; } const isChecked = checkbox.checked; const listItem = checkbox.closest('.subtask-item'); listItem.style.opacity = '0.5'; try { await fetchApi('logSubtask', { studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked }); listItem.classList.toggle('completed', isChecked); const fullTaskId = `${taskId}_${subtask}`; if (isChecked) { submittedTasks.add(fullTaskId); } else { submittedTasks.delete(fullTaskId); } } catch (error) { alert(`오류: ${error.message}`); checkbox.checked = !isChecked; } finally { listItem.style.opacity = '1'; } }
         function renderUnsubmitted(tasks) { const container = document.getElementById("unsubmitted-container"); if (!currentUser || !tasks || tasks.length === 0) { container.style.display = "none"; return; } container.style.display = "block"; container.innerHTML = `<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t => `<li>${t.icon || "📌"} ${t.title || t.content}</li>`).join("")}</ul></div>`; }
         function renderWidgets(widgets) { const container = document.getElementById("widgets-container"); if (!widgets || widgets.length === 0) { container.style.display = "none"; return; } container.style.display = "flex"; container.innerHTML = widgets.map(t => { let e = ""; switch (t.type) { case "디데이": const n = new Date(); n.setHours(0, 0, 0, 0); const o = new Date(t.content); o.setHours(0, 0, 0, 0); const i = Math.ceil((o - n) / 86400000); e = i > 0 ? `D-${i}` : i < 0 ? `D+${-i}` : "D-Day"; break; case "급식": e = `<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`; break; case "링크": e = `<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`; break; default: e = t.content; break; } return `<div class="widget"><div class="widget-title">${t.title}</div>${t.type !== "급식" ? `<div class="widget-content">${e}</div>` : e}</div>`; }).join(""); }
