@@ -78,6 +78,7 @@
         .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px;}
         .accordion-title::after { content: '▼'; font-size: 0.8em; }
         .accordion-title.active::after { content: '▲'; }
+        #teacher-dashboard .complete-btn { display:none; }
     </style>
 </head>
 <body>
@@ -124,7 +125,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwo0V1RxtH6jtsuC5fPH9RNfYlVQpP8KoSJxXntNCCudpPgUmwIjbQ_fUYuLuSwKzKk/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRckV1ru4CgwBDNfZR7AsiRr4AsaiMps0iF9x-Tcxjp07RVZuLWe_N5TmIh3K4bgWE/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 
     let currentUser = null;
@@ -324,18 +325,25 @@
         itemElement.style.maxHeight = '0px';
         itemElement.style.paddingTop = '0';
         itemElement.style.paddingBottom = '0';
-        itemElement.style.marginBottom = '0';
+        itemElement.style.margin = '0';
         setTimeout(() => itemElement.remove(), 500);
     }
 
     async function handleSubmission(item) {
         if (!currentUser || !currentUser.studentId) return; 
         if (submittedTasks.has(item.taskId)) return; 
-        const params = new URLSearchParams({ action: 'logClick', studentId: currentUser.studentId, name: encodeURIComponent(currentUser.name), taskId: encodeURIComponent(item.taskId) });
+        const params = new URLSearchParams({
+            action: 'logClick',
+            studentId: currentUser.studentId,
+            name: encodeURIComponent(currentUser.name),
+            taskId: encodeURIComponent(item.taskId)
+        });
         try {
             const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await response.json();
-            if (result.status === 'success') { submittedTasks.add(item.taskId); }
+            if (result.status === 'success') {
+                submittedTasks.add(item.taskId);
+            }
         } catch (error) { console.error('제출 기록 오류:', error); }
     }
 
@@ -426,6 +434,7 @@
         });
 
         if (todayRoutines.length > 0) {
+            routineContainer.style.display = 'block';
             routineContainer.innerHTML = `<div class="section-title"><span class="icon">🌟</span>오늘의 루틴 업무</div>` + 
             todayRoutines.map(r => `
                 <div class="routine-item ${completedItems[r.id] ? 'completed' : ''}" id="${r.id}">
@@ -433,13 +442,8 @@
                     <label for="check-${r.id}">${r.title}</label>
                 </div>
             `).join('');
-        } else { routineContainer.innerHTML = ''; }
-
-        const assignmentSection = document.getElementById('assignment-section');
-        const pendingLeaveSection = document.getElementById('pending-leave-section');
-        assignmentSection.remove();
-        pendingLeaveSection.remove();
-
+        } else { routineContainer.style.display = 'none'; }
+        
         const tabsContainer = document.getElementById('teacher-tabs-container');
         const linksContainer = document.getElementById('teacher-links');
         const tabs = Object.keys(data.dashboardItems);
@@ -541,5 +545,4 @@
         document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     }
 </script>
-
 </html>
