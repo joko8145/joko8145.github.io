@@ -13,7 +13,7 @@
         .auth-container { padding: 10px 30px; text-align: right; background-color: #343a40; min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
         .user-info { color: white; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
         .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
-        .user-info a { color: #fff; text-decoration: underline; margin-left: 10px; font-weight: bold; }
+        .user-info a { color: #fff; text-decoration: none; margin-left: 10px; font-weight: bold; border-bottom: 1px dotted white;}
         #gsi-container { display: inline-block; }
         .header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 40px 30px; text-align: center; }
         .header h1 { font-size: 2.8em; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
@@ -47,11 +47,11 @@
         .leave-history-item:first-child { padding-top: 0; }
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
-        .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
-        .teacher-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
-        .teacher-card p { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
+        .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
+        .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; }
+        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; }
         .teacher-card-button { display: block; text-align: center; margin-top: auto; }
         .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
         .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
@@ -61,6 +61,13 @@
         .approve-btn, .check-btn { background: #28a745; } .reject-btn { background: #dc3545; } .response-btn { background: #007bff; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
+        #modal-content h2 { margin-bottom: 20px; }
+        #modal-content form div { margin-bottom: 15px; }
+        #modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
+        #modal-content input, #modal-content select, #modal-content textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        #modal-buttons { text-align: right; margin-top: 20px; }
+        #modal-buttons button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-left: 10px; }
+        #submitLeave { background: var(--primary-color); color: white; }
         .routine-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: color 0.2s, background-color 0.2s; background: white; border-radius: 8px; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         .routine-item:last-child { border-bottom: none; }
         .routine-item input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; cursor: pointer; accent-color: var(--primary-color); }
@@ -119,8 +126,8 @@
                 <div id="routine-tasks-section" class="section"></div>
                 <div id="teacher-admin-section"></div>
                 <div id="teacher-tabs-container" class="section"></div>
-                <div id="teacher-links"></div>
                 <div id="accordion-container"></div>
+                <div id="teacher-links"></div>
             </div>
         </div>
     </div>
@@ -262,7 +269,7 @@
         } else {
             studentPortal.style.display = 'block';
             teacherDashboard.style.display = 'none';
-            ['notices', 'tasks', 'resources', 'leave-requests'].forEach(id => {
+            ['notices', 'tasks', 'leave-requests', 'resources'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
             });
@@ -368,7 +375,6 @@
             if (item.type !== '공지' && currentUser && currentUser.studentId) {
                  completeButton = `<button class="complete-btn" title="확인/완료" onclick="completeItem('${item.id}')">✔</button>`;
             }
-            
             const icon = item.icon ? `<span class="icon">${item.icon}</span>` : '';
             const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
             let contentHtml = '';
@@ -436,9 +442,8 @@
     
     function renderResources(resources) {
         const container = document.getElementById('resources');
-        if (!container.classList.contains('resource-grid')) container.classList.add('resource-grid');
         if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; }
-        container.innerHTML = resources.map(res => `<a href="${res.link}" target="_blank" class="teacher-card resource-card"><div class="teacher-card-title">${res.icon} ${res.title}</div><p>${res.description||""}</p></a>`).join('');
+        container.innerHTML = resources.map(res => `<a href="${res.link}" target="_blank" class="teacher-card resource-card"><div class="teacher-card-title">${res.icon} ${res.title}</div><p>${res.description||" "}</p></a>`).join('');
     }
 
     function renderLeaveRequests(requests) {
