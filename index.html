@@ -18,20 +18,20 @@
         .header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 40px 30px; text-align: center; }
         .header h1 { font-size: 2.8em; margin-bottom: 10px; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
         .date-display { font-size: 1.3em; opacity: 0.9; }
-        .content { padding: 30px; }
+        .content { padding: 0; /* 탭 UI를 위해 기존 패딩 제거 */ }
         .section { margin-bottom: 40px; }
         .section-title { font-size: 1.5em; font-weight: bold; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
         .section-title .icon { margin-right: 10px; }
         .empty-state { text-align: center; padding: 40px; color: #666; font-size: 1.1em; background-color: #f8f9fa; border-radius: 8px; }
-        .notice-item, .teacher-leave-card, .assignment-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
+        .notice-item, .teacher-leave-card { background: white; border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; overflow: hidden; border-left: 4px solid var(--primary-color); }
         .notice-title { font-size: 1.25em; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; }
         .notice-title .icon { margin-right: 8px; }
         .notice-content { font-size: 1.1em; line-height: 1.7; color: var(--text-light); }
         .notice-image { max-width: 100%; border-radius: 8px; margin-top: 15px; margin-bottom: 15px; display: block; }
-        .notice-link, .certificate-link { display: inline-block; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white; padding: 10px 18px; border-radius: 25px; margin-top: 15px; cursor: pointer; border: none; font-weight: 500; transition: all 0.2s ease; text-decoration: none; }
-        .notice-link:hover, .certificate-link:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .notice-link, .certificate-link, .teacher-card-button { display: inline-block; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white; padding: 10px 18px; border-radius: 25px; margin-top: 15px; cursor: pointer; border: none; font-weight: 500; transition: all 0.2s ease; text-decoration: none; }
+        .notice-link:hover, .certificate-link:hover, .teacher-card-button:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .certificate-link { background: #17a2b8; margin-left: 10px; }
-        .unsubmitted-section { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; }
+        .unsubmitted-section { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; margin-left: 30px; margin-right: 30px; margin-top: 20px;}
         .unsubmitted-title { font-weight: bold; color: #856404; margin-bottom: 10px; font-size: 1.2em; }
         .subtask-list, .unsubmitted-list { list-style: none; margin: 15px 0 0 5px; padding: 0;}
         .subtask-item { display: flex; align-items: center; margin-bottom: 10px; }
@@ -48,31 +48,47 @@
         .leave-history-item + .leave-history-item { border-top: 1px solid #eee; }
         .leave-comment { font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;}
         .teacher-dashboard-grid, .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; cursor: pointer;}
+        .teacher-card, .resource-card { background: white; border-radius: var(--border-radius); padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-color); transition: all 0.2s ease; display: block; position: relative; text-decoration: none; }
         .teacher-card:hover, .resource-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 8px; }
-        .teacher-card-title a { text-decoration: none; color: inherit; } .teacher-card-title a:hover { text-decoration: underline; }
-        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; font-size: 1em; }
-        .form-creator input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
-        .form-creator button { width: 100%; padding: 12px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; }
+        .teacher-card-title, .resource-title { font-weight: 700; font-size: 1.3em; color: var(--primary-color); margin-bottom: 5px; text-decoration: none; }
+        .teacher-card p, .resource-desc { margin-bottom: 15px; color: var(--text-light); flex-grow: 1; text-decoration: none; }
+        .form-creator input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; font-size: 1em;}
+        .form-creator button { width: 100%; padding: 10px 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; font-size: 1em; }
         .leave-comment-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 10px; }
         .leave-actions, .assignment-actions { text-align: right; margin-top: 15px; }
-        .leave-actions button, .assignment-actions button { padding: 8px 12px; margin-left: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 0.9em;}
+        .leave-actions button, .assignment-actions button { padding: 8px 12px; margin-left: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
         .approve-btn, .check-btn { background: #28a745; } .reject-btn { background: #dc3545; } .response-btn { background: #007bff; }
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
+        .complete-btn, .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 28px; text-align: center; opacity: 0.7; transition: opacity 0.2s;}
+        .complete-btn:hover, .teacher-complete-btn:hover { opacity: 1; }
+        .complete-btn { background: #28a745; }
+        .teacher-complete-btn { background: #dc3545; font-size: 18px; }
         #routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
-        .routine-item { display: inline-flex; align-items: center; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
+        .routine-item { display: inline-flex; align-items: center; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
         .routine-item input[type="checkbox"] { display: none; }
         .routine-item label { cursor: pointer; }
-        .routine-item.completed { background: transparent; color: #aaa; border-color: #ccc; }
+        .routine-item.completed { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
         .routine-item.completed label { text-decoration: line-through; }
-        .complete-btn { position: absolute; top: 15px; right: 15px; background: #28a745; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 16px; line-height: 28px; text-align: center; opacity: 0.7; transition: opacity 0.2s;}
-        .complete-btn:hover { opacity: 1; }
+        .accordion-title { cursor: pointer; padding: 15px; background: #f1f3f5; border-radius: 8px; font-weight: bold; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;}
+        .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px;}
+        .accordion-title::after { content: '▼'; font-size: 0.8em; }
+        .accordion-title.active::after { content: '▲'; }
+
+        /* --- ✨ 탭 UI 스타일 추가 --- */
+        .tabs { display: flex; border-bottom: 2px solid #e0e0e0; background-color: var(--light-bg); padding: 0 20px; }
+        .tab-button { padding: 15px 20px; cursor: pointer; border: none; background: none; font-size: 1.05em; font-weight: 500; color: var(--text-light); position: relative; transition: color 0.2s ease-in-out; }
+        .tab-button::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); transform: scaleX(0); transition: transform 0.3s ease; }
+        .tab-button.active { color: var(--primary-color); font-weight: 700; }
+        .tab-button.active::after { transform: scaleX(1); }
+        .tab-pane { display: none; padding: 30px; animation: fadeIn 0.5s; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="modal-overlay">
+        <!-- 모달 내용은 변경 없음 -->
         <div id="modal-content">
             <h2 id="modal-title">외출 신청</h2>
             <form id="leave-request-form">
@@ -95,31 +111,59 @@
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
+        
         <div class="content">
+            <!-- ✨ 학생 포털 UI 구조 변경 -->
             <div id="student-portal">
+                <div class="tabs" id="student-tabs">
+                    <button class="tab-button active" data-tab="student-tab-1">오늘의 알림</button>
+                    <button class="tab-button" data-tab="student-tab-2">외출/조퇴</button>
+                    <button class="tab-button" data-tab="student-tab-3">우리 반 자료실</button>
+                </div>
+                
                 <div id="unsubmitted-container"></div>
-                <div class="section"><h2 class="section-title"><span class="icon">📢</span>중요 공지사항</h2><div id="notices"></div></div>
-                <div class="section"><h2 class="section-title"><span class="icon">✅</span>오늘의 할 일</h2><div id="tasks"></div></div>
-                <div id="leave-section" style="display: none;">
-                    <div class="section">
+
+                <div id="student-tab-1" class="tab-pane active">
+                    <div class="section"><h2 class="section-title"><span class="icon">📢</span>중요 공지사항</h2><div id="notices"></div></div>
+                    <div class="section"><h2 class="section-title"><span class="icon">✅</span>오늘의 할 일</h2><div id="tasks"></div></div>
+                </div>
+                <div id="student-tab-2" class="tab-pane">
+                    <div id="leave-section" class="section">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h2 class="section-title" style="margin: 0; border: none; padding: 0;"><span class="icon">✈️</span>외출/조퇴</h2>
+                            <h2 class="section-title" style="margin: 0; border: none; padding: 0;"><span class="icon">✈️</span>외출/조퇴 신청</h2>
                             <div class="leave-request-buttons">
                                 <button class="leave-request-btn" id="request-go-out">외출</button>
                                 <button class="leave-request-btn" id="request-early-leave">조퇴</button>
                             </div>
                         </div>
+                        <h3 style="font-size: 1.2em; margin-top: 30px; margin-bottom: 15px;">나의 신청 내역</h3>
                         <div id="leave-requests"></div>
                     </div>
                 </div>
-                <div class="section"><h2 class="section-title"><span class="icon">📚</span>우리 반 자료실</h2><div id="resources" class="resource-grid"></div></div>
+                <div id="student-tab-3" class="tab-pane">
+                     <div class="section"><h2 class="section-title"><span class="icon">📚</span>우리 반 자료실</h2><div id="resources" class="resource-grid"></div></div>
+                </div>
             </div>
+
+            <!-- ✨ 교사 대시보드 UI 구조 변경 -->
             <div id="teacher-dashboard" style="display: none;">
-                <div id="routine-tasks-section" class="section"></div>
-                <div id="teacher-admin-section"></div>
-                <div class="section" id="assignment-section"><div class="section-title"><span class="icon">📝</span>과제별 제출 현황</div><div id="assignment-status"></div></div>
-                <div class="section" id="pending-leave-section"><div class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</div><div id="pending-leave-requests"></div></div>
-                <div id="teacher-links"></div>
+                 <div class="tabs" id="teacher-tabs">
+                    <button class="tab-button active" data-tab="teacher-tab-1">종합 대시보드</button>
+                    <button class="tab-button" data-tab="teacher-tab-2">과제 관리</button>
+                    <button class="tab-button" data-tab="teacher-tab-3">교사 자료/링크</button>
+                </div>
+
+                <div id="teacher-tab-1" class="tab-pane active">
+                    <div id="routine-tasks-section" class="section"></div>
+                    <div id="teacher-admin-section"></div>
+                    <div class="section" id="pending-leave-section"><h2 class="section-title"><span class="icon">⏰</span>외출/조퇴 신청 확인</h2><div id="pending-leave-requests"></div></div>
+                </div>
+                <div id="teacher-tab-2" class="tab-pane">
+                    <div class="section" id="assignment-section"><h2 class="section-title"><span class="icon">📝</span>과제별 제출 현황</h2><div id="assignment-status"></div></div>
+                </div>
+                <div id="teacher-tab-3" class="tab-pane">
+                    <div id="teacher-links"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -152,13 +196,38 @@
                 if(teacherDashboard) {
                     teacherDashboard.style.display = 'block';
                     document.getElementById('student-portal').style.display = 'none';
-                    teacherDashboard.innerHTML = '<div class="empty-state">교사 계정으로 로그인해주세요.</div>';
+                    teacherDashboard.innerHTML = '<div class="empty-state" style="padding: 30px;">교사 계정으로 로그인해주세요.</div>';
                 }
             }
         }
         updateDateDisplay();
         setupEventListeners();
+        // ✨ 탭 기능 초기화
+        initTabs('student-tabs');
+        initTabs('teacher-tabs');
     };
+
+    // ✨ 탭 기능 활성화 함수
+    function initTabs(containerId) {
+        const tabContainer = document.getElementById(containerId);
+        if (!tabContainer) return;
+
+        const tabButtons = tabContainer.querySelectorAll('.tab-button');
+        const tabPanes = tabContainer.parentElement.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // 모든 버튼과 창에서 active 클래스 제거
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+
+                // 클릭된 버튼과 해당 창에 active 클래스 추가
+                button.classList.add('active');
+                const targetPaneId = button.getAttribute('data-tab');
+                document.getElementById(targetPaneId).classList.add('active');
+            });
+        });
+    }
 
     function loadCompletedItems() {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -193,6 +262,17 @@
 
         const submitLeaveBtn = document.getElementById('submitLeave');
         if(submitLeaveBtn) submitLeaveBtn.addEventListener('click', submitLeaveRequest);
+
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('.accordion-title');
+            if (target) {
+                target.classList.toggle('active');
+                const content = target.nextElementSibling;
+                if (content && content.classList.contains('accordion-content')) {
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                }
+            }
+        });
     }
 
     function openLeaveModal(type) {
@@ -249,12 +329,9 @@
             teacherDashboard.style.display = 'block';
             document.getElementById('routine-tasks-section').innerHTML = '';
             document.getElementById('teacher-admin-section').innerHTML = '';
-            const assignmentSection = document.getElementById('assignment-section');
-            if (assignmentSection) assignmentSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-            const pendingLeaveSection = document.getElementById('pending-leave-section');
-            if (pendingLeaveSection) pendingLeaveSection.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-            const teacherLinks = document.getElementById('teacher-links');
-            if (teacherLinks) teacherLinks.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            document.getElementById('assignment-status').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            document.getElementById('pending-leave-requests').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+            document.getElementById('teacher-links').innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
         } else {
             studentPortal.style.display = 'block';
             teacherDashboard.style.display = 'none';
@@ -270,8 +347,9 @@
             const data = await response.json();
             
             if (data.error) {
-                if (isTeacherMode) teacherDashboard.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
-                else studentPortal.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
+                const errorHtml = `<div class="empty-state" style="padding: 30px;">❌ ${data.error}</div>`;
+                if (isTeacherMode) teacherDashboard.innerHTML = errorHtml;
+                else studentPortal.innerHTML = errorHtml;
                 if(data.user) { currentUser.name = data.user.name; renderUserInfo(currentUser); }
                 return;
             }
@@ -283,10 +361,11 @@
             if (isTeacherMode) {
                 renderTeacherDashboard(data);
             } else {
+                const leaveTabButton = document.querySelector('[data-tab="student-tab-2"]');
                 if (data.user && data.user.studentId) {
-                    document.getElementById('leave-section').style.display = 'block';
+                    if(leaveTabButton) leaveTabButton.style.display = 'block';
                 } else {
-                    document.getElementById('leave-section').style.display = 'none';
+                    if(leaveTabButton) leaveTabButton.style.display = 'none';
                 }
                 
                 submittedTasks = new Set(data.submittedTasks || []);
@@ -299,8 +378,8 @@
 
         } catch (error) {
             console.error('Error fetching data:', error);
-            const targetEl = isTeacherMode ? teacherDashboard : document.getElementById('notices');
-            if(targetEl) targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
+            const targetEl = isTeacherMode ? teacherDashboard : studentPortal;
+            if(targetEl) targetEl.innerHTML = `<div class="empty-state" style="padding: 30px;">❌ 데이터 로드 실패! (${error.message})</div>`;
         }
     }
     
@@ -355,6 +434,7 @@
 
     function renderItems(containerId, items, defaultButtonText, isTask = false) {
         const container = document.getElementById(containerId);
+        if (!container) return;
         if (!items || items.length === 0) {
             container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
             return;
@@ -428,21 +508,16 @@
         container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` 
     }
     
-    function renderWidgets(widgets) {
-        const container = document.getElementById('widgets-container');
-        if(!widgets||widgets.length===0)return void(container.style.display="none");
-        container.style.display="flex";
-        container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=0===i?"D-Day":i>0?`D-${i}`:`D+${-i}`;break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g,"<br>")}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("");
-    }
-    
     function renderResources(resources) {
         const container = document.getElementById('resources');
+        if (!container) return;
         if (!resources || resources.length === 0) { container.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>'; return; }
         container.innerHTML = resources.map(res => `<a href="${res.link}" target="_blank" class="teacher-card resource-card"><div class="teacher-card-title">${res.icon || '🔗'} ${res.title}</div><p>${res.description||" "}</p></a>`).join('');
     }
 
     function renderLeaveRequests(requests) {
         const container = document.getElementById('leave-requests');
+        if (!container) return;
         if (!requests || requests.length === 0) { container.innerHTML = '<div class="empty-state">신청 내역이 없습니다.</div>'; return; }
         const todayStr = new Date().toISOString().split('T')[0];
         container.innerHTML = requests.map(req => {
@@ -495,7 +570,7 @@
 
         if (todayRoutines.length > 0) {
             routineContainer.style.display = 'block';
-            routineContainer.innerHTML = `<div class="section-title"><span class="icon">🌟</span>오늘의 루틴 업무</div><div id="routine-tasks-container">${todayRoutines.map(r => `
+            routineContainer.innerHTML = `<h2 class="section-title"><span class="icon">🌟</span>오늘의 루틴 업무</h2><div id="routine-tasks-container">${todayRoutines.map(r => `
                 <label class="routine-item ${completedItems[r.id] ? 'completed' : ''}" id="${r.id}">
                     <input type="checkbox" onchange="toggleRoutineComplete('${r.id}')" ${completedItems[r.id] ? 'checked' : ''}>
                     <span>${r.title}</span>
@@ -505,7 +580,7 @@
         const assignmentContainer = document.getElementById('assignment-status');
         if(data.assignments && data.assignments.length > 0){
             assignmentContainer.parentElement.style.display = 'block';
-            assignmentContainer.innerHTML = data.assignments.map(a => `<div class="assignment-card" id="${a.id}"><button class="teacher-complete-btn" title="목록에서 숨기기" onclick="completeItem('${a.id}', true, ${a.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${a.title}</div><div class="assignment-actions">${a.responseSheetUrl ? `<a href="${a.responseSheetUrl}" target="_blank"><button class="response-btn">응답 확인</button></a>` : ''}${(a.assignmentType === '단일제출') ? `<button class="check-btn" onclick="checkUnsubmitted(event, '${a.taskId}', '${a.title}', '${a.studentIdColumn}')">미제출자 확인</button>` : ''}</div></div>`).join('');
+            assignmentContainer.innerHTML = data.assignments.map(a => `<div class="notice-item" id="${a.id}"><button class="teacher-complete-btn" title="목록에서 숨기기" onclick="completeItem('${a.id}', true, ${a.rowNum}, '[데이터_알림]')">✖</button><div class="notice-title">${a.title}</div><div class="assignment-actions">${a.responseSheetUrl ? `<a href="${a.responseSheetUrl}" target="_blank"><button class="response-btn">응답 확인</button></a>` : ''}${(a.assignmentType === '단일제출') ? `<button class="check-btn" onclick="checkUnsubmitted(event, '${a.taskId}', '${a.title}', '${a.studentIdColumn}')">미제출자 확인</button>` : ''}</div></div>`).join('');
         } else {
             assignmentContainer.parentElement.style.display = 'none';
         }
@@ -516,18 +591,27 @@
             return acc;
         }, {});
         
+        // ✨ 교사 자료/링크를 아코디언 형태로 렌더링
         linksContainer.innerHTML = Object.keys(groupedItems).map(group => {
             return `<div class="section">
-                        <div class="section-title"><span class="icon">🗂️</span>${group}</div>
-                        <div class="teacher-dashboard-grid">
-                            ${groupedItems[group].map(item => `
-                                <a href="${item.url || '#'}" target="_blank" class="teacher-card" id="${item.id}">
-                                    <div class="teacher-card-title">${item.title}</div>
-                                    <p>${item.description || ' '}</p>
-                                </a>`).join('')}
+                        <div class="accordion-title"><span class="icon">🗂️</span>${group}</div>
+                        <div class="accordion-content">
+                            <div class="teacher-dashboard-grid">
+                                ${groupedItems[group].map(item => `
+                                    <div class="teacher-card" id="${item.id}">
+                                        <button class="teacher-complete-btn" title="완료 처리" onclick="completeItem('${item.id}', true, ${item.rowNum}, '[교사_대시보드]')">✔</button>
+                                        <div class="teacher-card-title">${item.title}</div>
+                                        <p>${item.description || ' '}</p>
+                                        ${item.url ? `<a href="${item.url}" target="_blank" class="teacher-card-button">${item.buttonText || '바로가기'}</a>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>`;
         }).join('');
+        if(Object.keys(groupedItems).length === 0) {
+            linksContainer.innerHTML = '<div class="empty-state">등록된 자료/링크가 없습니다.</div>';
+        }
 
 
         const pendingContainer = document.getElementById('pending-leave-requests');
