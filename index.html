@@ -711,7 +711,7 @@
         const container = document.getElementById(containerId);
         if (!items || items.length === 0) { container.innerHTML = ''; return; }
         let itemsHtml = items.map(item => {
-            let completeButtonIcon = completedItems[item.id] ? '✔' : '○';
+            let completeButtonIcon = completedItems[item.id] ? '✔' : '○'; // 동그라미 아이콘
             let completeButtonTitle = completedItems[item.id] ? '완료됨' : '확인/완료';
             let contentHtml = `<div class="notice-content">${item.내용.replace(/\n/g, '<br>')}</div>`;
             if (item.이미지URL) contentHtml += `<img src="${item.이미지URL}" alt="이미지" class="notice-image">`;
@@ -769,7 +769,7 @@
     }
     
     function openLeaveModal(type) {
-        const modal = document.getElementById('modal-overlay-leave');
+        const modal = document.getElementById('modal-overlay-leave'); // 외출/조퇴 전용 모달 ID
         if(modal) {
             modal.style.display = 'flex';
             modal.querySelector('#modal-title-leave').textContent = `${type} 신청`;
@@ -790,7 +790,7 @@
             const result = await response.json();
             alert(result.message);
             if (result.status === 'success') {
-                document.getElementById('modal-overlay-leave').style.display = 'none';
+                document.getElementById('modal-overlay-leave').style.display = 'none'; // 외출/조퇴 전용 모달 ID
                 form.reset();
                 loadData();
             }
