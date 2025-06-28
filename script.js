@@ -1,6 +1,6 @@
 // [최종 완성본 - JS 파일 분리 및 모든 오류 해결]
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8a4iV_CC_dlPqS6gnnIPrDKyTQxiaKk2cuRFWky2S_YGfmFNBqd7OXg8gljpJKJHu/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyI4mbZxNrweVJOd-Pn29xDakH7ibzs_v0XqqcdQdR7AzoNlAsnYRYDE1ui9nzObJai/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
 const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
 let currentUser = null;
 let completedItems = {};
