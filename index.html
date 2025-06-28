@@ -184,7 +184,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz47zLQJ_DLYolmVLTcVIlZG6HIextCzL9q8uysi9FyiHu-YNOyiWWAyX6e4A07d3iZ/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbweZB3X4aiVA8bNvXFINfWlULKb2MdgFGR9duzrpw2UQXfNX966RAuilFC1HUiLC5Y/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
@@ -651,7 +651,7 @@
     async function handleCredentialResponse(response) {
         const userObject = JSON.parse(atob(response.credential.split('.')[1]));
         currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
-        localStorage.setItem('userInfo', JSON.stringify(currentUser));
+        localStorage.setItem('userInfo', JSON.parse(JSON.stringify(currentUser)));
         location.reload();
     }
 
