@@ -80,9 +80,6 @@
         /* 모달 스타일 */
         #modal-overlay, #modal-overlay-leave { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content, #modal-content-leave { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
-        #modal-content h2, #modal-content-leave h2 { margin-bottom: 20px; }
-        #modal-content label, #modal-content-leave label { display: block; margin-bottom: 5px; font-weight: 500; }
-        #modal-content input, #modal-content textarea, #modal-content-leave input, #modal-content-leave textarea, #modal-content select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -184,7 +181,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyTal9U7H6w-In8_Pt1Ss9c3ACZJYdxVsTz8RenWVLx9gRXFUOsagq4wFX10BRZD7O4/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKIIIiNXdVHK1C_P2Q-rxV4RJBnnORww-Q8rKzjw7e9qMqr1bddlOMVlOT9Zh4xxnP/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
@@ -395,7 +392,7 @@
         const portal = document.getElementById('student-portal');
         portal.innerHTML = `
             <div id="widgets-container"></div>
-            <div id="class-schedules-display" class="section" style="margin-top: 0; padding-top: 0;"></div>
+            <div id="class-schedules-display" class="section" style="margin-top: 0; padding-top: 0;"></div> <!-- ✨ 학급 일정 섹션 위치 변경 -->
             <div id="unsubmitted-container"></div>
             <div class="tabs" id="student-tabs">
                 <button class="tab-button active" data-tab="student-tab-1">알림 & 할 일</button>
@@ -416,11 +413,32 @@
         }
         
         renderWidgets(data.widgets);
-        renderStudentClassSchedules(data.classSchedules);
+        renderStudentClassSchedules(data.classSchedules); // ✨ 학급 일정 렌더링 (디데이 아래)
         renderUnsubmitted(data.unsubmitted);
         renderItems('notices', data.notices.filter(item => !completedItems[item.id]), '📢 중요 공지');
         renderItems('tasks', data.tasks.filter(item => !completedItems[item.id]), '✅ 오늘의 할 일');
         renderResources(data.resources);
+    }
+
+    function renderStudentClassSchedules(schedules) {
+        const container = document.getElementById('class-schedules-display');
+        if (!schedules || schedules.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        let schedulesHtml = schedules.map(schedule => {
+            const displayDate = schedule['일정 시작일'] === schedule['일정 종료일'] ? schedule['일정 시작일'] : `${schedule['일정 시작일']} ~ ${schedule['일정 종료일']}`;
+            const target = schedule['대상 학생'] || '전체';
+            return `
+            <div class="card" style="padding: 15px;">
+                <div class="card-title">${schedule.아이콘 || ''} ${schedule.제목}</div>
+                <p class="card-description" style="font-size: 0.9em; margin-bottom: 5px;">기간: ${displayDate}</p>
+                ${schedule.내용 ? `<p class="card-description" style="font-size: 0.9em; margin-bottom: 5px;">내용: ${schedule.내용}</p>` : ''}
+                <div style="font-size: 0.8em; color: var(--text-light);">대상: ${target}</div>
+                ${schedule.링크 ? `<a href="${schedule.링크}" target="_blank" class="notice-link" style="padding: 8px 12px; margin-top: 10px; border-radius: 8px;">자세히 보기</a>` : ''}
+            </div>`;
+        }).join('');
+        container.innerHTML = `<h2 class="section-title"><span class="icon">📅</span>다가오는 학급 일정</h2>${schedulesHtml}`;
     }
     
     function renderWidgets(widgets) {
@@ -492,24 +510,28 @@
     }
 
     function setupEventListeners() {
+        // 외출/조퇴 모달 이벤트
         document.getElementById('leave-request-form')?.addEventListener('submit', function(e) { e.preventDefault(); submitLeaveRequest(); });
         document.getElementById('closeLeaveModal')?.addEventListener('click', () => document.getElementById('modal-overlay-leave').style.display = 'none');
 
+        // 통합 게시물 등록 모달 이벤트
         document.getElementById('post-form')?.addEventListener('submit', function(e) { e.preventDefault(); createUnifiedPost(e.target); });
         document.getElementById('closePostModal')?.addEventListener('click', () => document.getElementById('modal-overlay').style.display = 'none');
         
+        // 게시물 유형 선택 시 필드 동적 변경
         document.querySelectorAll('input[name="postType"]').forEach(radio => {
             radio.addEventListener('change', togglePostFormFields);
         });
 
+        // 과제 유형 (학생 할 일) 드롭다운 변경 시
         document.getElementById('post-assignment-type')?.addEventListener('change', togglePostFormFields);
 
+        // 통합 게시물 모달 열기 버튼
         document.querySelector('#teacher-settings-section .card.form-creator button.action-btn')?.addEventListener('click', openPostModal);
 
-        document.querySelector('#student-portal')?.addEventListener('click', function(e) {
-            if (e.target.classList.contains('student-leave-btn')) { openLeaveModal('외출'); }
-            else if (e.target.classList.contains('student-early-leave-btn')) { openLeaveModal('조퇴'); }
-        });
+        // 외출/조퇴 버튼 클릭 이벤트 (학생용)
+        document.querySelector('#student-portal #leave-section .action-btn.student-leave-btn')?.addEventListener('click', () => openLeaveModal('외출'));
+        document.querySelector('#student-portal #leave-section .action-btn.student-early-leave-btn')?.addEventListener('click', () => openLeaveModal('조퇴'));
     }
 
     function openPostModal() {
@@ -545,11 +567,13 @@
         taskFields.style.display = 'none';
         teacherTaskFields.style.display = 'none';
 
+        // 모든 필드를 필수가 아님으로 초기화 (기본 필드는 나중에 다시 필수로 설정)
         document.querySelectorAll('#post-form input, #post-form textarea, #post-form select').forEach(el => {
             el.removeAttribute('required');
             el.disabled = false;
         });
         
+        // 공통 필드는 항상 필수
         document.getElementById('post-title').setAttribute('required', 'required');
         document.getElementById('post-content').setAttribute('required', 'required');
 
@@ -563,6 +587,7 @@
                 taskFields.style.display = 'block';
                 document.getElementById('post-start-date').setAttribute('required', 'required');
                 
+                // 과제 유형에 따른 링크/버튼이름/기록여부 필수 여부
                 if (postAssignmentType.value === '구글폼 과제') {
                      document.getElementById('post-link').removeAttribute('required');
                      document.getElementById('post-button-text').removeAttribute('required');
@@ -582,10 +607,12 @@
             case '교사 개인 할 일':
                 teacherTaskFields.style.display = 'block';
                 document.getElementById('post-teacher-email').setAttribute('required', 'required');
+                // 마감일은 필수 아님
                 break;
             case '학급 일정':
                 studentFields.style.display = 'block';
                 document.getElementById('post-start-date').setAttribute('required', 'required');
+                // 링크/버튼이름 필수는 아님
                 break;
         }
     }
@@ -651,7 +678,7 @@
     async function handleCredentialResponse(response) {
         const userObject = JSON.parse(atob(response.credential.split('.')[1]));
         currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
-        localStorage.setItem('userInfo', JSON.parse(JSON.stringify(currentUser)));
+        localStorage.setItem('userInfo', JSON.stringify(currentUser));
         location.reload();
     }
 
