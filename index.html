@@ -500,7 +500,7 @@
 
         // 동적으로 생성되는 버튼에 대한 이벤트 위임 처리
         document.addEventListener('click', function(e) {
-            if (e.target && e.target.matches('#teacher-settings-section .card.form-creator button.action-btn')) {
+            if (e.target && e.target.closest('#teacher-settings-section .card.form-creator button.action-btn')) {
                 openPostModal();
             }
         });
@@ -532,6 +532,7 @@
         const taskFields = document.getElementById('task-only-fields');
         const teacherTaskFields = document.getElementById('teacher-task-only-fields');
         const postAssignmentType = document.getElementById('post-assignment-type');
+        document.getElementById('common-fields').style.display = 'block';
 
         studentFields.style.display = 'none';
         taskFields.style.display = 'none';
@@ -546,23 +547,14 @@
         document.getElementById('post-content').setAttribute('required', 'required');
 
         switch (selectedType) {
-            case '학생 공지':
-                studentFields.style.display = 'block';
-                document.getElementById('post-start-date').setAttribute('required', 'required');
-                break;
+            case '학생 공지': studentFields.style.display = 'block'; break;
             case '학생 할 일':
                 studentFields.style.display = 'block';
                 taskFields.style.display = 'block';
-                document.getElementById('post-start-date').setAttribute('required', 'required');
-                
                 if (postAssignmentType.value === '구글폼 과제') {
-                     document.getElementById('post-link').removeAttribute('required');
-                     document.getElementById('post-button-text').removeAttribute('required');
                      document.getElementById('post-recordable').checked = true;
                      document.getElementById('post-recordable').disabled = true;
                 } else {
-                     document.getElementById('post-link').setAttribute('required', 'required');
-                     document.getElementById('post-button-text').setAttribute('required', 'required');
                      document.getElementById('post-recordable').disabled = false;
                 }
                 break;
@@ -714,7 +706,7 @@
         const container = document.getElementById(containerId);
         if (!items || items.length === 0) { container.innerHTML = ''; return; }
         let itemsHtml = items.map(item => {
-            let completeButtonIcon = completedItems[item.id] ? '✔' : '○';
+            let completeButtonIcon = completedItems[item.id] ? '✔' : '○'; // 동그라미 아이콘
             let completeButtonTitle = completedItems[item.id] ? '완료됨' : '확인/완료';
             let contentHtml = `<div class="notice-content">${item.내용.replace(/\n/g, '<br>')}</div>`;
             if (item.이미지URL) contentHtml += `<img src="${item.이미지URL}" alt="이미지" class="notice-image">`;
@@ -743,14 +735,7 @@
 
     function renderLeaveRequests(requests) {
         const container = document.getElementById('leave-section');
-        let requestButtons = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2 class="section-title" style="margin: 0; border: none;">✈️ 외출/조퇴 신청</h2>
-                <div style="display: flex; gap: 10px;">
-                    <button class="action-btn student-leave-btn" onclick="openLeaveModal('외출')">외출</button>
-                    <button class="action-btn student-early-leave-btn" onclick="openLeaveModal('조퇴')">조퇴</button>
-                </div>
-            </div>`;
+        let requestButtons = `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;"><h2 class="section-title" style="margin: 0; border: none;">✈️ 외출/조퇴 신청</h2><div style="display: flex; gap: 10px;"><button class="action-btn student-leave-btn" onclick="openLeaveModal('외출')">외출</button><button class="action-btn student-early-leave-btn" onclick="openLeaveModal('조퇴')">조퇴</button></div></div>`;
         let historyHtml = '<div class="empty-state">신청 내역이 없습니다.</div>';
         if (requests && requests.length > 0) {
             historyHtml = requests.map(req => {
