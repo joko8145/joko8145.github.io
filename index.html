@@ -19,52 +19,38 @@
         .section-title { font-size: 1.6em; font-weight: 600; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 1.1em; background-color: #f8f9fa; border-radius: var(--border-radius); }
         
-        /* 공통 카드 스타일 */
+        /* 공통 카드 및 버튼 스타일 */
         .card, .notice-item, .teacher-leave-card, .assignment-card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); position: relative; border-left: 4px solid var(--primary-color); }
         .card-title { font-size: 1.25em; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
-        .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; flex-grow: 1; margin-bottom: 10px; }
-        a.card { text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        a.card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        
-        /* 공통 버튼 스타일 */
-        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; transition: opacity 0.2s; text-decoration: none; display: inline-block; text-align: center; }
-        .action-btn:hover { opacity: 0.85; }
+        a.card { text-decoration: none; color: inherit; }
+        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; text-align: center; }
 
-        /* 사용자 정보 UI 스타일 */
+        /* 사용자 정보 UI */
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1em; font-weight: bold; }
         .user-profile-image { width: 36px; height: 36px; border-radius: 50%; }
         .user-name-logout { color: white; font-size: 0.9em; text-align: left; }
         .user-name-logout strong { display: block; }
         .user-name-logout a { color: #adb5bd; text-decoration: none; font-size: 0.9em; }
-        .user-name-logout a:hover { text-decoration: underline; }
 
-        /* 교사용 UI 스타일 */
+        /* 교사용 UI */
         .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .approve-btn { background: #28a745; } .reject-btn { background: #dc3545; } .check-btn { background: #17a2b8; } .response-btn { background: #007bff; }
-        .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; line-height: 30px; text-align: center; background: #dc3545; }
-        .routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
-        .routine-item { display: inline-flex; align-items: center; padding: 8px 15px; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 20px; cursor: pointer; }
-        .routine-item.completed { background-color: #e0e7ff; }
-        .routine-checkbox { display: none; }
         .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; }
         .accordion-content { display: none; padding: 15px 0 5px 0; }
         .accordion-title.active { background-color: #e9ecef; }
         .accordion-title::after { content: '▼'; } .accordion-title.active::after { content: '▲'; }
-        .status-card-info { font-size: 0.85em; color: var(--text-light); margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
-        .assignment-card { display: flex; align-items: center; justify-content: space-between; }
-        .assignment-actions { flex-shrink: 0; display: flex; gap: 10px; }
-        .form-group { display: flex; }
-        .form-group input { flex-grow: 1; border: 1px solid #ccc; padding: 12px; border-radius: 8px 0 0 8px; border-right: none; }
-        .form-group button { border-radius: 0 8px 8px 0; font-weight: 500; background: var(--primary-color); color: white; border: none; padding: 0 15px; cursor: pointer; }
-
-        /* 학생용 UI 스타일 */
+        .tabs { display: flex; border-bottom: 2px solid #e9ecef; margin-bottom: 20px; }
+        .tabs .tab-button { padding: 15px 20px; cursor: pointer; border: none; background: none; font-size: 1.05em; font-weight: 500; color: var(--text-light); position: relative; }
+        .tabs .tab-button.active { color: var(--primary-color); font-weight: 600; }
+        .tabs .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); }
+        .tab-pane { display: none; } .tab-pane.active { display: block; }
+        
+        /* 학생용 UI */
         .student-tabs { display: flex; border-bottom: 2px solid #e9ecef; margin-bottom: 20px; }
         .student-tab-button { padding: 15px 20px; cursor: pointer; border: none; background: none; font-size: 1.05em; font-weight: 500; color: var(--text-light); position: relative; }
         .student-tab-button.active { color: var(--primary-color); font-weight: 600; }
         .student-tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); }
         .student-tab-pane { display: none; } .student-tab-pane.active { display: block; }
-        .notice-content { font-size: 1.1em; line-height: 1.7; color: var(--text-light); }
         .notice-link { display: inline-block; background: var(--primary-color); color: white; padding: 12px 20px; border-radius: 25px; margin-top: 15px; text-decoration: none; }
         .unsubmitted-section { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; }
         .complete-btn { position: absolute; top: 15px; right: 15px; color: white; background: #28a745; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; line-height: 30px; text-align: center; }
@@ -74,29 +60,13 @@
         .widget-content { font-size: 2em; font-weight: 700; color: var(--primary-color); }
         .student-leave-btn { background-color: var(--primary-color); } .student-early-leave-btn { background-color: var(--secondary-color); } .student-cert-btn { background-color: #17a2b8; }
         
-        /* 모달 스타일 */
+        /* 모달 */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
-        #modal-content h2 { margin-bottom: 20px; }
-        #modal-content label { display: block; margin-bottom: 5px; font-weight: 500; }
-        #modal-content input, #modal-content textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <div id="modal-overlay" style="display: none;">
-        <div id="modal-content">
-            <h2 id="modal-title"></h2>
-            <form id="leave-request-form">
-                <input type="hidden" id="leave-type" name="type">
-                <div><label for="leave-date">희망 일자</label><input type="date" id="leave-date" name="date" required></div>
-                <div><label for="leave-reason">사유</label><textarea id="leave-reason" name="reason" rows="4" required></textarea></div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" id="closeModal" class="action-btn" style="background-color: #6c757d;">취소</button>
-                    <button type="submit" id="submitLeave" class="action-btn" style="background-color: var(--primary-color);">제출</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="modal-overlay" style="display: none;"> <!-- 모달 HTML --> </div>
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
@@ -171,8 +141,6 @@
         gsiContainer.style.display = 'none';
 
         let userInfoHtml;
-        // isTeacherMode로 학생/교사를 구분하거나, picture 유무로 구분할 수 있습니다.
-        // 학생은 항상 picture가 있다고 가정합니다.
         if (user.picture) {
             userInfoHtml = `<div class="user-display"><img src="${user.picture}" class="user-profile-image" alt="profile">
                 <div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`;
@@ -236,11 +204,10 @@
     function initTabs(containerId) {
         const tabContainer = document.getElementById(containerId);
         if (!tabContainer) return;
-        const buttonSelector = containerId.startsWith('student') ? '.student-tab-button' : '.tab-button';
+        const buttonSelector = containerId === 'student-tabs' ? '.student-tab-button' : '.tab-button';
+        const tabPanes = containerId === 'student-tabs' ? document.querySelectorAll('.student-tab-pane') : document.querySelectorAll('.tab-pane:not(.student-tab-pane)');
         const tabButtons = tabContainer.querySelectorAll(buttonSelector);
-        const paneSelector = containerId.startsWith('student') ? '.student-tab-pane' : '.tab-pane';
-        const tabPanes = document.querySelectorAll(paneSelector);
-        
+
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -267,7 +234,7 @@
         portal.innerHTML = `
             <div id="widgets-container"></div>
             <div id="unsubmitted-container"></div>
-            <div class="student-tabs tabs" id="student-tabs">
+            <div class="tabs student-tabs" id="student-tabs">
                 <button class="tab-button active" data-tab="student-tab-1">알림 & 할 일</button>
                 <button class="tab-button" data-tab="student-tab-2" style="display:none;">외출/조퇴</button>
                 <button class="tab-button" data-tab="student-tab-3">자료실</button>
@@ -316,6 +283,7 @@
                 default: contentHtml = widget.content;
             }
             return `<div class="widget"><div class="widget-title">${widget.title}</div><div class="widget-content">${contentHtml}</div></div>`;
+        }).join('');
     }
 
     function renderTeacherRoutines(routines) {
