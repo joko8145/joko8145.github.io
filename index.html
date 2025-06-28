@@ -19,7 +19,7 @@
         .section-title { font-size: 1.6em; font-weight: 600; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 1.1em; background-color: #f8f9fa; border-radius: var(--border-radius); }
         
-        /* 공통 카드 스타일 */
+        /* 카드 및 공통 아이템 스타일 */
         .card, .notice-item, .teacher-leave-card, .assignment-card, .personal-task-card, .class-schedule-card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); position: relative; border-left: 4px solid var(--primary-color); }
         .card-title { font-size: 1.25em; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
         .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; flex-grow: 1; margin-bottom: 10px; }
@@ -86,8 +86,92 @@
     </style>
 </head>
 <body>
-    <div id="modal-overlay" style="display: none;"> <!-- 모든 게시물 등록 모달 HTML --> </div>
-    <div id="modal-overlay-leave" style="display: none;"> <!-- 외출/조퇴 모달 HTML --> </div>
+    <div id="modal-overlay" style="display: none;">
+        <div id="modal-content">
+            <h2 id="modal-title"></h2>
+            <form id="post-form">
+                <input type="hidden" id="form-type" name="type">
+                
+                <div id="post-type-selection" style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom:10px;">게시물 유형 선택</label>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="postType" value="학생 공지" required> 학생 공지</label>
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="postType" value="학생 할 일"> 학생 할 일</label>
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="postType" value="교사 루틴 업무"> 교사 루틴 업무</label>
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="postType" value="교사 개인 할 일"> 교사 개인 할 일</label>
+                        <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="postType" value="학급 일정"> 학급 일정</label>
+                    </div>
+                </div>
+
+                <div id="common-fields" style="display:none; margin-top:20px;">
+                    <div><label for="post-title">제목</label><input type="text" id="post-title" name="title"></div>
+                    <div><label for="post-content">내용</label><textarea id="post-content" name="content" rows="4"></textarea></div>
+                    <div><label for="post-icon">아이콘 (선택)</label><input type="text" id="post-icon" name="icon" placeholder="예: 📢, ✅, 📅"></div>
+                </div>
+
+                <div id="student-only-fields" style="display:none; margin-top:20px;">
+                    <div><label for="post-image-url">이미지 URL (선택)</label><input type="url" id="post-image-url" name="imageUrl"></div>
+                    <div><label for="post-link">링크 (선택)</label><input type="url" id="post-link" name="link"></div>
+                    <div><label for="post-button-text">버튼 이름 (선택)</label><input type="text" id="post-button-text" name="buttonText" placeholder="예: 자세히 보기"></div>
+                    <div><label for="post-start-date">게시 시작일</label><input type="date" id="post-start-date" name="startDate"></div>
+                    <div><label for="post-end-date">게시 종료일 (선택)</label><input type="date" id="post-end-date" name="endDate"></div>
+                    <div><label for="post-target-students">대상 학생 (비워두면 전체)</label><input type="text" id="post-target-students" name="targetStudents" placeholder="쉼표로 구분 (예: 30101, 30205)"></div>
+                </div>
+
+                <div id="task-only-fields" style="display:none; margin-top:20px;">
+                    <div><label><input type="checkbox" id="post-recordable" name="recordable" value="Y"> 제출 기록 필요</label></div>
+                    <div>
+                        <label for="post-assignment-type">과제 유형</label>
+                        <select id="post-assignment-type" name="assignmentType">
+                            <option value="단순 확인">단순 확인</option>
+                            <option value="구글폼 과제">구글폼 과제</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="teacher-task-only-fields" style="display:none; margin-top:20px;">
+                    <div><label for="post-teacher-email">담당 교사 이메일</label><input type="email" id="post-teacher-email" name="teacherEmail" required readonly></div>
+                    <div><label for="post-due-date">마감일 (선택)</label><input type="date" id="post-due-date" name="dueDate"></div>
+                    <div>
+                        <label for="post-repeat-condition">반복 조건 (루틴 업무)</label>
+                        <select id="post-repeat-condition" name="repeatCondition">
+                            <option value="">반복 안 함</option>
+                            <option value="매일">매일</option>
+                            <option value="주중">주중</option>
+                            <option value="주말">주말</option>
+                            <option value="월">월요일</option>
+                            <option value="화">화요일</option>
+                            <option value="수">수요일</option>
+                            <option value="목">목요일</option>
+                            <option value="금">금요일</option>
+                            <option value="토">토요일</option>
+                            <option value="일">일요일</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" id="closePostModal" class="action-btn" style="background-color: #6c757d;">취소</button>
+                    <button type="submit" id="submitPost" class="action-btn" style="background-color: var(--primary-color);">등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- 외출/조퇴 모달 (id="modal-overlay-leave") -->
+    <div id="modal-overlay-leave" style="display: none;">
+        <div id="modal-content-leave" class="modal-content">
+            <h2 id="modal-title-leave"></h2>
+            <form id="leave-request-form">
+                <input type="hidden" id="leave-type" name="type">
+                <div><label for="leave-date">희망 일자</label><input type="date" id="leave-date" name="date" required></div>
+                <div><label for="leave-reason">사유</label><textarea id="leave-reason" name="reason" rows="4" required></textarea></div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" id="closeLeaveModal" class="action-btn" style="background-color: #6c757d;">취소</button>
+                    <button type="submit" id="submitLeave" class="action-btn" style="background-color: var(--primary-color);">제출</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
@@ -99,7 +183,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-h6OWyW-yP9ogO8I_5fJtnqavcmbylXaYUDgYbcv7ILCUWn0Od7_vnAABwQmHpawy/exec'; // ✨ 여기에 배포된 Apps Script 웹 앱 URL을 붙여넣으세요!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-h6OWyW-yP9ogO8I_5fJtnqavcmbylXaYUDgYbcv7ILCUWn0Od7_vnAABwQmHpawy/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
@@ -335,6 +419,27 @@
         renderItems('notices', data.notices.filter(item => !completedItems[item.id]), '📢 중요 공지');
         renderItems('tasks', data.tasks.filter(item => !completedItems[item.id]), '✅ 오늘의 할 일');
         renderResources(data.resources);
+    }
+
+    function renderStudentClassSchedules(schedules) {
+        const container = document.getElementById('class-schedules-display');
+        if (!schedules || schedules.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        let schedulesHtml = schedules.map(schedule => {
+            const displayDate = schedule['일정 시작일'] === schedule['일정 종료일'] ? schedule['일정 시작일'] : `${schedule['일정 시작일']} ~ ${schedule['일정 종료일']}`;
+            const target = schedule['대상 학생'] || '전체';
+            return `
+            <div class="card" style="padding: 15px;">
+                <div class="card-title">${schedule.아이콘 || ''} ${schedule.제목}</div>
+                <p class="card-description" style="font-size: 0.9em; margin-bottom: 5px;">기간: ${displayDate}</p>
+                ${schedule.내용 ? `<p class="card-description" style="font-size: 0.9em; margin-bottom: 5px;">내용: ${schedule.내용}</p>` : ''}
+                <div style="font-size: 0.8em; color: var(--text-light);">대상: ${target}</div>
+                ${schedule.링크 ? `<a href="${schedule.링크}" target="_blank" class="notice-link" style="padding: 8px 12px; margin-top: 10px; border-radius: 8px;">자세히 보기</a>` : ''}
+            </div>`;
+        }).join('');
+        container.innerHTML = `<h2 class="section-title"><span class="icon">📅</span>다가오는 학급 일정</h2>${schedulesHtml}`;
     }
     
     function renderWidgets(widgets) {
