@@ -157,7 +157,6 @@
             </form>
         </div>
     </div>
-    <!-- 외출/조퇴 모달 (id="modal-overlay-leave") -->
     <div id="modal-overlay-leave" style="display: none;">
         <div id="modal-content-leave" class="modal-content">
             <h2 id="modal-title-leave"></h2>
@@ -523,11 +522,11 @@
 
         document.getElementById('post-assignment-type')?.addEventListener('change', togglePostFormFields);
 
-        document.querySelector('#teacher-settings-section .card.form-creator button.action-btn')?.addEventListener('click', openPostModal);
-
-        document.querySelector('#student-portal')?.addEventListener('click', function(e) {
-            if (e.target.classList.contains('student-leave-btn')) { openLeaveModal('외출'); }
-            else if (e.target.classList.contains('student-early-leave-btn')) { openLeaveModal('조퇴'); }
+        // 동적으로 생성되는 버튼에 대한 이벤트 위임 처리
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.matches('#teacher-settings-section .card.form-creator button.action-btn')) {
+                openPostModal();
+            }
         });
     }
 
@@ -541,7 +540,7 @@
         document.getElementById('post-teacher-email').value = currentUser.email; 
         
         document.getElementById('post-type-selection').style.display = 'block';
-        document.getElementById('common-fields').style.display = 'none';
+        document.getElementById('common-fields').style.display = 'block';
         document.getElementById('student-only-fields').style.display = 'none';
         document.getElementById('task-only-fields').style.display = 'none';
         document.getElementById('teacher-task-only-fields').style.display = 'none';
@@ -549,8 +548,6 @@
         document.querySelectorAll('input[name="postType"]').forEach(radio => {
             radio.checked = false;
         });
-        document.getElementById('post-title').removeAttribute('required');
-        document.getElementById('post-content').removeAttribute('required');
     }
 
     function togglePostFormFields() {
@@ -575,12 +572,10 @@
         switch (selectedType) {
             case '학생 공지':
                 studentFields.style.display = 'block';
-                document.getElementById('post-start-date').setAttribute('required', 'required');
                 break;
             case '학생 할 일':
                 studentFields.style.display = 'block';
                 taskFields.style.display = 'block';
-                document.getElementById('post-start-date').setAttribute('required', 'required');
                 
                 if (postAssignmentType.value === '구글폼 과제') {
                      document.getElementById('post-link').removeAttribute('required');
@@ -588,8 +583,6 @@
                      document.getElementById('post-recordable').checked = true;
                      document.getElementById('post-recordable').disabled = true;
                 } else {
-                     document.getElementById('post-link').setAttribute('required', 'required');
-                     document.getElementById('post-button-text').setAttribute('required', 'required');
                      document.getElementById('post-recordable').disabled = false;
                 }
                 break;
