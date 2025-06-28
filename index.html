@@ -23,7 +23,6 @@
         .section-title .icon { margin-right: 12px; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 1.1em; background-color: #f8f9fa; border-radius: var(--border-radius); }
         
-        /* 카드 및 아이템 스타일 */
         .card, .notice-item, .teacher-leave-card, .assignment-card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); position: relative; border-left: 4px solid var(--primary-color); }
         .card-title { font-size: 1.25em; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
         .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; flex-grow: 1; margin-bottom: 10px; }
@@ -31,39 +30,33 @@
         a.card { text-decoration: none; color: inherit; display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; }
         a.card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         
-        /* 버튼 및 액션 스타일 */
         .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; transition: opacity 0.2s; text-decoration: none; display: inline-block; text-align: center; }
         .action-btn:hover { opacity: 0.85; }
         .approve-btn { background: #28a745; } .reject-btn { background: #dc3545; } .check-btn { background: #17a2b8; } .response-btn { background: #007bff; }
         .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; line-height: 30px; text-align: center; background: #dc3545; }
         
-        /* 루틴 업무 (칩 스타일) */
         .routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
         .routine-item { display: inline-flex; align-items: center; padding: 8px 15px; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 20px; cursor: pointer; }
         .routine-item.completed { background-color: #e0e7ff; border-color: var(--primary-color); }
         .routine-item.completed .routine-label { text-decoration: line-through; color: var(--text-light); }
         .routine-checkbox { display: none; }
 
-        /* 아코디언 스타일 */
         .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; }
         .accordion-title .count { font-size: 0.9em; font-weight: normal; color: var(--text-light); }
         .accordion-content { display: none; padding: 15px 0 5px 0; }
         .accordion-title.active { background-color: #e9ecef; }
         .accordion-title::after { content: '▼'; font-size: 0.8em; } .accordion-title.active::after { content: '▲'; }
         
-        /* 탭 스타일 */
         .tabs { display: flex; border-bottom: 2px solid #e9ecef; margin-bottom: 20px; }
         .tab-button { padding: 15px 20px; cursor: pointer; border: none; background: none; font-size: 1.05em; font-weight: 500; color: var(--text-light); position: relative; }
         .tab-button.active { color: var(--primary-color); font-weight: 600; }
         .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); }
         .tab-pane { display: none; } .tab-pane.active { display: block; }
         
-        /* 학생 포털용 아이템 */
         .notice-link { display: inline-block; background: var(--primary-color); color: white; padding: 12px 20px; border-radius: 25px; margin-top: 15px; text-decoration: none; font-weight: 500; transition: all 0.2s ease; }
         .unsubmitted-section { background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: var(--border-radius); padding: 20px; margin-bottom: 30px; }
         .complete-btn { position: absolute; top: 15px; right: 15px; color: white; background: #28a745; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; line-height: 30px; text-align: center; }
         
-        /* 세련된 UI 스타일 */
         .teacher-leave-card .leave-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .teacher-leave-card .leave-header strong { font-size: 1.1em; }
         .teacher-leave-card .leave-header small { color: var(--text-light); }
@@ -78,7 +71,6 @@
         .student-early-leave-btn { background-color: var(--secondary-color); }
         .student-cert-btn { background-color: #17a2b8; }
 
-        /* 모달 스타일 */
         #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         #modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
         #modal-content h2 { margin-bottom: 20px; }
@@ -529,6 +521,40 @@
             <div style="font-weight: bold; color: #856404; margin-bottom: 10px;">🔔 아직 완료하지 않은 할 일이 있어요!</div>
             <ul style="list-style: none; padding: 0;">${listHtml}</ul>
         </div>`;
+    }
+
+    function renderLeaveRequests(requests) {
+        const container = document.getElementById('leave-section');
+        let requestButtons = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin: 0; border: none;">✈️ 외출/조퇴 신청</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="action-btn student-leave-btn" onclick="openLeaveModal('외출')">외출</button>
+                    <button class="action-btn student-early-leave-btn" onclick="openLeaveModal('조퇴')">조퇴</button>
+                </div>
+            </div>`;
+        let historyHtml = '<div class="empty-state">신청 내역이 없습니다.</div>';
+        if (requests && requests.length > 0) {
+            historyHtml = requests.map(req => {
+                const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
+                const commentHtml = req.교사코멘트 ? `<div style="font-size: 0.9em; color: #6c757d; margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;"><strong>교사 의견:</strong> ${req.교사코멘트}</div>` : '';
+                const todayStr = new Date().toISOString().split('T')[0];
+                const requestDate = new Date(req.희망일자).toISOString().split('T')[0];
+                const certButton = (req.상태 === '승인' && requestDate === todayStr) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn student-cert-btn">확인증</a>` : '';
+                return `
+                    <div class="notice-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div><strong>${req.신청종류}</strong> (${new Date(req.희망일자).toLocaleDateString()})<br><small>사유: ${req.사유}</small></div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="padding: 5px 10px; border-radius: 5px; color: white; background-color:${statusMap[req.상태] || '#6c757d'}; font-size: 0.9em;">${req.상태}</span>
+                                ${certButton}
+                            </div>
+                        </div>
+                        ${commentHtml}
+                    </div>`;
+            }).join('');
+        }
+        container.innerHTML = `${requestButtons}<h3>나의 신청 내역</h3>${historyHtml}`;
     }
 
     function renderResources(resources) {
