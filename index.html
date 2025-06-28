@@ -11,10 +11,16 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--light-bg); min-height: 100vh; padding: 20px; color: var(--text-dark); }
         .container { max-width: 800px; margin: 0 auto; background: var(--white-bg); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
         .auth-container { padding: 10px 30px; text-align: right; background-color: #343a40; min-height: 50px; display: flex; justify-content: flex-end; align-items: center; }
+        .user-info { color: white; padding: 8px 15px; display: inline-block; font-size: 0.9em; }
+        .user-info img { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
+        .user-info a { color: #fff; text-decoration: none; margin-left: 10px; font-weight: bold; }
         .header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
+        .date-display { font-size: 1.2em; opacity: 0.9; }
         .content { padding: 30px; }
         .section { margin-bottom: 40px; }
         .section-title { font-size: 1.6em; font-weight: 600; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
+        .section-title .icon { margin-right: 12px; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 1.1em; background-color: #f8f9fa; border-radius: var(--border-radius); }
         
         .card, .notice-item, .teacher-leave-card, .assignment-card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); position: relative; border-left: 4px solid var(--primary-color); }
@@ -30,7 +36,8 @@
         .routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
         .routine-item { display: inline-flex; align-items: center; padding: 8px 15px; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 20px; cursor: pointer; }
         .routine-item.completed { background-color: #e0e7ff; border-color: var(--primary-color); }
-        
+        .routine-checkbox { display: none; }
+
         .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; }
         .accordion-content { display: none; padding: 15px 0 5px 0; }
         .accordion-title.active { background-color: #e9ecef; }
@@ -45,16 +52,16 @@
         .status-card-info { font-size: 0.85em; color: var(--text-light); margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
         .status-card-info span { padding: 3px 8px; border-radius: 5px; background-color: #e9ecef; }
 
-        /* ✨ 과제 카드 스타일 수정 */
         .assignment-card { display: flex; align-items: center; justify-content: space-between; }
         .assignment-card .card-title { margin-bottom: 0; flex-grow: 1; }
-        .assignment-actions { flex-shrink: 0; }
+        .assignment-actions { flex-shrink: 0; display: flex; gap: 10px; }
+
+        .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
     </style>
 </head>
 <body>
     <div id="modal-overlay" style="display: none;"> <!-- 모달은 변경 없음 --> </div>
     <div class="container">
-        <!-- 헤더 및 인증 부분은 변경 없음 -->
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
         <div class="content">
@@ -132,7 +139,6 @@
         setupAccordionListeners();
     }
     
-    // ✨ 게시 현황 0건 오류 수정 및 과제 현황 UI 개선
     function renderClassManagementAccordions(data) {
         const container = document.getElementById('class-management-section');
         container.innerHTML = `<h2 class="section-title"><span class="icon">🏠</span>학급 관리</h2>
@@ -166,7 +172,6 @@
             <div class="accordion-title"><span>📝 과제별 제출 현황</span><span class="count">${assignments.length}건</span></div>
             <div class="accordion-content">${assignmentsHtml}</div>`;
 
-        // ✨ 수정된 부분: data.allNotices와 data.allTasks를 참조하여 정확한 개수를 계산
         const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
         const totalPosts = allPosts.length;
         let postsHtml = '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
@@ -191,8 +196,8 @@
             <div class="accordion-title"><span>📢 알림 포털 게시 현황</span><span class="count">${totalPosts}건</span></div>
             <div class="accordion-content">${postsHtml}</div>`;
     }
-    
-    // --- 이하의 모든 함수는 생략 없이 모두 포함되어 있습니다. ---
+
+    // --- 이하의 모든 함수는 여기에 있습니다 ---
     
     function initTabs(containerId) {
         const tabContainer = document.getElementById(containerId);
