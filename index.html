@@ -91,7 +91,6 @@
             <h2 id="modal-title"></h2>
             <form id="post-form">
                 <input type="hidden" id="form-type" name="type">
-                
                 <div id="post-type-selection" style="margin-bottom: 20px;">
                     <label style="display:block; margin-bottom:10px;">게시물 유형 선택</label>
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
@@ -102,13 +101,11 @@
                         <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="postType" value="학급 일정"> 학급 일정</label>
                     </div>
                 </div>
-
                 <div id="common-fields" style="display:none; margin-top:20px;">
                     <div><label for="post-title">제목</label><input type="text" id="post-title" name="title"></div>
                     <div><label for="post-content">내용</label><textarea id="post-content" name="content" rows="4"></textarea></div>
                     <div><label for="post-icon">아이콘 (선택)</label><input type="text" id="post-icon" name="icon" placeholder="예: 📢, ✅, 📅"></div>
                 </div>
-
                 <div id="student-only-fields" style="display:none; margin-top:20px;">
                     <div><label for="post-image-url">이미지 URL (선택)</label><input type="url" id="post-image-url" name="imageUrl"></div>
                     <div><label for="post-link">링크 (선택)</label><input type="url" id="post-link" name="link"></div>
@@ -117,7 +114,6 @@
                     <div><label for="post-end-date">게시 종료일 (선택)</label><input type="date" id="post-end-date" name="endDate"></div>
                     <div><label for="post-target-students">대상 학생 (비워두면 전체)</label><input type="text" id="post-target-students" name="targetStudents" placeholder="쉼표로 구분 (예: 30101, 30205)"></div>
                 </div>
-
                 <div id="task-only-fields" style="display:none; margin-top:20px;">
                     <div><label><input type="checkbox" id="post-recordable" name="recordable" value="Y"> 제출 기록 필요</label></div>
                     <div>
@@ -128,28 +124,16 @@
                         </select>
                     </div>
                 </div>
-
                 <div id="teacher-task-only-fields" style="display:none; margin-top:20px;">
                     <div><label for="post-teacher-email">담당 교사 이메일</label><input type="email" id="post-teacher-email" name="teacherEmail" required readonly></div>
                     <div><label for="post-due-date">마감일 (선택)</label><input type="date" id="post-due-date" name="dueDate"></div>
                     <div>
                         <label for="post-repeat-condition">반복 조건 (루틴 업무)</label>
                         <select id="post-repeat-condition" name="repeatCondition">
-                            <option value="">반복 안 함</option>
-                            <option value="매일">매일</option>
-                            <option value="주중">주중</option>
-                            <option value="주말">주말</option>
-                            <option value="월">월요일</option>
-                            <option value="화">화요일</option>
-                            <option value="수">수요일</option>
-                            <option value="목">목요일</option>
-                            <option value="금">금요일</option>
-                            <option value="토">토요일</option>
-                            <option value="일">일요일</option>
+                            <option value="">반복 안 함</option><option value="매일">매일</option><option value="주중">주중</option><option value="주말">주말</option><option value="월">월요일</option><option value="화">화요일</option><option value="수">수요일</option><option value="목">목요일</option><option value="금">금요일</option><option value="토">토요일</option><option value="일">일요일</option>
                         </select>
                     </div>
                 </div>
-
                 <div style="text-align: right; margin-top: 20px;">
                     <button type="button" id="closePostModal" class="action-btn" style="background-color: #6c757d;">취소</button>
                     <button type="submit" id="submitPost" class="action-btn" style="background-color: var(--primary-color);">등록</button>
@@ -182,7 +166,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-h6OWyW-yP9ogO8I_5fJtnqavcmbylXaYUDgYbcv7ILCUWn0Od7_vnAABwQmHpawy/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-h6OWyW-yP9ogO8I_5fJtnqavcmbylXaYUDgYbcv7ILCUWn0Od7_vnAABwQmHpawy/exec'; // ✨ 여기에 배포된 Apps Script 웹 앱 URL을 붙여넣으세요!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
@@ -213,11 +197,10 @@
         setupEventListeners();
     };
     
-    // ✨ localStorage 저장 오류 수정
     async function handleCredentialResponse(response) {
         const userObject = JSON.parse(atob(response.credential.split('.')[1]));
         currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
-        localStorage.setItem('userInfo', JSON.stringify(currentUser)); // ✨ 올바른 형식으로 저장
+        localStorage.setItem('userInfo', JSON.stringify(currentUser));
         location.reload();
     }
 
@@ -225,26 +208,19 @@
         const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
         targetEl.style.display = 'block';
         targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-
         let fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}`;
         document.getElementById('portal-title').textContent = isTeacherMode ? '🎓 교사 통합 대시보드' : '📢 오늘의 알림';
         if (isTeacherMode) fullUrl += '&mode=teacher';
         if (currentUser) fullUrl += `&email=${encodeURIComponent(currentUser.email)}`;
-        
         try {
             const response = await fetch(fullUrl);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-
             currentUser = { ...currentUser, ...data.user };
-            localStorage.setItem('userInfo', JSON.stringify(currentUser)); // ✨ 여기도 수정
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
             renderUserInfo(currentUser);
-
-            if (isTeacherMode) {
-                renderTeacherDashboard(data);
-            } else {
-                renderStudentPortal(data);
-            }
+            if (isTeacherMode) { renderTeacherDashboard(data); } 
+            else { renderStudentPortal(data); }
         } catch (error) {
             console.error('Error:', error);
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
@@ -522,11 +498,11 @@
 
         document.getElementById('post-assignment-type')?.addEventListener('change', togglePostFormFields);
 
-        // 동적으로 생성되는 버튼에 대한 이벤트 위임 처리
-        document.addEventListener('click', function(e) {
-            if (e.target && e.target.matches('#teacher-settings-section .card.form-creator button.action-btn')) {
-                openPostModal();
-            }
+        document.querySelector('#teacher-settings-section .card.form-creator button.action-btn')?.addEventListener('click', openPostModal);
+
+        document.querySelector('#student-portal')?.addEventListener('click', function(e) {
+            if (e.target.classList.contains('student-leave-btn')) { openLeaveModal('외출'); }
+            else if (e.target.classList.contains('student-early-leave-btn')) { openLeaveModal('조퇴'); }
         });
     }
 
@@ -540,7 +516,7 @@
         document.getElementById('post-teacher-email').value = currentUser.email; 
         
         document.getElementById('post-type-selection').style.display = 'block';
-        document.getElementById('common-fields').style.display = 'block';
+        document.getElementById('common-fields').style.display = 'none';
         document.getElementById('student-only-fields').style.display = 'none';
         document.getElementById('task-only-fields').style.display = 'none';
         document.getElementById('teacher-task-only-fields').style.display = 'none';
@@ -548,6 +524,8 @@
         document.querySelectorAll('input[name="postType"]').forEach(radio => {
             radio.checked = false;
         });
+        document.getElementById('post-title').removeAttribute('required');
+        document.getElementById('post-content').removeAttribute('required');
     }
 
     function togglePostFormFields() {
@@ -572,10 +550,12 @@
         switch (selectedType) {
             case '학생 공지':
                 studentFields.style.display = 'block';
+                document.getElementById('post-start-date').setAttribute('required', 'required');
                 break;
             case '학생 할 일':
                 studentFields.style.display = 'block';
                 taskFields.style.display = 'block';
+                document.getElementById('post-start-date').setAttribute('required', 'required');
                 
                 if (postAssignmentType.value === '구글폼 과제') {
                      document.getElementById('post-link').removeAttribute('required');
@@ -583,6 +563,8 @@
                      document.getElementById('post-recordable').checked = true;
                      document.getElementById('post-recordable').disabled = true;
                 } else {
+                     document.getElementById('post-link').setAttribute('required', 'required');
+                     document.getElementById('post-button-text').setAttribute('required', 'required');
                      document.getElementById('post-recordable').disabled = false;
                 }
                 break;
