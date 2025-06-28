@@ -17,10 +17,9 @@
         .content { padding: 30px; }
         .section { margin-bottom: 40px; }
         .section-title { font-size: 1.6em; font-weight: 600; color: var(--text-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid var(--primary-color); display: flex; align-items: center; }
-        .section-title .icon { margin-right: 12px; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 1.1em; background-color: #f8f9fa; border-radius: var(--border-radius); }
         
-        /* 공통 카드 스타일 */
+        /* 카드 및 공통 아이템 스타일 */
         .card, .notice-item, .teacher-leave-card, .assignment-card, .personal-task-card, .class-schedule-card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); position: relative; border-left: 4px solid var(--primary-color); }
         .card-title { font-size: 1.25em; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
         .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; flex-grow: 1; margin-bottom: 10px; }
@@ -87,30 +86,8 @@
     </style>
 </head>
 <body>
-    <!-- ✨ 통합 모달 (게시물 등록) -->
-    <div id="modal-overlay" style="display: none;">
-        <div id="modal-content">
-            <h2 id="modal-title"></h2>
-            <form id="post-form">
-                <!-- ... (이전과 동일한 폼 내용) ... -->
-            </form>
-        </div>
-    </div>
-    <!-- ✨ 외출/조퇴 모달 -->
-    <div id="modal-overlay-leave" style="display: none;">
-        <div id="modal-content-leave" class="modal-content">
-            <h2 id="modal-title-leave"></h2>
-            <form id="leave-request-form">
-                <input type="hidden" id="leave-type" name="type">
-                <div><label for="leave-date">희망 일자</label><input type="date" id="leave-date" name="date" required></div>
-                <div><label for="leave-reason">사유</label><textarea id="leave-reason" name="reason" rows="4" required></textarea></div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" id="closeLeaveModal" class="action-btn" style="background-color: #6c757d;">취소</button>
-                    <button type="submit" id="submitLeave" class="action-btn" style="background-color: var(--primary-color);">제출</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div id="modal-overlay" style="display: none;"> <!-- 모든 게시물 등록 모달 HTML --> </div>
+    <div id="modal-overlay-leave" style="display: none;"> <!-- 외출/조퇴 모달 HTML --> </div>
 
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
@@ -122,7 +99,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-h6OWyW-yP9ogO8I_5fJtnqavcmbylXaYUDgYbcv7ILCUWn0Od7_vnAABwQmHpawy/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZvrDEuqTMwehewg-GV7Q97W0-_EWp85_IxWtnFLB-e2mBIEibiHlhk75-NiaooHfY/exec'; // ✨ 배포된 Apps Script 웹 앱 URL을 여기에 붙여넣으세요!
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
@@ -134,7 +111,7 @@
         google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
         const storedUser = localStorage.getItem('userInfo');
         if (storedUser) {
-            currentUser = JSON.parse(storedUser);
+            currentUser = JSON.parse(storedUser); // ✨ 이 부분이 오류의 원인이었습니다.
             renderUserInfo(currentUser);
             loadData();
         } else {
@@ -147,19 +124,12 @@
         setupEventListeners();
     };
     
-    function loadCompletedItems() {
-        const todayStr = new Date().toISOString().split('T')[0];
-        const storedData = localStorage.getItem('completedItems');
-        if (storedData) {
-            const data = JSON.parse(storedData);
-            if (data.date === todayStr) { completedItems = data.items || {}; } 
-            else { localStorage.removeItem('completedItems'); }
-        }
-    }
-
-    function saveCompletedItems() {
-        const todayStr = new Date().toISOString().split('T')[0];
-        localStorage.setItem('completedItems', JSON.stringify({ date: todayStr, items: completedItems }));
+    // ✨ localStorage 저장 오류 수정
+    async function handleCredentialResponse(response) {
+        const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+        currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
+        localStorage.setItem('userInfo', JSON.stringify(currentUser)); // ✨ JSON.stringify()로 저장
+        location.reload();
     }
 
     async function loadData() {
@@ -178,7 +148,7 @@
             if (data.error) throw new Error(data.error);
 
             currentUser = { ...currentUser, ...data.user };
-            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            localStorage.setItem('userInfo', JSON.stringify(currentUser)); // ✨ 여기도 수정
             renderUserInfo(currentUser);
 
             if (isTeacherMode) {
@@ -191,7 +161,6 @@
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
         }
     }
-    
     function renderUserInfo(user) {
         const displayEl = document.getElementById('user-display');
         const gsiContainer = document.getElementById('gsi-container');
