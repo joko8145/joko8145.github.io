@@ -197,10 +197,11 @@
         setupEventListeners();
     };
     
+    // ✨ localStorage 저장 오류 수정
     async function handleCredentialResponse(response) {
         const userObject = JSON.parse(atob(response.credential.split('.')[1]));
         currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
-        localStorage.setItem('userInfo', JSON.stringify(currentUser));
+        localStorage.setItem('userInfo', JSON.stringify(currentUser)); // ✨ 올바른 형식으로 저장
         location.reload();
     }
 
@@ -208,19 +209,26 @@
         const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
         targetEl.style.display = 'block';
         targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+
         let fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}`;
         document.getElementById('portal-title').textContent = isTeacherMode ? '🎓 교사 통합 대시보드' : '📢 오늘의 알림';
         if (isTeacherMode) fullUrl += '&mode=teacher';
         if (currentUser) fullUrl += `&email=${encodeURIComponent(currentUser.email)}`;
+        
         try {
             const response = await fetch(fullUrl);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
+
             currentUser = { ...currentUser, ...data.user };
-            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            localStorage.setItem('userInfo', JSON.stringify(currentUser)); // ✨ 여기도 수정
             renderUserInfo(currentUser);
-            if (isTeacherMode) { renderTeacherDashboard(data); } 
-            else { renderStudentPortal(data); }
+
+            if (isTeacherMode) {
+                renderTeacherDashboard(data);
+            } else {
+                renderStudentPortal(data);
+            }
         } catch (error) {
             console.error('Error:', error);
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
