@@ -89,14 +89,44 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPNlo3S5ACoOtia5-BSDYq_vETZ77K5BHSf63LMEddY3LsFKwyAgbZ_JToTMsJbu3d/exec'; // ✨ 여기에 배포된 Apps Script 웹 앱 URL을 붙여넣으세요!
+    console.log("✅ 스크립트 시작! 페이지 로딩 완료."); // <-- 진단 코드 1
+
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPNlo3S5ACoOtia5-BSDYq_vETZ77K5BHSf63LMEddY3LsFKwyAgbZ_JToTMsJbu3d/exec';
     const GOOGLE_CLIENT_ID = '190435721099-45et34v9elbvod5lb84ddakrnenh5039.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
     const urlParams = new URLSearchParams(window.location.search);
     const isTeacherMode = urlParams.get('mode') === 'teacher';
 
+    console.log("🔍 초기 변수 확인:", { isTeacherMode: isTeacherMode, currentUser: currentUser }); // <-- 진단 코드 2
+
     // --- ✨ 모든 함수 정의 시작 ---
+    // --- ✨ 페이지가 로드되면 실행될 핵심 코드 ---
+    window.onload = function() {
+        console.log("🚀 window.onload 이벤트 발생! 초기화 시작."); // <-- 진단 코드 3
+        
+        currentUser = JSON.parse(localStorage.getItem('userInfo')) || null;
+        loadCompletedItems();
+        updateDateDisplay();
+
+        if (currentUser) {
+            renderUserInfo(currentUser);
+            loadData();
+        } else {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                document.getElementById('gsi-container'),
+                { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill' }
+            );
+            google.accounts.id.prompt();
+        }
+
+        setupEventListeners();
+        console.log("🏁 초기화 스크립트 끝."); // <-- 진단 코드 4
+    };
 
     function loadCompletedItems() {
         const todayStr = new Date().toISOString().split('T')[0];
