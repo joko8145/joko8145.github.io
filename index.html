@@ -25,6 +25,7 @@
         a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s, box-shadow 0.2s; }
         a.card:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,0,0,0.12); }
         .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; }
+        a.action-btn { text-decoration: none; } /* 바로가기 버튼 밑줄 제거 */
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1em; font-weight: bold; background-color: #A25AF2; }
         .user-profile-image { width: 36px; height: 36px; border-radius: 50%; }
@@ -110,21 +111,11 @@
     function setupEventListeners() {
         document.body.addEventListener('click', function(e) {
             const target = e.target;
-            if (target.closest('.accordion-title')) {
-                target.closest('.accordion-title').classList.toggle('active');
-            }
-            if (target.closest('.student-leave-btn')) {
-                openLeaveModal('외출');
-            }
-            if (target.closest('.student-early-leave-btn')) {
-                openLeaveModal('조퇴');
-            }
-            if (target.closest('#new-post-btn')) {
-                openPostModal();
-            }
-            if (target.closest('.modal-close-btn')) {
-                closeModal();
-            }
+            if (target.closest('.accordion-title')) target.closest('.accordion-title').classList.toggle('active');
+            if (target.closest('.student-leave-btn')) openLeaveModal('외출');
+            if (target.closest('.student-early-leave-btn')) openLeaveModal('조퇴');
+            if (target.closest('#new-post-btn')) openPostModal();
+            if (target.closest('.modal-close-btn')) closeModal();
             if (target.closest('.tab-button')) {
                 const button = target.closest('.tab-button');
                 const container = button.closest('.content, .tab-content');
@@ -220,6 +211,7 @@
     function renderClassManagementAccordions(data) {
         const container = document.getElementById('class-management-section');
         container.innerHTML = `<h2 class="section-title">🏠 학급 관리</h2><div id="leave-accordion"></div><div id="assignment-accordion"></div><div id="notice-status-accordion"></div><div id="schedule-accordion"></div>`;
+        
         document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
         document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
         const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
@@ -290,6 +282,7 @@
         document.getElementById('student-portal').innerHTML = `
             <div id="widgets-container"></div>
             <div id="unsubmitted-container"></div>
+            <div id="student-schedules-section" class="section"></div>
             <div class="tabs" id="student-tabs">
                 <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
                 <button class="tab-button" data-tab="leave-pane" style="display:none;">외출/조퇴</button>
@@ -300,6 +293,7 @@
             <div id="resource-pane" class="tab-pane"></div>`;
         renderWidgets(data.widgets);
         renderUnsubmitted(data.unsubmitted);
+        renderStudentClassSchedules(data.classSchedules);
         const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
         const todayNotices = (data.notices || []).filter(item => {
             const conditions = (item.표시조건 || '').split(',').map(s => s.trim()).filter(c => c.length > 0);
@@ -349,11 +343,18 @@
         }).join('');
         container.innerHTML = `<h2 class="section-title">${sectionTitle}</h2>${itemsHtml}`;
     }
+    function renderStudentClassSchedules(schedules) {
+        const container = document.getElementById('student-schedules-section');
+        if (!schedules || schedules.length === 0) { container.style.display = 'none'; return; }
+        const schedulesHtml = schedules.map(s => `<div class="card">${s.제목}</div>`).join('');
+        container.innerHTML = `<h2 class="section-title">📅 학급 일정</h2>${schedulesHtml}`;
+    }
     function renderLeaveSection(requests) {
         const container = document.getElementById('leave-pane');
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
-            return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})</span><span style="background:${statusMap[req.상태]}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
+            const certButton = (req.상태 === '승인') ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
+            return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태]}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
         container.innerHTML = `
             <div style="display:flex; gap:10px; margin-bottom:20px;">
@@ -402,8 +403,8 @@
         const params = new URLSearchParams({ 
             action: 'submitLeaveRequest', 
             email: currentUser.email,
-            studentId: currentUser.studentId, // 학번 추가
-            name: currentUser.name, // 이름 추가
+            studentId: currentUser.studentId,
+            name: currentUser.name,
             ...Object.fromEntries(formData.entries()) 
         });
         alert('신청 처리 중...');
