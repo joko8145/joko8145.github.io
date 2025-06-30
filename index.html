@@ -93,7 +93,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-    /* --- 페이지 초기화 및 이벤트 리스너 설정 --- */
     window.onload = function() {
         try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); currentUser = null; }
         loadCompletedItems();
@@ -132,7 +131,6 @@
         });
     }
 
-    /* --- 데이터 로딩 및 공통 함수 --- */
     function loadCompletedItems() {
         const todayStr = new Date().toISOString().split('T')[0];
         const storedData = localStorage.getItem('completedItems');
@@ -321,7 +319,6 @@
             renderResources(data.resources);
         }
     }
-
     function renderWidgets(widgets) {
         const container = document.getElementById('widgets-container');
         if (!widgets || widgets.length === 0) { container.innerHTML = ''; return; }
@@ -347,10 +344,12 @@
         if (!items || items.length === 0) { container.innerHTML = ''; return; }
         let itemsHtml = items.map(item => {
             const isCompleted = !!completedItems[item.id];
+            const linkButton = item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color); margin-top: 10px; display: inline-block;">${item.버튼이름 || '바로가기'}</a>` : '';
             return `<div class="notice-item" id="${item.id}">
                 <button class="complete-btn ${isCompleted ? 'completed' : ''}" onclick="completeItem('${item.id}')">${isCompleted ? '읽음' : '확인'}</button>
                 <div class="card-title">${item.아이콘 || ''} ${item.제목}</div>
                 <div class="card-description">${(item.내용 || '').replace(/\n/g, '<br>')}</div>
+                ${linkButton}
             </div>`;
         }).join('');
         container.innerHTML = `<h2 class="section-title">${sectionTitle}</h2>${itemsHtml}`;
@@ -367,7 +366,9 @@
         if (!container) return;
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
-            const certButton = (req.상태 === '승인' && req.신청행번호) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
+            const todayStr = new Date().toISOString().split('T')[0];
+            const requestDateStr = new Date(req.희망일자).toISOString().split('T')[0];
+            const certButton = (req.상태 === '승인' && req.신청행번호 && todayStr === requestDateStr) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
             return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${new Date(req.희망일자).toLocaleDateString()})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
         container.innerHTML = `
