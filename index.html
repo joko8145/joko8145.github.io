@@ -88,18 +88,34 @@
     const urlParams = new URLSearchParams(window.location.search);
     const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-    /* --- 페이지 초기화 및 이벤트 리스너 설정 --- */
+    /* --- 페이지 초기화 및 이벤트 리스너 설정 (핵심 수정) --- */
     window.onload = function() {
         try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); currentUser = null; }
         loadCompletedItems();
         updateDateDisplay();
+        
         if (currentUser) {
             renderUserInfo(currentUser);
             loadData();
         } else {
-            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
-            google.accounts.id.renderButton( document.getElementById('gsi-container'), { theme: 'outline', size: 'large' });
-            google.accounts.id.prompt();
+            // [수정됨] 로그인 초기화 방식을 'redirect'로 변경
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                ux_mode: 'redirect', // <-- 이 부분이 핵심입니다!
+                login_uri: 'https://joko8145.github.io/portal-dev' // <-- 이 부분도 추가합니다.
+            });
+
+            // 페이지가 구글에서 리디렉션되어 돌아온 경우, 자동으로 로그인 처리를 시도합니다.
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    // 프롬프트가 표시되지 않으면 로그인 버튼을 그림
+                    google.accounts.id.renderButton(
+                        document.getElementById('gsi-container'),
+                        { theme: 'outline', size: 'large' }
+                    );
+                }
+            });
         }
         setupEventListeners();
     };
