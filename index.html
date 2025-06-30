@@ -92,7 +92,6 @@
         try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); currentUser = null; }
         loadCompletedItems();
         updateDateDisplay();
-        
         if (currentUser) {
             renderUserInfo(currentUser);
             loadData();
@@ -160,21 +159,15 @@
     function saveCompletedItems() {
         localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));
     }
-
     async function handleCredentialResponse(response) {
-    // response 객체가 있고, credential 속성이 있는지 확인
         if (response && response.credential) {
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
             currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
-        
-        // 로그인 성공 후, 불필요한 파라미터가 없는 깨끗한 URL로 이동
             const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '');
             window.location.href = cleanUrl;
         } else {
-        // 리디렉션 후 콜백이 정상적으로 호출되지 않은 경우를 대비
             console.error('Credential response is missing or invalid.', response);
-        // 이 경우, 사용자가 다시 로그인 버튼을 누를 수 있도록 페이지를 그대로 둡니다.
         }
     }
     function handleLogout() {
@@ -300,7 +293,6 @@
             <div class="tab-content">${tabPanesHtml}</div>`;
     }
 
-    /* --- 학생 UI 렌더링 --- */
     function renderStudentPortal(data) {
         const portal = document.getElementById('student-portal');
         
