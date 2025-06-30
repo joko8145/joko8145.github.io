@@ -50,12 +50,16 @@
         .leave-actions { display: flex; gap: 10px; justify-content: flex-end; }
         .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .personal-task-list .card { padding: 15px; }
-        .modal-overlay { /* 모달 관련 스타일은 이제 사용되지 않음 */ }
-        .leave-request-form { background: #f8f9fa; padding: 20px; border-radius: var(--border-radius); margin-bottom: 30px; }
-        .leave-request-form .form-group { margin-bottom: 15px; }
-        .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .leave-request-form input, .leave-request-form textarea, .leave-request-form select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
-        .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; transform: scale(0.9); transition: transform 0.3s ease; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .modal-title { font-size: 1.5em; margin-bottom: 20px; }
+        .modal-form-group { margin-bottom: 15px; }
+        .modal-form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .modal-form-group input, .modal-form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+        .modal-close-btn { background-color: #6c757d; }
         #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 150px; background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: var(--border-radius); }
         .widget-title { font-weight: 600; margin-bottom: 8px; }
@@ -68,6 +72,12 @@
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
         .status-card-info { font-size: 0.85em; color: var(--text-light); margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; justify-content: space-between; }
+        .leave-request-form { background: #f8f9fa; padding: 20px; border-radius: var(--border-radius); margin-bottom: 30px; }
+        .leave-request-form .form-group { margin-bottom: 15px; }
+        .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
+        .leave-type-btn.selected { box-shadow: 0 0 0 2px var(--primary-color); opacity: 1; }
     </style>
 </head>
 <body>
@@ -82,7 +92,6 @@
     </div>
 
 <script>
-    // --- 상수 선언 및 초기화 ---
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPNlo3S5ACoOtia5-BSDYq_vETZ77K5BHSf63LMEddY3LsFKwyAgbZ_JToTMsJbu3d/exec';
     const GOOGLE_CLIENT_ID = '278895756952-3icfkn5f8sipfc3jpj0norj6k9mh8scg.apps.googleusercontent.com';
     let currentUser = null;
@@ -90,7 +99,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-    // --- 페이지 로드 및 이벤트 리스너 설정 ---
     window.onload = function() {
         try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); currentUser = null; }
         loadCompletedItems();
@@ -100,7 +108,7 @@
             loadData();
         } else {
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
-            google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' });
+            google.accounts.id.renderButton( document.getElementById('gsi-container'), { theme: 'outline', size: 'large' });
             google.accounts.id.prompt();
         }
         setupEventListeners();
@@ -110,7 +118,7 @@
         document.body.addEventListener('click', function(e) {
             const target = e.target;
             if (target.closest('.accordion-title')) target.closest('.accordion-title').classList.toggle('active');
-            if (target.closest('#new-post-btn')) alert('게시물 등록 기능은 구현 예정입니다.');
+            if (target.closest('#new-post-btn')) openPostModal();
             if (target.closest('.tab-button')) {
                 const button = target.closest('.tab-button');
                 const container = button.closest('.content, .tab-content');
@@ -123,8 +131,12 @@
                     });
                 }
             }
+            if (target.classList.contains('leave-type-btn')) {
+                document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected'));
+                target.classList.add('selected');
+                document.getElementById('leave-type-input').value = target.dataset.type;
+            }
         });
-        // 이벤트 위임을 사용하여 동적으로 생성된 폼 처리
         document.body.addEventListener('submit', function(e) {
             if (e.target.id === 'leave-request-form') {
                 e.preventDefault();
@@ -133,7 +145,6 @@
         });
     }
 
-    // --- 데이터 로딩 및 공통 함수 ---
     function loadCompletedItems() {
         const todayStr = new Date().toISOString().split('T')[0];
         const storedData = localStorage.getItem('completedItems');
@@ -145,15 +156,23 @@
             } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; }
         }
     }
-    function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems })); }
+    function saveCompletedItems() {
+        localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));
+    }
     async function handleCredentialResponse(response) {
         const userObject = JSON.parse(atob(response.credential.split('.')[1]));
         currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
         localStorage.setItem('userInfo', JSON.stringify(currentUser));
         location.reload();
     }
-    function handleLogout() { localStorage.clear(); google.accounts.id.disableAutoSelect(); location.reload(); }
-    function updateDateDisplay() { document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }); }
+    function handleLogout() {
+        localStorage.clear();
+        google.accounts.id.disableAutoSelect();
+        location.reload();
+    }
+    function updateDateDisplay() {
+        document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    }
     async function loadData() {
         const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
         targetEl.style.display = 'block';
@@ -168,7 +187,9 @@
             renderUserInfo(currentUser);
             if (isTeacherMode) renderTeacherDashboard(data); 
             else renderStudentPortal(data);
-        } catch (error) { targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`; }
+        } catch (error) {
+            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
+        }
     }
     function renderUserInfo(user) {
         const displayEl = document.getElementById('user-display');
@@ -178,25 +199,110 @@
         displayEl.innerHTML = `<div class="user-display">${userInfoHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`;
     }
 
-    // --- 교사 UI 렌더링 함수들 ---
-    function renderTeacherDashboard(data) { /* 생략 없는 완전한 코드 */ }
-    function renderTeacherRoutines(routines) { /* 생략 없는 완전한 코드 */ }
-    function renderClassManagementAccordions(data) { /* 생략 없는 완전한 코드 */ }
-    function renderLeaveCards(leaves) { /* 생략 없는 완전한 코드 */ }
-    function renderAssignmentCards(assignments) { /* 생략 없는 완전한 코드 */ }
-    function renderPostStatusCards(posts) { /* 생략 없는 완전한 코드 */ }
-    function renderScheduleCards(schedules) { /* 생략 없는 완전한 코드 */ }
-    function renderTeacherPersonalTasks(tasks) { /* 생략 없는 완전한 코드 */ }
-    function renderTeacherSettings(data) { /* 생략 없는 완전한 코드 */ }
+    function renderTeacherDashboard(data) {
+        document.getElementById('teacher-dashboard').innerHTML = `
+            <div id="routine-tasks-section" class="section"></div>
+            <div id="class-management-section" class="section"></div>
+            <div id="teacher-personal-tasks-section" class="section"></div>
+            <div id="teacher-settings-section" class="section"></div>`;
+        renderTeacherRoutines(data.routines);
+        renderClassManagementAccordions(data);
+        renderTeacherPersonalTasks(data.teacherPersonalTasks);
+        renderTeacherSettings(data);
+    }
+    function renderTeacherRoutines(routines) {
+        const container = document.getElementById('routine-tasks-section');
+        if (!routines || routines.length === 0) return;
+        const routineHtml = routines.map(r => `
+            <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" for="routine-${r.rowNum}">
+                <input type="checkbox" class="routine-checkbox" id="routine-${r.rowNum}" onchange="toggleRoutineComplete('${r.rowNum}', this)" ${completedItems[r.rowNum] ? 'checked' : ''}>
+                <span>${r.업무명}</span>
+            </label>`).join('');
+        container.innerHTML = `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
+    }
+    function renderClassManagementAccordions(data) {
+        const container = document.getElementById('class-management-section');
+        container.innerHTML = `<h2 class="section-title">🏠 학급 관리</h2><div id="leave-accordion"></div><div id="assignment-accordion"></div><div id="notice-status-accordion"></div><div id="schedule-accordion"></div>`;
+        document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
+        document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
+        const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
+        document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content">${renderPostStatusCards(allPosts)}</div>`;
+        document.getElementById('schedule-accordion').innerHTML = `<div class="accordion-title"><span>📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</span></div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div>`;
+    }
+    function renderLeaveCards(leaves) {
+        if (!leaves || leaves.length === 0) return '<div class="empty-state">신청 내역이 없습니다.</div>';
+        return leaves.map(req => {
+            const escapedReason = (req.사유 || '').replace(/"/g, '"');
+            return `<div class="teacher-leave-card">
+                <div class="leave-header"><strong>${req.이름 || '정보없음'}(${req.학번 || '정보없음'})</strong><small>${req.신청종류}(${new Date(req.희망일자).toLocaleDateString()})</small></div>
+                <textarea class="leave-reason-input" id="reason-${req.rowNum}">${escapedReason}</textarea>
+                <div class="leave-actions">
+                    <button class="action-btn approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'reason-${req.rowNum}')">승인</button>
+                    <button class="action-btn reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'reason-${req.rowNum}')">반려</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    function renderAssignmentCards(assignments) {
+        if (!assignments || assignments.length === 0) return '<div class="empty-state">관리할 과제가 없습니다.</div>';
+        return assignments.map(a => `<div class="card">${a.title}</div>`).join('');
+    }
+    function renderPostStatusCards(posts) {
+        if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
+        return posts.map(item => `<div class="card">${item.제목}</div>`).join('');
+    }
+    function renderScheduleCards(schedules) {
+        if (!schedules || schedules.length === 0) return '<div class="empty-state">등록된 학급 일정이 없습니다.</div>';
+        return schedules.map(s => `<div class="card">${s.제목}</div>`).join('');
+    }
+    function renderTeacherPersonalTasks(tasks) {
+        const container = document.getElementById('teacher-personal-tasks-section');
+        if (!tasks || tasks.length === 0) { container.style.display = 'none'; return; }
+        let tasksHtml = tasks.map(task => `<div class="personal-task-card card">
+            <div class="card-title">${task.내용}</div>
+            ${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color:#007bff; margin-top:10px; display:inline-block;">바로가기</a>` : ''}
+        </div>`).join('');
+        container.innerHTML = `<h2 class="section-title">📋 업무 일지</h2><div class="personal-task-list">${tasksHtml}</div>`;
+    }
+    function renderTeacherSettings(data) {
+        const container = document.getElementById('teacher-settings-section');
+        const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
+            const type = item.종류 || '자료실';
+            if (!acc[type]) acc[type] = [];
+            acc[type].push(item);
+            return acc;
+        }, {});
+        const tabs = Object.keys(groupedItems);
+        const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+        const tabPanesHtml = tabs.map((tab, i) => {
+            const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join('');
+            return `<div id="teacher-tab-${i}" class="tab-pane ${i===0 ? 'active' : ''}"><div class="teacher-dashboard-grid">${itemsHtml}</div></div>`;
+        }).join('');
+        container.innerHTML = `
+            <h2 class="section-title">⚙️ 설정</h2>
+            <div class="teacher-dashboard-grid">
+                <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center;"><div class="card-title">✨ 새 게시물/업무 등록</div></div>
+                <a href="${data.sheetUrl}" target="_blank" class="card"><div class="card-title">📊 데이터 시트 수정</div></a>
+            </div>
+            <div class="tabs">${tabButtonsHtml}</div>
+            <div class="tab-content">${tabPanesHtml}</div>`;
+    }
 
-    // --- 학생 UI 렌더링 함수들 ---
+    /* --- 학생 UI 렌더링 --- */
     function renderStudentPortal(data) {
         const portal = document.getElementById('student-portal');
         
-        const mainPaneHTML = `
-            ${renderItems('notices-section', filterTodayNotices(data.notices), '📢 중요 공지')}
-            ${renderItems('tasks-section', (data.tasks || []).filter(item => !completedItems[item.id]), '✅ 오늘의 할 일')}`;
+        const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
+        const todayNotices = (data.notices || []).filter(item => {
+            const conditions = (item.표시조건 || '').split(',').map(s => s.trim()).filter(c => c);
+            if (conditions.length === 0) return true;
+            return conditions.includes('매일') || conditions.includes(dayOfWeek);
+        });
         
+        const mainPaneHTML = `
+            ${renderItems('notices-section', todayNotices.filter(item => !completedItems[item.id]), '📢 중요 공지')}
+            ${renderItems('tasks-section', (data.tasks || []).filter(item => !completedItems[item.id]), '✅ 오늘의 할 일')}`;
+
         portal.innerHTML = `
             ${renderWidgets(data.widgets)}
             ${renderUnsubmitted(data.unsubmitted)}
@@ -213,16 +319,7 @@
         if (data.user?.studentId) portal.querySelector('[data-tab="leave-pane"]').style.display = 'inline-block';
         if (data.resources && data.resources.length > 0) portal.querySelector('[data-tab="resource-pane"]').style.display = 'inline-block';
     }
-
-    function filterTodayNotices(notices) {
-        const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
-        return (notices || []).filter(item => {
-            const conditions = (item.표시조건 || '').split(',').map(s => s.trim()).filter(c => c);
-            if (conditions.length === 0) return true;
-            return conditions.includes('매일') || conditions.includes(dayOfWeek);
-        });
-    }
-
+    
     function renderWidgets(widgets) {
         if (!widgets || widgets.length === 0) return '';
         const widgetHtml = widgets.map(widget => {
@@ -235,13 +332,11 @@
         }).join('');
         return `<div id="widgets-container">${widgetHtml}</div>`;
     }
-
     function renderUnsubmitted(tasks) {
         if (!tasks || tasks.length === 0) return '';
         const listHtml = tasks.map(t => `<li>${t.아이콘||"📌"} ${t.제목||t.내용}</li>`).join('');
         return `<div id="unsubmitted-container" class="unsubmitted-section"><div style="font-weight: bold; color: #856404; margin-bottom: 10px;">🔔 아직 완료하지 않은 할 일이 있어요!</div><ul style="list-style: none; padding-left: 10px;">${listHtml}</ul></div>`;
     }
-
     function renderItems(containerId, items, sectionTitle) {
         if (!items || items.length === 0) return '';
         let itemsHtml = items.map(item => {
@@ -256,13 +351,11 @@
         }).join('');
         return `<div id="${containerId}" class="section"><h2 class="section-title">${sectionTitle}</h2>${itemsHtml}</div>`;
     }
-
     function renderStudentClassSchedules(schedules) {
         if (!schedules || schedules.length === 0) return '';
         const schedulesHtml = schedules.map(s => `<div class="card"><div class="card-title">${s.제목}</div><p class="card-description">${s.내용 || ''}</p></div>`).join('');
         return `<div id="student-schedules-section" class="section"><h2 class="section-title">📅 학급 일정</h2>${schedulesHtml}</div>`;
     }
-
     function renderLeaveSection(requests) {
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
@@ -277,7 +370,11 @@
                 <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
                 <div class="form-group">
                     <label>신청 종류</label>
-                    <select name="type" required><option value="외출">외출</option><option value="조퇴">조퇴</option></select>
+                    <div style="display:flex; gap:10px;">
+                         <button type="button" class="action-btn leave-type-btn" data-type="외출" style="background:var(--primary-color); flex:1;">외출</button>
+                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴" style="background:var(--secondary-color); flex:1;">조퇴</button>
+                    </div>
+                    <input type="hidden" name="type" id="leave-type-input" required>
                 </div>
                 <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div>
                 <div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div>
@@ -286,16 +383,15 @@
             <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0; margin-top:30px;">나의 신청 내역</h3>
             ${historyHtml}`;
     }
-
     function renderResources(resources) {
         if (!resources || resources.length === 0) return '';
         const resourcesHtml = resources.map(res => `<a href="${res.링크}" target="_blank" class="card"><div class="card-title">${res.자료명}</div><p class="card-description">${res.설명 || ''}</p></a>`).join('');
         return `<div class="teacher-dashboard-grid">${resourcesHtml}</div>`;
     }
 
-    /* --- 서버 통신 --- */
     async function submitLeaveRequest(form) {
         const formData = new FormData(form);
+        if (!formData.get('type')) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; }
         const params = new URLSearchParams({ 
             action: 'submitLeaveRequest', 
             studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email,
