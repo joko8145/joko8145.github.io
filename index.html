@@ -50,16 +50,12 @@
         .leave-actions { display: flex; gap: 10px; justify-content: flex-end; }
         .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .personal-task-list .card { padding: 15px; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
-        .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; transform: scale(0.9); transition: transform 0.3s ease; }
-        .modal-overlay.visible .modal-content { transform: scale(1); }
-        .modal-title { font-size: 1.5em; margin-bottom: 20px; }
-        .modal-form-group { margin-bottom: 15px; }
-        .modal-form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .modal-form-group input, .modal-form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
-        .modal-close-btn { background-color: #6c757d; }
+        .leave-request-form { background: #f8f9fa; padding: 20px; border-radius: var(--border-radius); margin-bottom: 30px; }
+        .leave-request-form .form-group { margin-bottom: 15px; }
+        .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
+        .leave-type-btn.selected { box-shadow: 0 0 0 3px var(--primary-color) inset; }
         #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 150px; background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: var(--border-radius); }
         .widget-title { font-weight: 600; margin-bottom: 8px; }
@@ -71,12 +67,6 @@
         .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); }
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
-        .leave-request-form { background: #f8f9fa; padding: 20px; border-radius: var(--border-radius); margin-bottom: 30px; }
-        .leave-request-form .form-group { margin-bottom: 15px; }
-        .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
-        .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
-        .leave-type-btn.selected { box-shadow: 0 0 0 3px var(--primary-color) inset; }
     </style>
 </head>
 <body>
@@ -91,7 +81,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwiMCRT5EZDll9CQ37J5wIZlgu7DvTVGZE6v6--UrxtRQyNa7c8Oo-JNJKE_Bn-pQjZJw/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycnkUUlcTyz8wUkdZ63ejFFAyOGckRzzjzEBYwE1aDKMNmJWNA2niv-8qK8HeaWhvoNQ/exec';
     const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
     let currentUser = null;
     let completedItems = {};
@@ -104,7 +94,7 @@
         updateDateDisplay();
         if (currentUser) {
             renderUserInfo(currentUser);
-            loadDataWithJSONP();
+            loadData();
         } else {
             google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
@@ -193,39 +183,23 @@
         document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     }
 
-    function loadDataWithJSONP() {
+    async function loadData() {
         const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
         targetEl.style.display = 'block';
         targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-
-        window.handleData = function(data) {
-            try {
-                if (data.error) throw new Error(data.error);
-                currentUser = { ...currentUser, ...data.user };
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-                renderUserInfo(currentUser);
-                if (isTeacherMode) renderTeacherDashboard(data); 
-                else renderStudentPortal(data);
-            } catch(e) {
-                targetEl.innerHTML = `<div class="empty-state">❌ 데이터 처리 실패: ${e.message}</div>`;
-            } finally {
-                delete window.handleData;
-                const scriptTag = document.getElementById('jsonp-script');
-                if (scriptTag) document.body.removeChild(scriptTag);
-            }
-        };
-
-        const script = document.createElement('script');
-        const fullUrl = `${SCRIPT_URL}?callback=handleData&v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}` + (isTeacherMode ? '&mode=teacher' : '');
-        script.id = 'jsonp-script';
-        script.src = fullUrl;
-        
-        script.onerror = function() {
-            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: 스크립트를 불러오지 못했습니다. 네트워크나 URL을 확인하세요.</div>`;
-            delete window.handleData;
-        };
-        
-        document.body.appendChild(script);
+        const fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}` + (isTeacherMode ? '&mode=teacher' : '');
+        try {
+            const response = await fetch(fullUrl);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            currentUser = { ...currentUser, ...data.user };
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            renderUserInfo(currentUser);
+            if (isTeacherMode) renderTeacherDashboard(data); 
+            else renderStudentPortal(data);
+        } catch (error) {
+            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
+        }
     }
     
     function renderUserInfo(user) {
@@ -277,8 +251,8 @@
                 <div class="leave-header"><strong>${req.이름 || '정보없음'}(${req.학번 || '정보없음'})</strong><small>${req.신청종류}(${new Date(req.희망일자).toLocaleDateString()})</small></div>
                 <textarea class="leave-reason-input" id="reason-${req.rowNum}">${escapedReason}</textarea>
                 <div class="leave-actions">
-                    <button class="action-btn approve-btn" onclick="alert('이 기능은 POST 방식으로 변경해야 합니다.')">승인</button>
-                    <button class="action-btn reject-btn" onclick="alert('이 기능은 POST 방식으로 변경해야 합니다.')">반려</button>
+                    <button class="action-btn approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'reason-${req.rowNum}')">승인</button>
+                    <button class="action-btn reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'reason-${req.rowNum}')">반려</button>
                 </div>
             </div>`;
         }).join('');
@@ -433,11 +407,32 @@
         return `<div class="teacher-dashboard-grid">${resourcesHtml}</div>`;
     }
 
-    function submitLeaveRequest(form) {
-        alert("이 기능은 현재 JSONP 방식과 호환되지 않아 비활성화되었습니다. 추후 POST 방식으로 구현해야 합니다.");
+    async function submitLeaveRequest(form) {
+        const formData = new FormData(form);
+        if (!formData.get('type')) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; }
+        const params = new URLSearchParams({ 
+            action: 'submitLeaveRequest', 
+            studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email,
+            ...Object.fromEntries(formData.entries()) 
+        });
+        alert('신청 처리 중...');
+        try {
+            const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await res.json();
+            alert(result.message);
+            if (result.status === 'success') loadData();
+        } catch (error) { alert('신청 중 오류: ' + error.message); }
     }
-    function updateLeaveStatus(rowNum, status, reasonInputId) {
-        alert("이 기능은 현재 JSONP 방식과 호환되지 않아 비활성화되었습니다. 추후 POST 방식으로 구현해야 합니다.");
+    async function updateLeaveStatus(rowNum, status, reasonInputId) {
+        const modifiedReason = document.getElementById(reasonInputId)?.value || '';
+        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, modifiedReason });
+        alert('처리 중...');
+        try {
+            const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await res.json();
+            alert(result.message);
+            if (result.status === 'success') loadData();
+        } catch (error) { alert('처리 중 오류: ' + error.message); }
     }
     function toggleRoutineComplete(itemId, checkbox) {
         const label = checkbox.closest('.routine-item');
