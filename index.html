@@ -55,21 +55,9 @@
         .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
         .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
         .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
-        /* [수정됨] 외출/조퇴 버튼 초기 상태 (회색) */
-        .leave-type-btn {
-            background-color: #e9ecef;
-            color: #495057;
-            flex: 1;
-        }
-        /* [수정됨] 선택되었을 때만 색상 적용 */
-        .leave-type-btn.selected[data-type="외출"] {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        .leave-type-btn.selected[data-type="조퇴"] {
-            background-color: var(--secondary-color);
-            color: white;
-        }
+        .leave-type-btn { background-color: #e9ecef; color: #495057; flex: 1; }
+        .leave-type-btn.selected[data-type="외출"] { background-color: var(--primary-color); color: white; }
+        .leave-type-btn.selected[data-type="조퇴"] { background-color: var(--secondary-color); color: white; }
         #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 150px; background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: var(--border-radius); }
         .widget-title { font-weight: 600; margin-bottom: 8px; }
@@ -88,10 +76,50 @@
         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--primary-color); }
         input:checked + .slider:before { transform: translateX(22px); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .modal-content { background-color: var(--white-bg); padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text-light); }
+        .modal-content h2 { font-size: 1.5em; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div id="modal-container"></div>
+    <div id="new-post-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">×</button>
+            <h2>✨ 새 게시물/업무 등록</h2>
+            <form id="new-post-form">
+                <div class="form-group">
+                    <label for="post-type">유형</label>
+                    <select id="post-type" name="type" required>
+                        <option value="공지">공지</option>
+                        <option value="할일">할 일</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="post-title">제목</label>
+                    <input type="text" id="post-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="post-content">내용</label>
+                    <textarea id="post-content" name="content"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="post-link">링크 (선택)</label>
+                    <input type="url" id="post-link" name="link">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="action-btn modal-close-btn" style="position: static; background-color: var(--text-light);">취소</button>
+                    <button type="submit" class="action-btn" style="background-color: var(--primary-color);">등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
@@ -144,7 +172,11 @@
                 target.closest('.accordion-title').classList.toggle('active');
             }
             if (target.closest('#new-post-btn')) {
-                alert('게시물 등록 기능은 구현 예정입니다.');
+                document.getElementById('new-post-modal').style.display = 'flex';
+            }
+            if (target.classList.contains('modal-close-btn')) {
+                document.getElementById('new-post-modal').style.display = 'none';
+                document.getElementById('new-post-form').reset();
             }
             if (target.closest('.tab-button')) {
                 const button = target.closest('.tab-button');
@@ -168,6 +200,10 @@
             if (e.target.id === 'leave-request-form') {
                 e.preventDefault();
                 submitLeaveRequest(e.target);
+            }
+            if (e.target.id === 'new-post-form') {
+                e.preventDefault();
+                submitNewPost(e.target);
             }
         });
     }
@@ -416,7 +452,6 @@
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
             const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
-            // [수정됨] 확인증 버튼 표시 로직: req.rowNum 대신 req.신청행번호를 사용
             const certButton = (req.상태 === '승인' && req.신청행번호) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
             return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
@@ -427,7 +462,6 @@
                 <div class="form-group">
                     <label>신청 종류</label>
                     <div style="display:flex; gap:10px;">
-                         <!-- [수정됨] 인라인 스타일 제거, 클래스만 남김 -->
                          <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
                          <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
                     </div>
@@ -509,6 +543,35 @@
             checkbox.checked = !checkbox.checked;
         } finally {
             card.style.opacity = '1';
+        }
+    }
+
+    async function submitNewPost(form) {
+        const formData = new FormData(form);
+        const params = new URLSearchParams({
+            action: 'createNewPost',
+            ...Object.fromEntries(formData.entries())
+        });
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.textContent = '등록 중...';
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await response.json();
+
+            if (result.status !== 'success') {
+                throw new Error(result.message);
+            }
+            alert(result.message);
+            document.getElementById('new-post-modal').style.display = 'none';
+            form.reset();
+            loadData();
+        } catch (error) {
+            alert('오류: ' + error.message);
+        } finally {
+            submitButton.textContent = '등록하기';
+            submitButton.disabled = false;
         }
     }
 </script>
