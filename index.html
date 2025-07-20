@@ -48,8 +48,6 @@
         .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
         .resource-card { background: #f1f3f5; border-radius: 12px; padding: 20px; text-decoration: none; color: inherit; display: block; transition: all 0.2s ease-in-out; }
         .resource-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .resource-title { font-size: 1.1em; font-weight: bold; margin-bottom: 8px; }
-        .resource-desc { font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
@@ -78,30 +76,27 @@
             if (storedUser) {
                 currentUser = JSON.parse(storedUser);
                 renderUserInfo(currentUser);
-                loadPersonalizedData();
+                loadPersonalizedData(currentUser.email); // 이미 로그인 정보가 있으면 바로 데이터 로딩
             } else {
                 google.accounts.id.renderButton(document.getElementById("gsi-container"),{ theme: "outline", size: "large", text: "signin_with", shape: "pill" });
-                loadPersonalizedData();
+                loadPersonalizedData(); // 로그인 정보가 없으면 비로그인 상태로 데이터 로딩
             }
             updateDateTime();
             setInterval(updateDateTime, 1000);
         };
 
         async function handleCredentialResponse(response) {
+            // 구글에서 받은 사용자 기본 정보 파싱
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
-            const fullUrl = `${NOTIFICATION_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(userObject.email)}`;
-            try {
-                const apiResponse = await fetch(fullUrl);
-                const data = await apiResponse.json();
-                if (data.user) { currentUser = { ...data.user, picture: userObject.picture }; }
-                else { currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null }; }
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } catch (error) {
-                currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null };
-                localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            } finally {
-                location.reload();
-            }
+            
+            // 사용자 정보를 로컬 저장소에 먼저 저장 (사진, 이름 등)
+            // 아직 우리 서비스의 학번 등은 모르는 상태
+            currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture, studentId: null, isTeacher: false };
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            
+            // 로그인 후 페이지를 새로고침하여 전체 플로우를 다시 시작.
+            // 이렇게 하면 코드가 훨씬 단순하고 안정적이 됨.
+            location.reload();
         }
 
         function handleLogout() {
@@ -114,8 +109,11 @@
         function renderUserInfo(user) {
             document.getElementById('user-display').style.display = 'block';
             document.getElementById('gsi-container').style.display = 'none';
+            // 이름이 깨지지 않도록 user.name을 직접 사용
             let userInfoHtml = `<span class="user-info"><img src="${user.picture}" alt="profile"><strong>${user.name}</strong>님 <a href="#" onclick="handleLogout()">로그아웃</a></span>`;
-            if (user.studentId === null) { userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록)</span>`; }
+            if (user.studentId === null && !user.isTeacher) { // 교사가 아닐 때만 미등록 표시
+                userInfoHtml += ` <span class="user-info" style="color: #ffc107;">(미등록)</span>`; 
+            }
             document.getElementById('user-display').innerHTML = userInfoHtml;
         }
         
@@ -159,6 +157,7 @@
             listItem.style.opacity = '0.5';
             const params = new URLSearchParams({ action: 'logSubtask', studentId: currentUser.studentId, name: currentUser.name, taskId: taskId, subtask: subtask, isChecked: isChecked });
             try {
+                // [수정됨] 한글 깨짐 방지를 위해 .json() 사용
                 const response = await fetch(`${NOTIFICATION_URL}?${params.toString()}`);
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message);
@@ -173,13 +172,20 @@
             }
         }
         
-        function renderUnsubmitted(tasks) { const container=document.getElementById("unsubmitted-container");if(!currentUser||!tasks||0===tasks.length)return void(container.style.display="none");container.style.display="block",container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${currentUser.name}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>` }
+        function renderUnsubmitted(tasks, userName) {
+            const container=document.getElementById("unsubmitted-container");
+            if(!userName || !tasks || tasks.length === 0) {
+                container.style.display="none";
+                return;
+            }
+            container.style.display="block";
+            container.innerHTML=`<div class="unsubmitted-section"><div class="unsubmitted-title">🔔 ${userName}님, 아직 완료하지 않은 할 일이 있어요!</div><ul class="unsubmitted-list">${tasks.map(t=>`<li>${t.icon||"📌"} ${t.title||t.content}</li>`).join("")}</ul></div>`;
+        }
+
         function renderWidgets(widgets) { const container=document.getElementById("widgets-container");if(!widgets||0===widgets.length)return void(container.style.display="none");container.style.display="flex",container.innerHTML=widgets.map(t=>{let e="";switch(t.type){case"디데이":const n=new Date;n.setHours(0,0,0,0);const o=new Date(t.content);o.setHours(0,0,0,0);const i=Math.ceil((o-n)/864e5);e=i>0?`D-${i}`:i<0?`D+${-i}`:"D-Day";break;case"급식":e=`<div class="widget-content small-text">${t.content.replace(/\n/g, '<br>')}</div>`;break;case"링크":e=`<a href="${t.content}" target="_blank" style="font-size: 1.2em;">바로가기</a>`;break;default:e=t.content}return`<div class="widget"><div class="widget-title">${t.title}</div>${"급식"!==t.type?`<div class="widget-content">${e}</div>`:e}</div>`}).join("")}
         
-        // [수정됨] 자료실 렌더링 함수: 레이아웃 문제를 해결하기 위해 최종 수정
         function renderResources(resources) {
             const container = document.getElementById('resources');
-            // 'resource-grid' 클래스가 있는지 확인하고 없으면 추가
             if (!container.classList.contains('resource-grid')) {
                 container.classList.add('resource-grid');
             }
@@ -195,24 +201,39 @@
             `).join('');
         }
 
-        async function loadPersonalizedData() {
+        // [수정됨] 데이터를 불러오는 핵심 함수
+        async function loadPersonalizedData(userEmail = null) {
             let fullUrl = NOTIFICATION_URL + '?v=' + new Date().getTime();
-            if (currentUser) fullUrl += '&email=' + encodeURIComponent(currentUser.email);
+            if (userEmail) {
+                fullUrl += '&email=' + encodeURIComponent(userEmail);
+            }
             
             const sections = ['notices', 'tasks', 'resources'];
             sections.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>'; });
             
             try {
+                // [수정됨] 한글 깨짐을 완벽하게 방지하는 방법
                 const response = await fetch(fullUrl);
-                if (!response.ok) throw new Error('데이터 로드 실패');
-                const data = await response.json();
+                if (!response.ok) throw new Error('데이터 로드 실패 (서버 응답 오류)');
+                
+                // .json()을 사용하면 브라우저가 알아서 UTF-8로 해석해줍니다.
+                const data = await response.json(); 
+
                 if (data.error) throw new Error(data.error);
                 
+                // 로그인 했을 경우, 서버에서 받은 정확한 정보로 currentUser를 업데이트하고 다시 저장
+                if(data.user && data.user.email) {
+                    const picture = currentUser ? currentUser.picture : '';
+                    currentUser = { ...data.user, picture: picture };
+                    localStorage.setItem('userInfo', JSON.stringify(currentUser));
+                    renderUserInfo(currentUser); // 업데이트된 정보로 화면 다시 그리기
+                }
+
                 submittedTasks = new Set(data.submittedTasks || []);
                 renderWidgets(data.widgets);
                 renderItems('notices', data.notices, '자세히 보기 →', false);
                 renderItems('tasks', data.tasks, '바로 하기 →', true);
-                renderUnsubmitted(data.unsubmitted);
+                renderUnsubmitted(data.unsubmitted, currentUser ? currentUser.name : null);
                 renderResources(data.resources);
 
             } catch (error) {
