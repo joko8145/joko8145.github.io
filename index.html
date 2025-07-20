@@ -85,7 +85,6 @@
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
         .form-group textarea { resize: vertical; min-height: 100px; }
         .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        /* [추가됨] 게시물 필터링 컨트롤 스타일 */
         .post-filter-controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
         .post-search-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
         .post-filter-tabs { display: flex; }
@@ -300,7 +299,6 @@
         return assignments.map(a => `<div class="card">${a.title}</div>`).join('');
     }
 
-    // [수정됨] 검색/필터 기능이 포함된 게시물 관리 함수
     function renderPostStatusCards(posts) {
         if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
         const postListHtml = posts.map(item => `
@@ -316,12 +314,13 @@
             <div class="post-filter-controls">
                 <input type="search" id="post-search-input" class="post-search-input" placeholder="제목으로 검색..." oninput="filterPosts()">
                 <div class="post-filter-tabs">
-                    <button class="post-filter-btn active" onclick="filterPosts(this, 'all')">전체</button>
-                    <button class="post-filter-btn" onclick="filterPosts(this, 'Y')">게시중</button>
-                    <button class="post-filter-btn" onclick="filterPosts(this, 'N')">숨김</button>
+                    <button class="post-filter-btn active" data-filter="all" onclick="filterPosts(this)">전체</button>
+                    <button class="post-filter-btn" data-filter="Y" onclick="filterPosts(this)">게시중</button>
+                    <button class="post-filter-btn" data-filter="N" onclick="filterPosts(this)">숨김</button>
                 </div>
             </div>
             <div id="post-list-container">${postListHtml}</div>
+            <div class="empty-state" id="post-filter-empty" style="display:none;">검색 결과가 없습니다.</div>
         `;
     }
 
@@ -513,6 +512,7 @@
     async function updatePostStatus(checkbox, rowNum) {
         const newStatus = checkbox.checked ? 'Y' : 'N';
         const card = checkbox.closest('.post-status-card');
+        card.dataset.status = newStatus; // [수정됨] 데이터 속성도 즉시 업데이트
         card.style.opacity = '0.5';
         const params = new URLSearchParams({ action: 'updatePostStatus', rowNum, newStatus });
         try {
@@ -522,6 +522,7 @@
         } catch (error) {
             alert(`오류: ${error.message}`);
             checkbox.checked = !checkbox.checked;
+            card.dataset.status = checkbox.checked ? 'Y' : 'N'; // 오류 시 데이터 속성 원상복구
         } finally {
             card.style.opacity = '1';
         }
@@ -536,7 +537,6 @@
         const submitButton = form.querySelector('button[type="submit"]');
         submitButton.textContent = '등록 중...';
         submitButton.disabled = true;
-
         try {
             const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await response.json();
@@ -553,19 +553,18 @@
         }
     }
 
-    // [추가됨] 게시물 목록 필터링 함수
-    function filterPosts(button = null, filterStatus = null) {
+    // [수정됨] 게시물 목록 필터링 함수
+    function filterPosts(button = null) {
         const container = document.getElementById('post-status-content');
         if (!container) return;
         
-        // 필터 버튼 상태 업데이트
-        if (button && filterStatus) {
+        if (button) {
             container.querySelectorAll('.post-filter-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
         }
 
         const searchTerm = container.querySelector('#post-search-input').value.toLowerCase();
-        const activeFilter = container.querySelector('.post-filter-btn.active').getAttribute('onclick').split("'")[1];
+        const activeFilter = container.querySelector('.post-filter-btn.active').dataset.filter;
 
         const allPosts = container.querySelectorAll('.post-status-card');
         let visibleCount = 0;
@@ -584,9 +583,8 @@
             }
         });
         
-        // 필터링 후 결과가 없을 때 'empty-state' 표시
-        const emptyState = container.querySelector('.empty-state');
-        if (emptyState) {
+        const emptyState = container.querySelector('#post-filter-empty');
+        if(emptyState) {
             emptyState.style.display = (visibleCount === 0 && allPosts.length > 0) ? 'block' : 'none';
         }
     }
