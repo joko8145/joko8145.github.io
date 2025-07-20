@@ -37,7 +37,7 @@
         .routine-item.completed { background-color: #e0e7ff; }
         .routine-checkbox { display: none; }
         .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-content { display: none; padding: 15px 0 5px 0; }
+        .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px; }
         .accordion-title.active + .accordion-content { display: block; }
         .accordion-title.active::after { transform: rotate(180deg); }
         .accordion-title::after { content: '▼'; transition: transform 0.2s; }
@@ -85,6 +85,14 @@
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
         .form-group textarea { resize: vertical; min-height: 100px; }
         .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        /* [추가됨] 게시물 필터링 컨트롤 스타일 */
+        .post-filter-controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .post-search-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .post-filter-tabs { display: flex; }
+        .post-filter-btn { padding: 10px 15px; border: 1px solid #ccc; background-color: var(--white-bg); cursor: pointer; }
+        .post-filter-btn:first-child { border-radius: 8px 0 0 8px; }
+        .post-filter-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+        .post-filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
     </style>
 </head>
 <body>
@@ -93,30 +101,11 @@
             <button class="modal-close-btn">×</button>
             <h2>✨ 새 게시물/업무 등록</h2>
             <form id="new-post-form">
-                <div class="form-group">
-                    <label for="post-type">유형</label>
-                    <select id="post-type" name="type" required>
-                        <option value="공지">공지</option>
-                        <option value="할일">할 일</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="post-title">제목</label>
-                    <input type="text" id="post-title" name="title" required>
-                </div>
-                <div class="form-group">
-                    <label for="post-content">내용</label>
-                    <textarea id="post-content" name="content"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="post-link">링크 (선택)</label>
-                    <input type="url" id="post-link" name="link">
-                </div>
-                <div class="form-actions">
-                    <!-- [수정됨] 여기에 "취소" 텍스트를 추가했습니다. -->
-                    <button type="button" class="action-btn modal-close-btn" style="position: static; background-color: var(--text-light);">취소</button>
-                    <button type="submit" class="action-btn" style="background-color: var(--primary-color);">등록하기</button>
-                </div>
+                <div class="form-group"><label for="post-type">유형</label><select id="post-type" name="type" required><option value="공지">공지</option><option value="할일">할 일</option></select></div>
+                <div class="form-group"><label for="post-title">제목</label><input type="text" id="post-title" name="title" required></div>
+                <div class="form-group"><label for="post-content">내용</label><textarea id="post-content" name="content"></textarea></div>
+                <div class="form-group"><label for="post-link">링크 (선택)</label><input type="url" id="post-link" name="link"></div>
+                <div class="form-actions"><button type="button" class="action-btn modal-close-btn" style="position: static; background-color: var(--text-light);">취소</button><button type="submit" class="action-btn" style="background-color: var(--primary-color);">등록하기</button></div>
             </form>
         </div>
     </div>
@@ -169,12 +158,8 @@
     function setupEventListeners() {
         document.body.addEventListener('click', function(e) {
             const target = e.target;
-            if (target.closest('.accordion-title')) {
-                target.closest('.accordion-title').classList.toggle('active');
-            }
-            if (target.closest('#new-post-btn')) {
-                document.getElementById('new-post-modal').style.display = 'flex';
-            }
+            if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); }
+            if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
             if (target.classList.contains('modal-close-btn')) {
                 document.getElementById('new-post-modal').style.display = 'none';
                 document.getElementById('new-post-form').reset();
@@ -198,14 +183,8 @@
             }
         });
         document.body.addEventListener('submit', function(e) {
-            if (e.target.id === 'leave-request-form') {
-                e.preventDefault();
-                submitLeaveRequest(e.target);
-            }
-            if (e.target.id === 'new-post-form') {
-                e.preventDefault();
-                submitNewPost(e.target);
-            }
+            if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); }
+            if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); }
         });
     }
 
@@ -215,16 +194,9 @@
         if (storedData) {
             try {
                 const data = JSON.parse(storedData);
-                if (data.date === todayStr) { 
-                    completedItems = data.items || {}; 
-                } else { 
-                    localStorage.removeItem('completedItems');
-                    completedItems = {}; 
-                }
-            } catch (e) { 
-                localStorage.removeItem('completedItems');
-                completedItems = {}; 
-            }
+                if (data.date === todayStr) { completedItems = data.items || {}; } 
+                else { localStorage.removeItem('completedItems'); completedItems = {}; }
+            } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; }
         }
     }
 
@@ -239,9 +211,7 @@
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '');
             window.location.href = cleanUrl;
-        } else {
-            console.error('Credential response is missing or invalid.', response);
-        }
+        } else { console.error('Credential response is missing or invalid.', response); }
     }
 
     function handleLogout() {
@@ -266,11 +236,8 @@
             currentUser = { ...currentUser, ...data.user };
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             renderUserInfo(currentUser);
-            if (isTeacherMode) {
-                renderTeacherDashboard(data); 
-            } else {
-                renderStudentPortal(data);
-            }
+            if (isTeacherMode) { renderTeacherDashboard(data); } 
+            else { renderStudentPortal(data); }
         } catch (error) {
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
         }
@@ -312,7 +279,7 @@
         document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
         document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
         const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
-        document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content">${renderPostStatusCards(allPosts)}</div>`;
+        document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content" id="post-status-content">${renderPostStatusCards(allPosts)}</div>`;
         document.getElementById('schedule-accordion').innerHTML = `<div class="accordion-title"><span>📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</span></div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div>`;
     }
     
@@ -333,16 +300,29 @@
         return assignments.map(a => `<div class="card">${a.title}</div>`).join('');
     }
 
+    // [수정됨] 검색/필터 기능이 포함된 게시물 관리 함수
     function renderPostStatusCards(posts) {
         if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
-        return posts.map(item => `
-            <div class="card post-status-card">
+        const postListHtml = posts.map(item => `
+            <div class="card post-status-card" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}">
                 <span>${item.제목}</span>
                 <label class="toggle-switch">
                     <input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}>
                     <span class="slider"></span>
                 </label>
             </div>`).join('');
+        
+        return `
+            <div class="post-filter-controls">
+                <input type="search" id="post-search-input" class="post-search-input" placeholder="제목으로 검색..." oninput="filterPosts()">
+                <div class="post-filter-tabs">
+                    <button class="post-filter-btn active" onclick="filterPosts(this, 'all')">전체</button>
+                    <button class="post-filter-btn" onclick="filterPosts(this, 'Y')">게시중</button>
+                    <button class="post-filter-btn" onclick="filterPosts(this, 'N')">숨김</button>
+                </div>
+            </div>
+            <div id="post-list-container">${postListHtml}</div>
+        `;
     }
 
     function renderScheduleCards(schedules) {
@@ -560,10 +540,7 @@
         try {
             const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await response.json();
-
-            if (result.status !== 'success') {
-                throw new Error(result.message);
-            }
+            if (result.status !== 'success') { throw new Error(result.message); }
             alert(result.message);
             document.getElementById('new-post-modal').style.display = 'none';
             form.reset();
@@ -573,6 +550,44 @@
         } finally {
             submitButton.textContent = '등록하기';
             submitButton.disabled = false;
+        }
+    }
+
+    // [추가됨] 게시물 목록 필터링 함수
+    function filterPosts(button = null, filterStatus = null) {
+        const container = document.getElementById('post-status-content');
+        if (!container) return;
+        
+        // 필터 버튼 상태 업데이트
+        if (button && filterStatus) {
+            container.querySelectorAll('.post-filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        const searchTerm = container.querySelector('#post-search-input').value.toLowerCase();
+        const activeFilter = container.querySelector('.post-filter-btn.active').getAttribute('onclick').split("'")[1];
+
+        const allPosts = container.querySelectorAll('.post-status-card');
+        let visibleCount = 0;
+        allPosts.forEach(post => {
+            const title = post.dataset.title || '';
+            const status = post.dataset.status || '';
+
+            const matchesSearch = title.includes(searchTerm);
+            const matchesFilter = (activeFilter === 'all' || status === activeFilter);
+
+            if (matchesSearch && matchesFilter) {
+                post.style.display = 'flex';
+                visibleCount++;
+            } else {
+                post.style.display = 'none';
+            }
+        });
+        
+        // 필터링 후 결과가 없을 때 'empty-state' 표시
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.style.display = (visibleCount === 0 && allPosts.length > 0) ? 'block' : 'none';
         }
     }
 </script>
