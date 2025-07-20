@@ -24,7 +24,7 @@
         .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; flex-grow: 1; margin-bottom: 10px; }
         a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s, box-shadow 0.2s; }
         a.card:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,0,0,0.12); }
-        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; transition: filter 0.2s; }
+        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; transition: background-color 0.2s, color 0.2s, filter 0.2s; }
         a.action-btn { text-decoration: none; }
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1em; font-weight: bold; background-color: #A25AF2; }
@@ -55,10 +55,20 @@
         .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
         .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
         .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
-        /* [수정됨] 선택 효과를 filter: brightness()로 변경 */
-        .leave-type-btn.selected {
-            filter: brightness(0.85);
-            box-shadow: 0 0 0 2px rgba(0,0,0,0.2) inset;
+        /* [수정됨] 외출/조퇴 버튼 초기 상태 (회색) */
+        .leave-type-btn {
+            background-color: #e9ecef;
+            color: #495057;
+            flex: 1;
+        }
+        /* [수정됨] 선택되었을 때만 색상 적용 */
+        .leave-type-btn.selected[data-type="외출"] {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .leave-type-btn.selected[data-type="조퇴"] {
+            background-color: var(--secondary-color);
+            color: white;
         }
         #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 150px; background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: var(--border-radius); }
@@ -93,8 +103,8 @@
 
 <script>
     // [중요!] 아래 두 값을 반드시 본인의 것으로 교체하세요
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhkaCliMMt1m2fofzqDtk0i_a1WRLudhYeiUX_7n-fXbl_0P1_32mdhZ8RCNfnLiyH/exec';
-    const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
+    const SCRIPT_URL = '여기에_본인의_최신_Apps_Script_URL을_붙여넣으세요';
+    const GOOGLE_CLIENT_ID = '여기에_본인의_Google_Cloud_Client_ID를_붙여넣으세요';
     
     let currentUser = null;
     let completedItems = {};
@@ -113,7 +123,7 @@
                 client_id: GOOGLE_CLIENT_ID,
                 callback: handleCredentialResponse,
                 ux_mode: 'redirect',
-                login_uri: 'https://joko8145.github.io/portal-dev'
+                login_uri: 'https://joko8145.github.io/portal-dev' // 이 주소도 본인의 GitHub Pages 주소로 확인해주세요.
             });
             google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
@@ -406,7 +416,8 @@
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
             const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
-            const certButton = (req.상태 === '승인' && req.rowNum) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.rowNum}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
+            // [수정됨] 확인증 버튼 표시 로직: req.rowNum 대신 req.신청행번호를 사용
+            const certButton = (req.상태 === '승인' && req.신청행번호) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
             return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
         
@@ -416,8 +427,9 @@
                 <div class="form-group">
                     <label>신청 종류</label>
                     <div style="display:flex; gap:10px;">
-                         <button type="button" class="action-btn leave-type-btn" data-type="외출" style="background:var(--primary-color); flex:1;">외출</button>
-                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴" style="background:var(--secondary-color); flex:1;">조퇴</button>
+                         <!-- [수정됨] 인라인 스타일 제거, 클래스만 남김 -->
+                         <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
+                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
                     </div>
                     <input type="hidden" name="type" id="leave-type-input" required>
                 </div>
