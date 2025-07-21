@@ -332,7 +332,66 @@
             return `<div class="notice-item">${title}${contentHtml}</div>`;
         }).join('');
     }
+    // [추가할 코드 1] - 학급 일정을 표시하는 함수
+    function renderStudentClassSchedules(schedules) {
+        if (!schedules || schedules.length === 0) return '';
+        const schedulesHtml = schedules.map(s => `
+            <div class="card">
+                <div class="card-title">${s.제목}</div>
+                <p class="card-description">${s.내용 || ''}</p>
+            </div>`).join('');
+    
+        // 이 함수는 HTML 문자열을 반환하여 renderStudentPortal 함수 내에서 사용됩니다.
+        return `<div id="student-schedules-section" class="section">
+                    <h2 class="section-title">📅 학급 일정</h2>
+                        ${schedulesHtml}
+            </div>`;
+    }
+        // [추가할 코드 2] - 외출/조퇴 신청 양식과 내역을 표시하고, 확인증 버튼을 생성하는 함수
+    function renderLeaveSection(requests) {
+        // 나의 신청 내역 (History) HTML 생성
+        const historyHtml = (!requests || requests.length === 0) 
+            ? '<div class="empty-state">신청 내역이 없습니다.</div>' 
+            : requests.map(req => {
+                const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
+                const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
+            
+                // ★★★ 핵심: 여기서 확인증 출력 버튼 링크를 생성합니다 ★★★
+                const certButton = (req.상태 === '승인' && req.신청행번호) 
+                    ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` 
+                    : '';
 
+                return `<div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>
+                            ${certButton}
+                        </div>
+                    </div>
+                    <p style="margin-top:10px;">사유: ${req.사유}</p>
+                </div>`;
+            }).join('');
+    
+        // 외출/조퇴 신청 양식 (Form)과 신청 내역(History)을 결합하여 최종 HTML 반환
+        return `
+            <form id="leave-request-form" class="leave-request-form">
+                <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
+                <div class="form-group">
+                    <label>신청 종류</label>
+                    <div style="display:flex; gap:10px;">
+                         <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
+                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
+                    </div>
+                    <input type="hidden" name="type" id="leave-type-input" required>
+                </div>
+                <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div>
+                <div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div>
+                <div class="form-actions"><button type="submit" class="action-btn" style="background:var(--primary-color);">신청 제출</button></div>
+            </form>
+            <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0; margin-top:30px;">나의 신청 내역</h3>
+            ${historyHtml}`;
+    }
     async function toggleSubtask(checkbox, taskId, subtask) {
         if (!currentUser || !currentUser.studentId) { alert("로그인 후 이용해주세요."); checkbox.checked = !checkbox.checked; return; }
         const isChecked = checkbox.checked;
