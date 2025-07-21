@@ -11,7 +11,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--light-bg); min-height: 100vh; padding: 20px; color: var(--text-dark); }
         .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; backdrop-filter: blur(10px); }
-        .auth-container { padding: 0 30px; text-align: right; background-color: rgba(0,0,0,0.1); min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
+        .auth-container { padding: 0 30px; text-align: right; background-color: #343a40; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
         .header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 40px 30px; text-align: center; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
         .date-display { font-size: 1.2em; opacity: 0.9; }
@@ -245,7 +245,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxkDkPXqe9ZjF76a9HK2bOmiwL7AAd-sTPDLcfeIHSyZrjbm_Bn3xzoJJqEReegtlrs/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEWGQMclVeuTzuXyGRPFx_mja6XgDVgfs3ykUsS28ATLjb1kAgy2CHqwNAfuNGaFa6/exec';
     const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
     const SCHOOL_NAME_CLIENT = "송내고등학교"; // 클라이언트에서 학교 이름을 직접 설정 (확인증용)
     const TEACHER_NAME_CLIENT = "조경옥"; // 클라이언트에서 교사 이름을 직접 설정 (확인증용)
@@ -257,6 +257,7 @@
 
     let initialData = {};
     try {
+        // Apps Script 템플릿에서 초기 데이터를 JSON 문자열로 받습니다.
         initialData = JSON.parse('<?= initialData ?>');
     } catch (e) {
         console.error("초기 데이터 파싱 오류:", e);
@@ -265,19 +266,22 @@
 
     window.onload = function() {
         if (initialData && !initialData.error) {
+            // 서버에서 받은 초기 데이터로 UI를 구성합니다.
             currentUser = initialData.user;
-            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            localStorage.setItem('userInfo', JSON.stringify(currentUser)); // 로컬 스토리지 업데이트
             renderUserInfo(currentUser);
-            processLoadedData(initialData);
+            processLoadedData(initialData); // 데이터 처리 및 렌더링 시작
 
         } else {
+            // 초기 데이터 로드에 실패하면 오류 메시지를 표시합니다.
             document.getElementById('main-content').innerHTML = `<div class="empty-state">❌ ${initialData.error || '알 수 없는 오류 발생'}</div>`;
             
+            // 로그인 버튼을 렌더링합니다.
             google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: handleCredentialResponse,
                 ux_mode: 'redirect',
-                login_uri: window.location.href.split('?')[0]
+                login_uri: window.location.href.split('?')[0] // 현재 페이지 주소 (Apps Script 웹 앱 주소)
             });
             google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
@@ -293,6 +297,7 @@
         setupEventListeners();
     };
     
+    // 데이터 로드 후 처리 및 렌더링 (loadData에서 분리)
     function processLoadedData(data) {
         completedItems = new Set(data.submittedTasks || []);
         if (isTeacherMode) {
@@ -331,9 +336,9 @@
             if (target.classList.contains('leave-summary-detail-btn')) {
                 activateTab('leave-pane');
             }
-            // [추가됨] 나의 신청 내역의 확인증 버튼 클릭 시
+            // [수정됨] 나의 신청 내역의 확인증 버튼 클릭 시
             if (target.classList.contains('cert-view-btn') && target.dataset.rownum) {
-                renderInAppCertificate(target.dataset.rownum);
+                renderAndShowInAppCertificate(target.dataset.rownum); // 새 함수 호출
             }
         });
         document.body.addEventListener('submit', function(e) {
@@ -342,11 +347,73 @@
         });
     }
 
-    // [추가됨] 인앱 확인증 렌더링 함수
-    async function renderInAppCertificate(rowNum) {
-        // 모달을 사용하는 대신, 특정 위치에 렌더링하거나 새로운 탭/팝업으로 띄울 수 있습니다.
-        // 현재 외출/조퇴 탭에 이미 렌더링하고 있으므로, 이 함수는 별도 창으로 여는 용도로 사용합니다.
-        window.open(`${SCRIPT_URL}?action=getCertificate&rowNum=${rowNum}`, '_blank');
+    // [추가됨] 인앱 확인증을 렌더링하고 보여주는 함수
+    async function renderAndShowInAppCertificate(rowNum) {
+        // 확인증 데이터 로드 중 메시지 표시
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `<div class="empty-state">확인증 데이터를 불러오는 중...</div>`;
+
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getCertificate&rowNum=${rowNum}`);
+            const result = await response.json(); // JSON 응답 예상
+
+            if (result.status !== 'success' || !result.data) {
+                throw new Error(result.message || '확인증 데이터 로드 실패');
+            }
+
+            const certData = result.data;
+            const schoolName = SCHOOL_NAME_CLIENT; 
+            const teacherName = TEACHER_NAME_CLIENT;
+            
+            const studentIdStr = String(certData.studentId);
+            const grade = studentIdStr.substring(0, 1);
+            const classNum = parseInt(studentIdStr.substring(1, 3), 10);
+            const dateObj = new Date(certData.year, certData.month - 1, certData.day); // 월은 0부터 시작
+            const year = dateObj.getFullYear();
+            const month = dateObj.getMonth() + 1;
+            const day = dateObj.getDate();
+
+            const teacherInitials = `${teacherName.charAt(0)}${teacherName.substring(teacherName.length - 2)}`;
+            const schoolNameForStamp = schoolName;
+            
+            // 인앱 확인증 HTML을 생성하여 main-content에 주입
+            mainContent.innerHTML = `
+                <div class="section in-app-certificate-container" id="printable-certificate">
+                    <header class="in-app-cert-header">
+                        <h2 class="in-app-cert-title">[ ${certData.leaveType}증 ]</h2>
+                    </header>
+                    <main class="in-app-cert-body">
+                        <div class="in-app-cert-info-line">
+                            <span>${grade}</span>학년 <span>${classNum}</span>반, 이름 : <strong>${certData.studentName}</strong>
+                        </div>
+                        <div class="in-app-cert-reason-line">
+                            위 학생은 (<div class="in-app-cert-reason-content">${certData.reason}</div>) (으)로 인하여 ${certData.leaveType}(을)를 허락합니다.
+                        </div
+                    </main>
+                    <footer class="in-app-cert-footer">
+                        <div class="in-app-cert-date-line">
+                            <span>${year}</span>년 <span>${month}</span>월 <span>${day}</span>일
+                        </div>
+                        <div class="in-app-cert-signature">
+                            담임 : ${teacherName} (인)
+                            <div class="in-app-cert-stamp" style="--teacher-initials: '${teacherInitials}';"></div>
+                        </div>
+                        <div class="in-app-cert-school-signature">
+                            <div class="in-app-cert-school-name">${schoolName}</div>
+                            <div class="in-app-cert-school-stamp" style="--school-name: '${schoolNameForStamp}';"></div>
+                        </div>
+                    </footer>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="button" class="action-btn" style="background-color:#17a2b8;" onclick="window.print()">인쇄하기</button>
+                    <button type="button" class="action-btn" style="background-color:var(--text-light);" onclick="loadData(true)">돌아가기</button>
+                </div>
+            `;
+            // 인쇄하기 버튼 클릭 시 window.print() 호출
+        } catch (error) {
+            console.error('Failed to load certificate data:', error);
+            mainContent.innerHTML = `<div class="empty-state">❌ 확인증 로드 실패: ${error.message}</div>`;
+        }
     }
 
     function loadCompletedItems() {
@@ -385,7 +452,13 @@
     }
 
     async function loadData(manualRequest = true) {
-        if (!manualRequest) return;
+        // manualRequest가 false이면 초기 로드이므로, fetch 호출 대신 initialData를 사용합니다.
+        // true이면 수동 요청(버튼 클릭 등)이므로 fetch를 호출합니다.
+        if (!manualRequest && initialData && !initialData.error) {
+            processLoadedData(initialData);
+            return;
+        }
+
         const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
         targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 다시 불러오는 중...</div>';
 
@@ -435,8 +508,8 @@
         const routineHtml = routines.map(r => `
             <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" for="routine-${r.rowNum}">
                 <input type="checkbox" class="routine-checkbox" id="routine-${r.rowNum}" onchange="toggleRoutineComplete('${r.rowNum}', this)" ${completedItems[r.rowNum] ? 'checked' : ''}>
-                    <span>${r.업무명}</span>
-                </label>`).join('');
+                <span>${r.업무명}</span>
+            </label>`).join('');
         return `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
     }
 
@@ -549,7 +622,6 @@
             return conditions.includes('매일') || conditions.includes(dayOfWeek);
         });
 
-        // 외출/조퇴 요약 위젯 렌더링
         const leaveSummaryWidgetHtml = renderLeaveSummaryWidget(data.latestApprovedLeave); 
 
         portal.innerHTML = `
@@ -643,7 +715,7 @@
                         </div>
                         <div class="in-app-cert-reason-line">
                             위 학생은 (<div class="in-app-cert-reason-content">${latestApprovedLeave.reason}</div>) (으)로 인하여 ${latestApprovedLeave.type}(을)를 허락합니다.
-                        </div>
+                        </div
                     </main>
                     <footer class="in-app-cert-footer">
                         <div class="in-app-cert-date-line">
@@ -658,7 +730,10 @@
                             <div class="in-app-cert-school-stamp" style="--school-name: '${schoolNameForStamp}';"></div>
                         </div>
                     </footer>
-                    <div style="text-align: center; margin-top: 20px;"><button class="action-btn" style="background-color:#17a2b8;" onclick="window.print()">인쇄하기</button></div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="action-btn" style="background-color:#17a2b8;" onclick="window.print()">인쇄하기</button>
+                        <button class="action-btn" style="background-color:var(--text-light);" onclick="activateTab('leave-pane')">돌아가기</button> <!-- 탭으로 돌아가도록 수정 -->
+                    </div>
                 </div>
             `;
         }
@@ -666,15 +741,17 @@
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
             const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
+            // [수정됨] 확인증 버튼 클릭 시 renderAndShowInAppCertificate 함수 호출
             const certButton = (req.상태 === '승인' && req.신청행번호) ? `<button type="button" class="action-btn cert-view-btn" data-rownum="${req.신청행번호}" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</button>` : '';
             return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
         
         const todayDateInput = new Date().toISOString().split('T')[0];
-        const studentNameForForm = user && user.name ? user.name : ''; // 로그인한 학생 이름 자동 입력
-        const studentIdForForm = user && user.studentId ? user.studentId : ''; // 로그인한 학생 학번 자동 입력
+        const studentNameForForm = user && user.name ? user.name : '';
+        const studentIdForForm = user && user.studentId ? user.studentId : '';
 
         return `
+            ${inAppCertificateHtml} <!-- 인앱 확인증 HTML을 폼 위에 배치 -->
             <form id="leave-request-form" class="leave-request-form">
                 <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
                 <div class="form-group"><label>신청자 이름</label><input type="text" name="name" value="${studentNameForForm}" readonly></div>
@@ -706,7 +783,7 @@
         if (!formData.get('type')) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; }
         const params = new URLSearchParams({ 
             action: 'submitLeaveRequest', 
-            studentId: formData.get('studentId'), name: formData.get('name'), email: currentUser.email, // 폼에서 이름, 학번 가져옴
+            studentId: formData.get('studentId'), name: formData.get('name'), email: currentUser.email,
             type: formData.get('type'), reason: formData.get('reason'), date: formData.get('date')
         });
         alert('신청 처리 중...');
@@ -830,7 +907,7 @@
 
     // [추가됨] 외출/조퇴 요약 위젯 렌더링 함수
     function renderLeaveSummaryWidget(summaryData) {
-        if (!summaryData || !summaryData.status) return '';
+        if (!summaryData || !summaryData.status) return ''; // 활성 외출/조퇴 요청이 없거나 상태가 없으면 아무것도 렌더링하지 않음
         
         const statusClassMap = { '신청': '신청', '승인': '승인', '반려': '반려' };
         const statusClass = statusClassMap[summaryData.status] || '';
@@ -869,5 +946,5 @@
         }
     }
     </script>
-</body>
-</html>
+    </body>
+    </html>
