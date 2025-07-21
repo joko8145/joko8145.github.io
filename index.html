@@ -24,7 +24,7 @@
         .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; flex-grow: 1; margin-bottom: 10px; }
         a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s, box-shadow 0.2s; }
         a.card:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(0,0,0,0.12); }
-        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; transition: background-color 0.2s, color 0.2s, filter 0.2s; }
+        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; }
         a.action-btn { text-decoration: none; }
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1em; font-weight: bold; background-color: #A25AF2; }
@@ -37,7 +37,7 @@
         .routine-item.completed { background-color: #e0e7ff; }
         .routine-checkbox { display: none; }
         .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px; }
+        .accordion-content { display: none; padding: 15px 0 5px 0; }
         .accordion-title.active + .accordion-content { display: block; }
         .accordion-title.active::after { transform: rotate(180deg); }
         .accordion-title::after { content: '▼'; transition: transform 0.2s; }
@@ -55,9 +55,7 @@
         .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
         .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
         .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
-        .leave-type-btn { background-color: #e9ecef; color: #495057; flex: 1; }
-        .leave-type-btn.selected[data-type="외출"] { background-color: var(--primary-color); color: white; }
-        .leave-type-btn.selected[data-type="조퇴"] { background-color: var(--secondary-color); color: white; }
+        .leave-type-btn.selected { box-shadow: 0 0 0 3px var(--primary-color) inset; filter: brightness(1.1); }
         #widgets-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
         .widget { flex: 1; min-width: 150px; background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: var(--border-radius); }
         .widget-title { font-weight: 600; margin-bottom: 8px; }
@@ -76,39 +74,10 @@
         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--primary-color); }
         input:checked + .slider:before { transform: translateX(22px); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; display: none; }
-        .modal-content { background-color: var(--white-bg); padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); position: relative; }
-        .modal-close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text-light); }
-        .modal-content h2 { font-size: 1.5em; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
-        .form-group textarea { resize: vertical; min-height: 100px; }
-        .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-        .post-filter-controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .post-search-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-        .post-filter-tabs { display: flex; }
-        .post-filter-btn { padding: 10px 15px; border: 1px solid #ccc; background-color: var(--white-bg); cursor: pointer; }
-        .post-filter-btn:first-child { border-radius: 8px 0 0 8px; }
-        .post-filter-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
-        .post-filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
     </style>
 </head>
 <body>
-    <div id="new-post-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close-btn">×</button>
-            <h2>✨ 새 게시물/업무 등록</h2>
-            <form id="new-post-form">
-                <div class="form-group"><label for="post-type">유형</label><select id="post-type" name="type" required><option value="공지">공지</option><option value="할일">할 일</option></select></div>
-                <div class="form-group"><label for="post-title">제목</label><input type="text" id="post-title" name="title" required></div>
-                <div class="form-group"><label for="post-content">내용</label><textarea id="post-content" name="content"></textarea></div>
-                <div class="form-group"><label for="post-link">링크 (선택)</label><input type="url" id="post-link" name="link"></div>
-                <div class="form-actions"><button type="button" class="action-btn modal-close-btn" style="position: static; background-color: var(--text-light);">취소</button><button type="submit" class="action-btn" style="background-color: var(--primary-color);">등록하기</button></div>
-            </form>
-        </div>
-    </div>
-    
+    <div id="modal-container"></div>
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
@@ -120,7 +89,7 @@
 
 <script>
     // [중요!] 아래 두 값을 반드시 본인의 것으로 교체하세요
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZdA4eniKF28kG-oWHwsdx9WUFvvPwirP4zOITL5p_yw805zJD6pGznFOcynl82y6A/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhkaCliMMt1m2fofzqDtk0i_a1WRLudhYeiUX_7n-fXbl_0P1_32mdhZ8RCNfnLiyH/exec';
     const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
     
     let currentUser = null;
@@ -157,11 +126,11 @@
     function setupEventListeners() {
         document.body.addEventListener('click', function(e) {
             const target = e.target;
-            if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); }
-            if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
-            if (target.classList.contains('modal-close-btn')) {
-                document.getElementById('new-post-modal').style.display = 'none';
-                document.getElementById('new-post-form').reset();
+            if (target.closest('.accordion-title')) {
+                target.closest('.accordion-title').classList.toggle('active');
+            }
+            if (target.closest('#new-post-btn')) {
+                alert('게시물 등록 기능은 구현 예정입니다.');
             }
             if (target.closest('.tab-button')) {
                 const button = target.closest('.tab-button');
@@ -182,8 +151,10 @@
             }
         });
         document.body.addEventListener('submit', function(e) {
-            if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); }
-            if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); }
+            if (e.target.id === 'leave-request-form') {
+                e.preventDefault();
+                submitLeaveRequest(e.target);
+            }
         });
     }
 
@@ -193,9 +164,16 @@
         if (storedData) {
             try {
                 const data = JSON.parse(storedData);
-                if (data.date === todayStr) { completedItems = data.items || {}; } 
-                else { localStorage.removeItem('completedItems'); completedItems = {}; }
-            } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; }
+                if (data.date === todayStr) { 
+                    completedItems = data.items || {}; 
+                } else { 
+                    localStorage.removeItem('completedItems');
+                    completedItems = {}; 
+                }
+            } catch (e) { 
+                localStorage.removeItem('completedItems');
+                completedItems = {}; 
+            }
         }
     }
 
@@ -210,7 +188,9 @@
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '');
             window.location.href = cleanUrl;
-        } else { console.error('Credential response is missing or invalid.', response); }
+        } else {
+            console.error('Credential response is missing or invalid.', response);
+        }
     }
 
     function handleLogout() {
@@ -235,8 +215,11 @@
             currentUser = { ...currentUser, ...data.user };
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             renderUserInfo(currentUser);
-            if (isTeacherMode) { renderTeacherDashboard(data); } 
-            else { renderStudentPortal(data); }
+            if (isTeacherMode) {
+                renderTeacherDashboard(data); 
+            } else {
+                renderStudentPortal(data);
+            }
         } catch (error) {
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
         }
@@ -278,7 +261,7 @@
         document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
         document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
         const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
-        document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content" id="post-status-content">${renderPostStatusCards(allPosts)}</div>`;
+        document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content">${renderPostStatusCards(allPosts)}</div>`;
         document.getElementById('schedule-accordion').innerHTML = `<div class="accordion-title"><span>📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</span></div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div>`;
     }
     
@@ -301,27 +284,14 @@
 
     function renderPostStatusCards(posts) {
         if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
-        const postListHtml = posts.map(item => `
-            <div class="card post-status-card" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}">
+        return posts.map(item => `
+            <div class="card post-status-card">
                 <span>${item.제목}</span>
                 <label class="toggle-switch">
                     <input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}>
                     <span class="slider"></span>
                 </label>
             </div>`).join('');
-        
-        return `
-            <div class="post-filter-controls">
-                <input type="search" id="post-search-input" class="post-search-input" placeholder="제목으로 검색..." oninput="filterPosts()">
-                <div class="post-filter-tabs">
-                    <button class="post-filter-btn active" data-filter="all" onclick="filterPosts(this)">전체</button>
-                    <button class="post-filter-btn" data-filter="Y" onclick="filterPosts(this)">게시중</button>
-                    <button class="post-filter-btn" data-filter="N" onclick="filterPosts(this)">숨김</button>
-                </div>
-            </div>
-            <div id="post-list-container">${postListHtml}</div>
-            <div class="empty-state" id="post-filter-empty" style="display:none;">검색 결과가 없습니다.</div>
-        `;
     }
 
     function renderScheduleCards(schedules) {
@@ -432,7 +402,7 @@
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
             const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
-            const certButton = (req.상태 === '승인' && req.신청행번호) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
+            const certButton = (req.상태 === '승인' && req.rowNum) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.rowNum}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
             return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
         
@@ -442,8 +412,8 @@
                 <div class="form-group">
                     <label>신청 종류</label>
                     <div style="display:flex; gap:10px;">
-                         <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
-                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
+                         <button type="button" class="action-btn leave-type-btn" data-type="외출" style="background:var(--primary-color); flex:1;">외출</button>
+                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴" style="background:var(--secondary-color); flex:1;">조퇴</button>
                     </div>
                     <input type="hidden" name="type" id="leave-type-input" required>
                 </div>
@@ -512,7 +482,6 @@
     async function updatePostStatus(checkbox, rowNum) {
         const newStatus = checkbox.checked ? 'Y' : 'N';
         const card = checkbox.closest('.post-status-card');
-        card.dataset.status = newStatus; // [수정됨] 데이터 속성도 즉시 업데이트
         card.style.opacity = '0.5';
         const params = new URLSearchParams({ action: 'updatePostStatus', rowNum, newStatus });
         try {
@@ -522,70 +491,8 @@
         } catch (error) {
             alert(`오류: ${error.message}`);
             checkbox.checked = !checkbox.checked;
-            card.dataset.status = checkbox.checked ? 'Y' : 'N'; // 오류 시 데이터 속성 원상복구
         } finally {
             card.style.opacity = '1';
-        }
-    }
-
-    async function submitNewPost(form) {
-        const formData = new FormData(form);
-        const params = new URLSearchParams({
-            action: 'createNewPost',
-            ...Object.fromEntries(formData.entries())
-        });
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.textContent = '등록 중...';
-        submitButton.disabled = true;
-        try {
-            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
-            const result = await response.json();
-            if (result.status !== 'success') { throw new Error(result.message); }
-            alert(result.message);
-            document.getElementById('new-post-modal').style.display = 'none';
-            form.reset();
-            loadData();
-        } catch (error) {
-            alert('오류: ' + error.message);
-        } finally {
-            submitButton.textContent = '등록하기';
-            submitButton.disabled = false;
-        }
-    }
-
-    // [수정됨] 게시물 목록 필터링 함수
-    function filterPosts(button = null) {
-        const container = document.getElementById('post-status-content');
-        if (!container) return;
-        
-        if (button) {
-            container.querySelectorAll('.post-filter-btn').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-
-        const searchTerm = container.querySelector('#post-search-input').value.toLowerCase();
-        const activeFilter = container.querySelector('.post-filter-btn.active').dataset.filter;
-
-        const allPosts = container.querySelectorAll('.post-status-card');
-        let visibleCount = 0;
-        allPosts.forEach(post => {
-            const title = post.dataset.title || '';
-            const status = post.dataset.status || '';
-
-            const matchesSearch = title.includes(searchTerm);
-            const matchesFilter = (activeFilter === 'all' || status === activeFilter);
-
-            if (matchesSearch && matchesFilter) {
-                post.style.display = 'flex';
-                visibleCount++;
-            } else {
-                post.style.display = 'none';
-            }
-        });
-        
-        const emptyState = container.querySelector('#post-filter-empty');
-        if(emptyState) {
-            emptyState.style.display = (visibleCount === 0 && allPosts.length > 0) ? 'block' : 'none';
         }
     }
 </script>
