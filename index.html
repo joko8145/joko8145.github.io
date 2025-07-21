@@ -245,7 +245,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwEWGQMclVeuTzuXyGRPFx_mja6XgDVgfs3ykUsS28ATLjb1kAgy2CHqwNAfuNGaFa6/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjfH9IEy74qqM13rm35NJIivYGkv475uR71HC70gTRAjNScrMaui0iddft7zFUIr4H/exec';
     const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
     const SCHOOL_NAME_CLIENT = "송내고등학교"; // 클라이언트에서 학교 이름을 직접 설정 (확인증용)
     const TEACHER_NAME_CLIENT = "조경옥"; // 클라이언트에서 교사 이름을 직접 설정 (확인증용)
@@ -257,7 +257,6 @@
 
     let initialData = {};
     try {
-        // Apps Script 템플릿에서 초기 데이터를 JSON 문자열로 받습니다.
         initialData = JSON.parse('<?= initialData ?>');
     } catch (e) {
         console.error("초기 데이터 파싱 오류:", e);
@@ -266,22 +265,19 @@
 
     window.onload = function() {
         if (initialData && !initialData.error) {
-            // 서버에서 받은 초기 데이터로 UI를 구성합니다.
             currentUser = initialData.user;
-            localStorage.setItem('userInfo', JSON.stringify(currentUser)); // 로컬 스토리지 업데이트
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
             renderUserInfo(currentUser);
-            processLoadedData(initialData); // 데이터 처리 및 렌더링 시작
+            processLoadedData(initialData);
 
         } else {
-            // 초기 데이터 로드에 실패하면 오류 메시지를 표시합니다.
             document.getElementById('main-content').innerHTML = `<div class="empty-state">❌ ${initialData.error || '알 수 없는 오류 발생'}</div>`;
             
-            // 로그인 버튼을 렌더링합니다.
             google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: handleCredentialResponse,
                 ux_mode: 'redirect',
-                login_uri: window.location.href.split('?')[0] // 현재 페이지 주소 (Apps Script 웹 앱 주소)
+                login_uri: window.location.href.split('?')[0]
             });
             google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
@@ -297,7 +293,6 @@
         setupEventListeners();
     };
     
-    // 데이터 로드 후 처리 및 렌더링 (loadData에서 분리)
     function processLoadedData(data) {
         completedItems = new Set(data.submittedTasks || []);
         if (isTeacherMode) {
@@ -338,7 +333,7 @@
             }
             // [수정됨] 나의 신청 내역의 확인증 버튼 클릭 시
             if (target.classList.contains('cert-view-btn') && target.dataset.rownum) {
-                renderAndShowInAppCertificate(target.dataset.rownum); // 새 함수 호출
+                renderAndShowInAppCertificate(target.dataset.rownum);
             }
         });
         document.body.addEventListener('submit', function(e) {
@@ -409,7 +404,6 @@
                     <button type="button" class="action-btn" style="background-color:var(--text-light);" onclick="loadData(true)">돌아가기</button>
                 </div>
             `;
-            // 인쇄하기 버튼 클릭 시 window.print() 호출
         } catch (error) {
             console.error('Failed to load certificate data:', error);
             mainContent.innerHTML = `<div class="empty-state">❌ 확인증 로드 실패: ${error.message}</div>`;
@@ -452,8 +446,6 @@
     }
 
     async function loadData(manualRequest = true) {
-        // manualRequest가 false이면 초기 로드이므로, fetch 호출 대신 initialData를 사용합니다.
-        // true이면 수동 요청(버튼 클릭 등)이므로 fetch를 호출합니다.
         if (!manualRequest && initialData && !initialData.error) {
             processLoadedData(initialData);
             return;
@@ -609,40 +601,29 @@
             <div class="tab-content">${tabPanesHtml}</div>`;
     }
 
-    // [수정됨] renderStudentPortal 함수
     function renderStudentPortal(data) {
-        const portal = document.getElementById('main-content');
-        document.getElementById('teacher-dashboard').style.display = 'none';
-        document.getElementById('portal-title').textContent = '📢 오늘의 알림';
-        
+        const portal = document.getElementById('student-portal');
         const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
         const todayNotices = (data.notices || []).filter(item => {
             const conditions = (item.표시조건 || '').split(',').map(s => s.trim()).filter(c => c);
             if (conditions.length === 0) return true;
             return conditions.includes('매일') || conditions.includes(dayOfWeek);
         });
-
-        const leaveSummaryWidgetHtml = renderLeaveSummaryWidget(data.latestApprovedLeave); 
-
+        const mainPaneHTML = `${renderItems('notices-section', todayNotices.filter(item => !completedItems[item.id]), '📢 중요 공지')}${renderItems('tasks-section', (data.tasks || []).filter(item => !completedItems[item.id]), '✅ 오늘의 할 일')}`;
         portal.innerHTML = `
             ${renderWidgets(data.widgets)}
-            ${leaveSummaryWidgetHtml}
             ${renderUnsubmitted(data.unsubmitted)}
             ${renderStudentClassSchedules(data.classSchedules)}
             <div class="tabs" id="student-tabs">
                 <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
-                <button class="tab-button" data-tab="leave-pane">외출/조퇴</button>
-                <button class="tab-button" data-tab="resource-pane">자료실</button>
+                <button class="tab-button" data-tab="leave-pane" style="display:none;">외출/조퇴</button>
+                <button class="tab-button" data-tab="resource-pane" style="display:none;">자료실</button>
             </div>
-            <div id="main-pane" class="tab-pane active">${renderItems('notices-section', todayNotices.filter(item => !completedItems[item.id]), '📢 중요 공지')}${renderItems('tasks-section', (data.tasks || []).filter(item => !completedItems[item.id]), '✅ 오늘의 할 일')}</div>
-            <div id="leave-pane" class="tab-pane">
-                ${renderLeaveSectionContent(data.leaveRequests, data.latestApprovedLeave, data.user)}
-            </div>
+            <div id="main-pane" class="tab-pane active">${mainPaneHTML}</div>
+            <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div>
             <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div>`;
-        
         if (data.user?.studentId) portal.querySelector('[data-tab="leave-pane"]').style.display = 'inline-block';
         if (data.resources && data.resources.length > 0) portal.querySelector('[data-tab="resource-pane"]').style.display = 'inline-block';
-        else portal.querySelector('[data-tab="resource-pane"]').style.display = 'none';
     }
 
     function renderWidgets(widgets) {
@@ -685,77 +666,17 @@
         return `<div id="student-schedules-section" class="section"><h2 class="section-title">📅 학급 일정</h2>${schedulesHtml}</div>`;
     }
 
-    // [수정됨] renderLeaveSectionContent 함수 (내용 생성)
-    function renderLeaveSectionContent(requests, latestApprovedLeave, user) {
-        let inAppCertificateHtml = '';
-        if (latestApprovedLeave && latestApprovedLeave.status === '승인') {
-            const schoolName = "송내고등학교"; 
-            const teacherName = "조경옥"; 
-            
-            const studentIdStr = String(latestApprovedLeave.studentId);
-            const grade = studentIdStr.substring(0, 1);
-            const classNum = parseInt(studentIdStr.substring(1, 3), 10);
-            
-            const dateObj = new Date(latestApprovedLeave.date);
-            const year = dateObj.getFullYear();
-            const month = dateObj.getMonth() + 1;
-            const day = dateObj.getDate();
-
-            const teacherInitials = `${teacherName.charAt(0)}${teacherName.substring(teacherName.length - 2)}`;
-            const schoolNameForStamp = schoolName;
-
-            inAppCertificateHtml = `
-                <div class="section in-app-certificate-container">
-                    <header class="in-app-cert-header">
-                        <h2 class="in-app-cert-title">[ ${latestApprovedLeave.type}증 ]</h2>
-                    </header>
-                    <main class="in-app-cert-body">
-                        <div class="in-app-cert-info-line">
-                            <span>${grade}</span>학년 <span>${classNum}</span>반, 이름 : <strong>${latestApprovedLeave.studentName}</strong>
-                        </div>
-                        <div class="in-app-cert-reason-line">
-                            위 학생은 (<div class="in-app-cert-reason-content">${latestApprovedLeave.reason}</div>) (으)로 인하여 ${latestApprovedLeave.type}(을)를 허락합니다.
-                        </div
-                    </main>
-                    <footer class="in-app-cert-footer">
-                        <div class="in-app-cert-date-line">
-                            <span>${year}</span>년 <span>${month}</span>월 <span>${day}</span>일
-                        </div>
-                        <div class="in-app-cert-signature">
-                            담임 : ${teacherName} (인)
-                            <div class="in-app-cert-stamp" style="--teacher-initials: '${teacherInitials}';"></div>
-                        </div>
-                        <div class="in-app-cert-school-signature">
-                            <div class="in-app-cert-school-name">${schoolName}</div>
-                            <div class="in-app-cert-school-stamp" style="--school-name: '${schoolNameForStamp}';"></div>
-                        </div>
-                    </footer>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="action-btn" style="background-color:#17a2b8;" onclick="window.print()">인쇄하기</button>
-                        <button class="action-btn" style="background-color:var(--text-light);" onclick="activateTab('leave-pane')">돌아가기</button> <!-- 탭으로 돌아가도록 수정 -->
-                    </div>
-                </div>
-            `;
-        }
-
+    function renderLeaveSection(requests) {
         const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
             const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
             const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
-            // [수정됨] 확인증 버튼 클릭 시 renderAndShowInAppCertificate 함수 호출
-            const certButton = (req.상태 === '승인' && req.신청행번호) ? `<button type="button" class="action-btn cert-view-btn" data-rownum="${req.신청행번호}" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</button>` : '';
+            const certButton = (req.상태 === '승인' && req.신청행번호) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
             return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
         }).join('');
         
-        const todayDateInput = new Date().toISOString().split('T')[0];
-        const studentNameForForm = user && user.name ? user.name : '';
-        const studentIdForForm = user && user.studentId ? user.studentId : '';
-
         return `
-            ${inAppCertificateHtml} <!-- 인앱 확인증 HTML을 폼 위에 배치 -->
             <form id="leave-request-form" class="leave-request-form">
                 <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
-                <div class="form-group"><label>신청자 이름</label><input type="text" name="name" value="${studentNameForForm}" readonly></div>
-                <div class="form-group"><label>신청자 학번</label><input type="text" name="studentId" value="${studentIdForForm}" readonly></div>
                 <div class="form-group">
                     <label>신청 종류</label>
                     <div style="display:flex; gap:10px;">
@@ -764,7 +685,7 @@
                     </div>
                     <input type="hidden" name="type" id="leave-type-input" required>
                 </div>
-                <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${todayDateInput}" required></div>
+                <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div>
                 <div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div>
                 <div class="form-actions"><button type="submit" class="action-btn" style="background:var(--primary-color);">신청 제출</button></div>
             </form>
@@ -783,15 +704,15 @@
         if (!formData.get('type')) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; }
         const params = new URLSearchParams({ 
             action: 'submitLeaveRequest', 
-            studentId: formData.get('studentId'), name: formData.get('name'), email: currentUser.email,
-            type: formData.get('type'), reason: formData.get('reason'), date: formData.get('date')
+            studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email,
+            ...Object.fromEntries(formData.entries()) 
         });
         alert('신청 처리 중...');
         try {
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
             alert(result.message);
-            if (result.status === 'success') loadData(true);
+            if (result.status === 'success') loadData();
         } catch (error) { alert('신청 중 오류: ' + error.message); }
     }
 
@@ -803,7 +724,7 @@
             const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
             const result = await res.json();
             alert(result.message);
-            if (result.status === 'success') loadData(true);
+            if (result.status === 'success') loadData();
         } catch (error) { alert('처리 중 오류: ' + error.message); }
     }
 
@@ -829,7 +750,7 @@
     async function updatePostStatus(checkbox, rowNum) {
         const newStatus = checkbox.checked ? 'Y' : 'N';
         const card = checkbox.closest('.post-status-card');
-        card.dataset.status = newStatus;
+        card.dataset.status = newStatus; // [수정됨] 데이터 속성도 즉시 업데이트
         card.style.opacity = '0.5';
         const params = new URLSearchParams({ action: 'updatePostStatus', rowNum, newStatus });
         try {
@@ -839,7 +760,7 @@
         } catch (error) {
             alert(`오류: ${error.message}`);
             checkbox.checked = !checkbox.checked;
-            card.dataset.status = checkbox.checked ? 'Y' : 'N';
+            card.dataset.status = checkbox.checked ? 'Y' : 'N'; // 오류 시 데이터 속성 원상복구
         } finally {
             card.style.opacity = '1';
         }
@@ -861,7 +782,7 @@
             alert(result.message);
             document.getElementById('new-post-modal').style.display = 'none';
             form.reset();
-            loadData(true);
+            loadData();
         } catch (error) {
             alert('오류: ' + error.message);
         } finally {
@@ -870,6 +791,7 @@
         }
     }
 
+    // [수정됨] 게시물 목록 필터링 함수
     function filterPosts(button = null) {
         const container = document.getElementById('post-status-content');
         if (!container) return;
@@ -904,47 +826,6 @@
             emptyState.style.display = (visibleCount === 0 && allPosts.length > 0) ? 'block' : 'none';
         }
     }
-
-    // [추가됨] 외출/조퇴 요약 위젯 렌더링 함수
-    function renderLeaveSummaryWidget(summaryData) {
-        if (!summaryData || !summaryData.status) return ''; // 활성 외출/조퇴 요청이 없거나 상태가 없으면 아무것도 렌더링하지 않음
-        
-        const statusClassMap = { '신청': '신청', '승인': '승인', '반려': '반려' };
-        const statusClass = statusClassMap[summaryData.status] || '';
-
-        const cardStyle = summaryData.status === '승인' ? `border-left-color: ${statusClassMap['승인']};` : '';
-
-        return `
-            <div class="section leave-summary-widget">
-                <h2 class="section-title">✈️ 나의 외출/조퇴 현황</h2>
-                <div class="card" style="${cardStyle}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div class="card-title">${summaryData.type} 신청</div>
-                        <span class="status-badge ${statusClass}">${summaryData.status}</span>
-                    </div>
-                    <p class="card-description">희망일: ${summaryData.date}</p>
-                    <div style="text-align: right; margin-top: 10px;">
-                        <button type="button" class="action-btn leave-summary-detail-btn" style="background-color: var(--primary-color); padding: 5px 10px; font-size: 0.8em;">자세히 보기</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // [추가됨] 탭 활성화 헬퍼 함수
-    function activateTab(tabId) {
-        document.querySelectorAll('.tabs .tab-button').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-
-        const targetButton = document.querySelector(`.tabs .tab-button[data-tab="${tabId}"]`);
-        if (targetButton) {
-            targetButton.classList.add('active');
-        }
-        const targetPane = document.getElementById(tabId);
-        if (targetPane) {
-            targetPane.classList.add('active');
-        }
-    }
-    </script>
-    </body>
-    </html>
+</script>
+</body>
+</html>
