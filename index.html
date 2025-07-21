@@ -10,7 +10,7 @@
         :root { --primary-color: #5D78E6; --secondary-color: #A25AF2; --light-bg: #f8f9fa; --white-bg: #ffffff; --text-dark: #212529; --text-light: #6c757d; --border-radius: 12px; --shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--light-bg); min-height: 100vh; padding: 20px; color: var(--text-dark); }
-        .container { max-width: 800px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; backdrop-filter: blur(10px); }
+        .container { max-width: 800px; margin: 0 auto; background: var(--white-bg); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
         .auth-container { padding: 0 30px; text-align: right; background-color: #343a40; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
         .header { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 40px 30px; text-align: center; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
@@ -39,23 +39,22 @@
         .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
         .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px; }
         .accordion-title.active + .accordion-content { display: block; }
-        .accordion-title.active::after { content: '▲'; transform: rotate(180deg); }
-        .accordion-title::after { content: '▼'; transition: transform 0.2s; margin-left: 10px; }
+        .accordion-title.active::after { transform: rotate(180deg); }
+        .accordion-title::after { content: '▼'; transition: transform 0.2s; }
         .complete-btn, .teacher-complete-btn { position: absolute; top: 15px; right: 15px; color: var(--primary-color); border: 1px solid var(--primary-color); background: #fff; padding: 5px 10px; cursor: pointer; font-size: 0.8em; border-radius: 15px; font-weight: bold; }
         .complete-btn.completed { background: #e9ecef; color: var(--text-light); border-color: #dee2e6; }
         .teacher-complete-btn { background: #dc3545; color: white; border: none; }
         .teacher-leave-card { display: flex; flex-direction: column; gap: 10px; }
         .leave-header { display: flex; justify-content: space-between; align-items: center; }
         .leave-reason-input { width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 8px; }
-        .leave-actions { display: flex; justify-content: flex-end; }
+        .leave-actions { display: flex; gap: 10px; justify-content: flex-end; }
         .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .personal-task-list .card { padding: 15px; }
         .leave-request-form { background: #f8f9fa; padding: 20px; border-radius: var(--border-radius); margin-bottom: 30px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
-        .form-group textarea { resize: vertical; min-height: 100px; }
-        .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .leave-request-form .form-group { margin-bottom: 15px; }
+        .leave-request-form label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .leave-request-form input, .leave-request-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .leave-request-form .form-actions { display: flex; justify-content: flex-end; }
         .leave-type-btn { background-color: #e9ecef; color: #495057; flex: 1; }
         .leave-type-btn.selected[data-type="외출"] { background-color: var(--primary-color); color: white; }
         .leave-type-btn.selected[data-type="조퇴"] { background-color: var(--secondary-color); color: white; }
@@ -93,132 +92,6 @@
         .post-filter-btn:first-child { border-radius: 8px 0 0 8px; }
         .post-filter-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
         .post-filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
-
-        /* [추가됨] 외출/조퇴 요약 위젯 스타일 */
-        .leave-summary-widget .card {
-            border-left-width: 8px; /* 더 강조 */
-            transition: all 0.3s ease-in-out;
-        }
-        .leave-summary-widget .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-        .leave-summary-widget .card-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 5px;
-        }
-        .leave-summary-widget .card-description {
-            font-size: 1.1em;
-            color: var(--text-light);
-        }
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            color: white;
-            font-weight: bold;
-        }
-        .status-badge.신청 { background-color: #ffc107; } /* Warning */
-        .status-badge.승인 { background-color: #28a745; } /* Success */
-        .status-badge.반려 { background-color: #dc3545; } /* Danger */
-
-        /* [추가됨] 인앱 확인증 스타일 (certificate.html 내용을 여기에 맞게 변형) */
-        .in-app-certificate-container {
-            background: var(--white-bg);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border: 1px solid #e0e0e0;
-        }
-        .in-app-cert-header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .in-app-cert-title {
-            font-family: 'Gowun Dodum', serif; /* Gowun Dodum 폰트가 필요합니다. */
-            font-size: 22px;
-            font-weight: 700;
-        }
-        .in-app-cert-body {
-            font-size: 15px;
-            line-height: 1.6;
-            color: #333;
-        }
-        .in-app-cert-info-line {
-            margin-bottom: 10px;
-        }
-        .in-app-cert-reason-line {
-            margin: 15px 0;
-        }
-        .in-app-cert-reason-content {
-            padding: 8px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            min-height: 30px;
-            word-break: keep-all;
-            text-align: left;
-        }
-        .in-app-cert-footer {
-            margin-top: 30px;
-            text-align: center;
-        }
-        .in-app-cert-date-line {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 25px;
-        }
-        .in-app-cert-signature {
-            font-size: 16px;
-            margin-bottom: 20px;
-            position: relative;
-            display: inline-block;
-        }
-        .in-app-cert-stamp {
-            position: absolute;
-            width: 45px;
-            height: 45px;
-            border: 2px solid #c82333;
-            border-radius: 3px;
-            top: 50%;
-            right: -25px;
-            transform: translateY(-50%) rotate(-10deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            color: #c82333;
-            font-weight: 700;
-        }
-        .in-app-cert-school-signature {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .in-app-cert-school-name {
-            font-family: 'Gowun Dodum', serif;
-            font-size: 22px;
-            font-weight: 700;
-        }
-        .in-app-cert-school-stamp {
-            width: 70px;
-            height: 70px;
-            border: 3px solid #c82333;
-            border-radius: 6px;
-            color: #c82333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 700;
-            font-size: 16px;
-            text-align: center;
-            line-height: 1.2;
-        }
     </style>
 </head>
 <body>
@@ -239,45 +112,35 @@
     <div class="container">
         <div class="auth-container"><div id="user-display" style="display: none;"></div><div id="gsi-container"></div></div>
         <div class="header"><h1 id="portal-title">📢 오늘의 알림</h1><div class="date-display" id="dateDisplay"></div></div>
-        <div class="content" id="main-content">
-            <!-- 데이터가 여기에 동적으로 채워집니다 -->
+        <div class="content">
+            <div id="student-portal" style="display: none;"></div>
+            <div id="teacher-dashboard" style="display: none;"></div>
         </div>
     </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjfH9IEy74qqM13rm35NJIivYGkv475uR71HC70gTRAjNScrMaui0iddft7zFUIr4H/exec';
+    // [중요!] 아래 두 값을 반드시 본인의 것으로 교체하세요
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQ0Pfig-ikflr4la3VHVCo-PlK4xKcsTpDVs6mvs8YoejYMGS9-5I1JdRwWny_51xa/exec';
     const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
-    const SCHOOL_NAME_CLIENT = "송내고등학교"; // 클라이언트에서 학교 이름을 직접 설정 (확인증용)
-    const TEACHER_NAME_CLIENT = "조경옥"; // 클라이언트에서 교사 이름을 직접 설정 (확인증용)
-
+    
     let currentUser = null;
     let completedItems = {};
     const urlParams = new URLSearchParams(window.location.search);
     const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-    let initialData = {};
-    try {
-        initialData = JSON.parse('<?= initialData ?>');
-    } catch (e) {
-        console.error("초기 데이터 파싱 오류:", e);
-        initialData = { error: '초기 데이터 로드 실패 (데이터 파싱 오류)' };
-    }
-
     window.onload = function() {
-        if (initialData && !initialData.error) {
-            currentUser = initialData.user;
-            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+        try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); currentUser = null; }
+        loadCompletedItems();
+        updateDateDisplay();
+        if (currentUser) {
             renderUserInfo(currentUser);
-            processLoadedData(initialData);
-
+            loadData();
         } else {
-            document.getElementById('main-content').innerHTML = `<div class="empty-state">❌ ${initialData.error || '알 수 없는 오류 발생'}</div>`;
-            
             google.accounts.id.initialize({
                 client_id: GOOGLE_CLIENT_ID,
                 callback: handleCredentialResponse,
                 ux_mode: 'redirect',
-                login_uri: window.location.href.split('?')[0]
+                login_uri: 'https://joko8145.github.io/portal-dev' // 이 주소도 본인의 GitHub Pages 주소로 확인해주세요.
             });
             google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
@@ -288,20 +151,9 @@
                 }
             });
         }
-        updateDateDisplay();
-        setInterval(updateDateDisplay, 1000);
         setupEventListeners();
     };
     
-    function processLoadedData(data) {
-        completedItems = new Set(data.submittedTasks || []);
-        if (isTeacherMode) {
-            renderTeacherDashboard(data);
-        } else {
-            renderStudentPortal(data);
-        }
-    }
-
     function setupEventListeners() {
         document.body.addEventListener('click', function(e) {
             const target = e.target;
@@ -328,86 +180,11 @@
                 target.classList.add('selected');
                 document.getElementById('leave-type-input').value = target.dataset.type;
             }
-            if (target.classList.contains('leave-summary-detail-btn')) {
-                activateTab('leave-pane');
-            }
-            // [수정됨] 나의 신청 내역의 확인증 버튼 클릭 시
-            if (target.classList.contains('cert-view-btn') && target.dataset.rownum) {
-                renderAndShowInAppCertificate(target.dataset.rownum);
-            }
         });
         document.body.addEventListener('submit', function(e) {
             if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); }
             if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); }
         });
-    }
-
-    // [추가됨] 인앱 확인증을 렌더링하고 보여주는 함수
-    async function renderAndShowInAppCertificate(rowNum) {
-        // 확인증 데이터 로드 중 메시지 표시
-        const mainContent = document.getElementById('main-content');
-        mainContent.innerHTML = `<div class="empty-state">확인증 데이터를 불러오는 중...</div>`;
-
-        try {
-            const response = await fetch(`${SCRIPT_URL}?action=getCertificate&rowNum=${rowNum}`);
-            const result = await response.json(); // JSON 응답 예상
-
-            if (result.status !== 'success' || !result.data) {
-                throw new Error(result.message || '확인증 데이터 로드 실패');
-            }
-
-            const certData = result.data;
-            const schoolName = SCHOOL_NAME_CLIENT; 
-            const teacherName = TEACHER_NAME_CLIENT;
-            
-            const studentIdStr = String(certData.studentId);
-            const grade = studentIdStr.substring(0, 1);
-            const classNum = parseInt(studentIdStr.substring(1, 3), 10);
-            const dateObj = new Date(certData.year, certData.month - 1, certData.day); // 월은 0부터 시작
-            const year = dateObj.getFullYear();
-            const month = dateObj.getMonth() + 1;
-            const day = dateObj.getDate();
-
-            const teacherInitials = `${teacherName.charAt(0)}${teacherName.substring(teacherName.length - 2)}`;
-            const schoolNameForStamp = schoolName;
-            
-            // 인앱 확인증 HTML을 생성하여 main-content에 주입
-            mainContent.innerHTML = `
-                <div class="section in-app-certificate-container" id="printable-certificate">
-                    <header class="in-app-cert-header">
-                        <h2 class="in-app-cert-title">[ ${certData.leaveType}증 ]</h2>
-                    </header>
-                    <main class="in-app-cert-body">
-                        <div class="in-app-cert-info-line">
-                            <span>${grade}</span>학년 <span>${classNum}</span>반, 이름 : <strong>${certData.studentName}</strong>
-                        </div>
-                        <div class="in-app-cert-reason-line">
-                            위 학생은 (<div class="in-app-cert-reason-content">${certData.reason}</div>) (으)로 인하여 ${certData.leaveType}(을)를 허락합니다.
-                        </div
-                    </main>
-                    <footer class="in-app-cert-footer">
-                        <div class="in-app-cert-date-line">
-                            <span>${year}</span>년 <span>${month}</span>월 <span>${day}</span>일
-                        </div>
-                        <div class="in-app-cert-signature">
-                            담임 : ${teacherName} (인)
-                            <div class="in-app-cert-stamp" style="--teacher-initials: '${teacherInitials}';"></div>
-                        </div>
-                        <div class="in-app-cert-school-signature">
-                            <div class="in-app-cert-school-name">${schoolName}</div>
-                            <div class="in-app-cert-school-stamp" style="--school-name: '${schoolNameForStamp}';"></div>
-                        </div>
-                    </footer>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button type="button" class="action-btn" style="background-color:#17a2b8;" onclick="window.print()">인쇄하기</button>
-                    <button type="button" class="action-btn" style="background-color:var(--text-light);" onclick="loadData(true)">돌아가기</button>
-                </div>
-            `;
-        } catch (error) {
-            console.error('Failed to load certificate data:', error);
-            mainContent.innerHTML = `<div class="empty-state">❌ 확인증 로드 실패: ${error.message}</div>`;
-        }
     }
 
     function loadCompletedItems() {
@@ -431,7 +208,8 @@
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
             currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
-            window.location.href = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '');
+            const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '');
+            window.location.href = cleanUrl;
         } else { console.error('Credential response is missing or invalid.', response); }
     }
 
@@ -445,30 +223,22 @@
         document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
     }
 
-    async function loadData(manualRequest = true) {
-        if (!manualRequest && initialData && !initialData.error) {
-            processLoadedData(initialData);
-            return;
-        }
-
+    async function loadData() {
         const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
-        targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 다시 불러오는 중...</div>';
-
-        let fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}&mode=${isTeacherMode ? 'teacher' : ''}`;
-        if (currentUser) { fullUrl += `&email=${encodeURIComponent(currentUser.email)}`; }
-        
+        targetEl.style.display = 'block';
+        targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+        const fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}` + (isTeacherMode ? '&mode=teacher' : '');
         try {
             const response = await fetch(fullUrl);
             const data = await response.json();
             if (data.error) throw new Error(data.error);
-
             currentUser = { ...currentUser, ...data.user };
             localStorage.setItem('userInfo', JSON.stringify(currentUser));
             renderUserInfo(currentUser);
-            processLoadedData(data);
+            if (isTeacherMode) { renderTeacherDashboard(data); } 
+            else { renderStudentPortal(data); }
         } catch (error) {
-            console.error('Error fetching data (manual):', error);
-            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패 (수동 갱신): ${error.message}</div>`;
+            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
         }
     }
     
@@ -481,10 +251,7 @@
     }
 
     function renderTeacherDashboard(data) {
-        document.getElementById('teacher-dashboard').style.display = 'block';
-        document.getElementById('student-portal').style.display = 'none';
-        document.getElementById('portal-title').textContent = '💼 교사 대시보드';
-        document.getElementById('main-content').innerHTML = `
+        document.getElementById('teacher-dashboard').innerHTML = `
             <div id="routine-tasks-section" class="section"></div>
             <div id="class-management-section" class="section"></div>
             <div id="teacher-personal-tasks-section" class="section"></div>
@@ -496,23 +263,18 @@
     }
 
     function renderTeacherRoutines(routines) {
-        if (!routines || routines.length === 0) return '';
+        if (!routines || routines.length === 0) return;
         const routineHtml = routines.map(r => `
             <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" for="routine-${r.rowNum}">
                 <input type="checkbox" class="routine-checkbox" id="routine-${r.rowNum}" onchange="toggleRoutineComplete('${r.rowNum}', this)" ${completedItems[r.rowNum] ? 'checked' : ''}>
                 <span>${r.업무명}</span>
             </label>`).join('');
-        return `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
+        document.getElementById('routine-tasks-section').innerHTML = `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
     }
 
     function renderClassManagementAccordions(data) {
         const container = document.getElementById('class-management-section');
-        container.innerHTML = `
-            <h2 class="section-title">🏠 학급 관리</h2>
-            <div id="leave-accordion"></div>
-            <div id="assignment-accordion"></div>
-            <div id="notice-status-accordion"></div>
-            <div id="schedule-accordion"></div>`;
+        container.innerHTML = `<h2 class="section-title">🏠 학급 관리</h2><div id="leave-accordion"></div><div id="assignment-accordion"></div><div id="notice-status-accordion"></div><div id="schedule-accordion"></div>`;
         document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
         document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
         const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
