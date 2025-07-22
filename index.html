@@ -298,40 +298,48 @@
             targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패! (${error.message})</div>`;
         }
     }
-    
-    function renderItems(containerId, items, defaultButtonText, isTask = false) {
-        const container = document.getElementById(containerId);
-        if (!items || items.length === 0) {
-            container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
-            return;
-        }
-        container.innerHTML = items.map(item => {
-            const icon = item.icon ? `${item.icon} ` : '';
-            const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
-            let contentHtml = '';
-            
-            const isChecklist = isTask && (item.type === '체크리스트' || (!item.link && item.content.includes(',')));
+// [수정된 코드] - 이 함수로 index.html의 기존 renderItems 함수를 교체하세요.
 
-            if (isChecklist && item.taskId) {
-                const subtasks = item.content.split(',').map(s => s.trim());
-                contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => {
-                    const fullTaskId = `${item.taskId}_${subtask}`;
-                    const isCompleted = submittedTasks.has(fullTaskId);
-                    return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`;
-                }).join('') + `</ul>`;
-            } else {
-                const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
-                const content = item.content ? `<div class="notice-content">${!title && !image ? icon : ''}${item.content.replace(/\n/g, '<br>')}</div>` : '';
-                let finalLink = item.link;
-                if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
-                    finalLink = `${SCRIPT_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
-                }
-                const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
-                contentHtml = image + content + linkHtml;
-            }
-            return `<div class="notice-item">${title}${contentHtml}</div>`;
-        }).join('');
+function renderItems(containerId, items, defaultButtonText, isTask = false) {
+    const container = document.getElementById(containerId);
+    if (!items || items.length === 0) {
+        container.innerHTML = `<div class="empty-state">${containerId === 'notices' ? '📝 오늘 등록된 공지사항이 없습니다.' : '✅ 오늘 할 일이 모두 완료되었습니다!'}</div>`;
+        return;
     }
+    container.innerHTML = items.map(item => {
+        const icon = item.icon ? `${item.icon} ` : '';
+        const title = item.title ? `<div class="notice-title">${icon}${item.title}</div>` : '';
+        
+        // ★★★ 핵심 수정 사항: item.content가 없더라도 안전하게 빈 문자열로 처리 ★★★
+        const itemContent = String(item.content || ''); 
+        
+        let contentHtml = '';
+        
+        const isChecklist = isTask && (item.type === '체크리스트' || (!item.link && itemContent.includes(',')));
+
+        if (isChecklist && item.taskId) {
+            const subtasks = itemContent.split(',').map(s => s.trim());
+            contentHtml = `<ul class="subtask-list">` + subtasks.map(subtask => {
+                const fullTaskId = `${item.taskId}_${subtask}`;
+                const isCompleted = submittedTasks.has(fullTaskId);
+                return `<li class="subtask-item ${isCompleted ? 'completed' : ''}"><input type="checkbox" class="subtask-checkbox" onchange="toggleSubtask(this, '${item.taskId}', '${subtask}')" ${isCompleted ? 'checked' : ''}><label class="subtask-label">${subtask}</label></li>`;
+            }).join('') + `</ul>`;
+        } else {
+            const image = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title || '알림 이미지'}" class="notice-image">` : '';
+            
+            // ★★★ 핵심 수정 사항: itemContent 변수 사용 ★★★
+            const content = itemContent ? `<div class="notice-content">${!title && !image ? icon : ''}${itemContent.replace(/\n/g, '<br>')}</div>` : '';
+
+            let finalLink = item.link;
+            if (isTask && item.recordable && currentUser && currentUser.studentId && item.taskId) {
+                finalLink = `${SCRIPT_URL}?action=logClick&studentId=${currentUser.studentId}&name=${encodeURIComponent(currentUser.name)}&taskId=${encodeURIComponent(item.taskId)}&url=${encodeURIComponent(item.link)}`;
+            }
+            const linkHtml = finalLink ? `<a href="${finalLink}" class="notice-link" target="${isTask && item.recordable ? '_self' : '_blank'}">${item.buttonText || defaultButtonText}</a>` : '';
+            contentHtml = image + content + linkHtml;
+        }
+        return `<div class="notice-item">${title}${contentHtml}</div>`;
+    }).join('');
+}
     // [추가할 코드 1] - 학급 일정을 표시하는 함수
     function renderStudentClassSchedules(schedules) {
         if (!schedules || schedules.length === 0) return '';
