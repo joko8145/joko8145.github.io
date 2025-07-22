@@ -159,7 +159,98 @@
 <script>
     // [전체 수정된 스크립트 코드]
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye0NvlRwKVa2GAeqcAbXUmPdbi0BIEQc8b6vc2fa-KxDYbwtnVnG_rjamYVRYfZV9m/exec';
+const SCRIPT_URL = '// [최종 수정] 파일 문제를 완전히 우회하는 새로운 확인증 생성 함수
+function renderCertificatePage(e) {
+  try {
+    const rowNum = e.parameter.rowNum;
+    if (!rowNum) return HtmlService.createHtmlOutput("잘못된 요청입니다.");
+
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('[외출조퇴_신청내역]');
+    if (!sheet) return HtmlService.createHtmlOutput("[외출조퇴_신청내역] 시트를 찾을 수 없습니다.");
+
+    // 1. 시트에서 데이터 가져오기
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const data = sheet.getRange(parseInt(rowNum), 1, 1, sheet.getLastColumn()).getValues()[0];
+    const leaveData = {};
+    headers.forEach((header, i) => leaveData[header] = data[i]);
+
+    // 2. HTML에 들어갈 변수 준비
+    const leaveType = leaveData['신청종류'] || '';
+    const studentName = leaveData['이름'] || '';
+    const studentIdStr = String(leaveData['학번'] || '');
+    const grade = studentIdStr.substring(0, 1);
+    const classNum = parseInt(studentIdStr.substring(1, 3), 10);
+    const reason = leaveData['사유'] || '';
+    const date = new Date(leaveData['희망일자']);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const teacherName = TEACHER_NAME;
+    const schoolName = SCHOOL_NAME;
+    const teacherStampText = teacherName.substring(0, 1) + teacherName.substring(teacherName.length - 2);
+
+    // 3. HTML 코드를 자바스크립트 내부에 직접 작성
+    const html = `
+      <!DOCTYPE html>
+      <html lang="ko">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${leaveType}증</title>
+          <style>
+              @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+              body { font-family: 'Noto Sans KR', sans-serif; background-color: #e9ecef; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .card-container { background: white; border-radius: 16px; padding: 35px 30px; width: 100%; max-width: 420px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); border: 1px solid #e0e0e0; }
+              .card-header { text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6; }
+              .card-title { font-family: 'Gowun Dodum', serif; font-size: 26px; font-weight: 700; }
+              .card-body { font-size: 17px; line-height: 1.8; color: #333; }
+              .info-line { margin-bottom: 15px; }
+              .reason-line { margin: 25px 0; }
+              .reason-content { padding: 10px; background-color: #f8f9fa; border-radius: 8px; min-height: 50px; word-break: keep-all; }
+              .card-footer { margin-top: 40px; text-align: center; }
+              .date-line { font-size: 18px; color: #555; margin-bottom: 35px; }
+              .teacher-signature { font-size: 18px; margin-bottom: 30px; position: relative; display: inline-block; }
+              .teacher-stamp { position: absolute; width: 55px; height: 55px; border: 2.5px solid #c82333; border-radius: 4px; top: 50%; right: -35px; transform: translateY(-50%) rotate(-15deg); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c82333; font-weight: 700; }
+              .school-signature { display: flex; align-items: center; justify-content: center; gap: 20px; }
+              .school-name { font-family: 'Gowun Dodum', serif; font-size: 26px; font-weight: 700; }
+              .school-stamp { width: 80px; height: 80px; border: 4px solid #c82333; border-radius: 8px; color: #c82333; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 18px; text-align: center; line-height: 1.3; }
+              .print-button-container { text-align: center; margin-top: 30px; }
+              .btn-print { background-color: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+              @media print {
+                  body { background: white; padding: 0; }
+                  .card-container { box-shadow: none; border: 2px solid #000; width: 100%; height: auto; border-radius: 0; }
+                  .print-button-container { display: none; }
+              }
+              .teacher-stamp::after { content: "${teacherStampText}"; }
+              .school-stamp::after { content: "${schoolName}"; }
+          </style>
+      </head>
+      <body>
+          <div class="card-container">
+              <header class="card-header"><h1 class="card-title">[ ${leaveType}증 ]</h1></header>
+              <main class="card-body">
+                  <div class="info-line"><span>${grade}</span>학년 <span>${classNum}</span>반, 이름 : <strong>${studentName}</strong></div>
+                  <div class="reason-line">위 학생은 (<div class="reason-content">${reason}</div>) (으)로 인하여 ${leaveType}(을)를 허락합니다.</div>
+              </main>
+              <footer class="card-footer">
+                  <div class="date-line"><span>${year}</span>년 <span>${month}</span>월 <span>${day}</span>일</div>
+                  <div class="teacher-signature">담임 : ${teacherName} (인)<div class="teacher-stamp"></div></div>
+                  <div class="school-signature"><div class="school-name">${schoolName}</div><div class="school-stamp"></div></div>
+              </footer>
+              <div class="print-button-container"><button class="btn-print" onclick="window.print()">인쇄하기</button></div>
+          </div>
+      </body>
+      </html>
+    `;
+
+    // 4. HTML 문자열로부터 직접 HtmlOutput 객체를 생성하여 반환 (가장 안정적인 방법)
+    return HtmlService.createHtmlOutput(html).setTitle(`${leaveType}증`);
+
+  } catch (error) {
+    Logger.log('renderCertificatePage Error: ' + error.message);
+    return HtmlService.createHtmlOutput('<h1>확인증 생성 중 오류 발생</h1><p>' + error.message + '</p>');
+  }
+}';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
 let currentUser = null;
