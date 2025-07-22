@@ -176,6 +176,7 @@ function setupEventListeners() {
     document.body.addEventListener('submit', function(e) { if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); } if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); } });
 }
 
+// ★★★ 이 함수로 기존 renderTeacherSettings 함수를 교체해주세요 ★★★
 function renderTeacherSettings(data) {
     const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
         const type = item.종류 || '기타';
@@ -183,6 +184,7 @@ function renderTeacherSettings(data) {
         acc[type].push(item);
         return acc;
     }, {});
+    
     const tabs = Object.keys(groupedItems);
     const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
     
@@ -195,7 +197,7 @@ function renderTeacherSettings(data) {
             </a>`
         ).join('');
         
-        // 첫 번째 탭에만 'active' 클래스를 부여
+        // 첫 번째 탭에만 'active' 클래스를 부여하여 처음에는 첫 탭만 보이도록 수정
         const activeClass = i === 0 ? 'active' : '';
         return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
     }).join('');
@@ -215,7 +217,6 @@ function renderTeacherSettings(data) {
             <div class="tab-content">${tabPanesHtml}</div>
         </div>`;
 }
-
 // ... 이 아래로 나머지 모든 자바스크립트 함수들이 위치합니다 (생략 없음) ...
 function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
 function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
