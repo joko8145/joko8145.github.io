@@ -216,21 +216,33 @@ function renderTeacherDashboard(data) {
     `;
 }
 
-    function renderTeacherSettings(data) {
-        const container = document.getElementById('teacher-settings-section');
-        const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
-            const type = item.종류 || '자료실';
-            if (!acc[type]) acc[type] = [];
-            acc[type].push(item);
-            return acc;
-        }, {});
-        const tabs = Object.keys(groupedItems);
-        const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
-        const tabPanesHtml = tabs.map((tab, i) => {
-            const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join('');
-            return `<div id="teacher-tab-${i}" class="tab-pane ${i===0 ? 'active' : ''}"><div class="teacher-dashboard-grid">${itemsHtml}</div></div>`;
-        }).join('');
-        container.innerHTML = `
+// ★★★ 이 함수로 기존 renderTeacherSettings 함수를 완전히 교체해주세요 ★★★
+function renderTeacherSettings(data) {
+    const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
+        const type = item.종류 || '자료실';
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(item);
+        return acc;
+    }, {});
+
+    const tabs = Object.keys(groupedItems);
+    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+    
+    const tabPanesHtml = tabs.map((tab, i) => {
+        const itemsHtml = groupedItems[tab].map(item => 
+            `<a href="${item.링크 || '#'}" target="_blank" class="card">
+                <div class="card-title">${item.업무명}</div>
+                <p class="card-description">${item.상세내용 || ''}</p>
+            </a>`
+        ).join('');
+        
+        const activeClass = i === 0 ? 'active' : '';
+        return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
+    }).join('');
+
+    // ★★★ 수정: container를 찾는 대신, 완성된 HTML 문자열을 직접 반환합니다. ★★★
+    return `
+        <div class="section">
             <h2 class="section-title">⚙️ 설정</h2>
             <div class="teacher-dashboard-grid">
                 <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center; display:flex; align-items:center; justify-content:center;">
