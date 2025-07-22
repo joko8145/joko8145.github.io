@@ -28,7 +28,8 @@
         .tab-button { padding: 12px 18px; cursor: pointer; border: none; background: none; font-size: 1em; font-weight: 500; color: var(--text-light); position: relative; }
         .tab-button.active { color: var(--primary-color); font-weight: 600; }
         .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); border-radius: 3px; }
-        .tab-pane { display: none; } .tab-pane.active { display: grid; } /* ★★★ 수정: active일 때 grid로 변경 ★★★ */
+        .tab-pane { display: none; }
+        .tab-pane.active { display: grid; } /* ★★★ 수정: active일 때 grid로 변경 ★★★ */
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-profile-image { width: 36px; height: 36px; border-radius: 50%; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; background-color: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
@@ -175,47 +176,6 @@ function setupEventListeners() {
     document.body.addEventListener('submit', function(e) { if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); } if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); } });
 }
 
-function renderStudentPortal(data) {
-    return `
-        <div class="student-header"><div id="user-display"></div></div>
-        <div class="header">
-            <h1>📢 오늘의 알림</h1>
-            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
-        </div>
-        <div class="content">
-            ${renderWidgets(data.widgets)}
-            ${renderUnsubmitted(data.unsubmitted)}
-            ${renderStudentClassSchedules(data.classSchedules)}
-            <div class="tabs">
-                <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
-                <button class="tab-button" data-tab="leave-pane" style="${data.user?.studentId ? '' : 'display:none;'}">외출/조퇴</button>
-                <button class="tab-button" data-tab="resource-pane" style="${(data.resources || []).length > 0 ? '' : 'display:none;'}">자료실</button>
-            </div>
-            <div class="tab-content">
-                <div id="main-pane" class="tab-pane active">${renderItemsSection('notices', data.notices, '📌 중요 공지')} ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}</div>
-                <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div>
-                <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div>
-            </div>
-        </div>
-    `;
-}
-
-function renderTeacherDashboard(data) {
-    return `
-        <div class="teacher-header"><div id="user-display"></div></div>
-        <div class="header">
-            <h1>💼 업무 대시보드</h1>
-            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
-        </div>
-        <div class="content">
-            ${renderTeacherRoutines(data.routines)}
-            ${renderClassManagement(data)}
-            ${renderTeacherPersonalTasks(data.teacherPersonalTasks)}
-            ${renderTeacherSettings(data)}
-        </div>
-    `;
-}
-
 function renderTeacherSettings(data) {
     const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
         const type = item.종류 || '기타';
@@ -225,8 +185,6 @@ function renderTeacherSettings(data) {
     }, {});
     const tabs = Object.keys(groupedItems);
     const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
-    
-    // ★★★ 수정된 부분: 각 탭의 내용(pane)을 생성하는 로직 ★★★
     const tabPanesHtml = tabs.map((tab, i) => {
         const itemsHtml = groupedItems[tab].map(item => 
             `<a href="${item.링크 || '#'}" target="_blank" class="card">
@@ -234,8 +192,7 @@ function renderTeacherSettings(data) {
                 <p class="card-description">${item.상세내용 || ''}</p>
             </a>`
         ).join('');
-        
-        const activeClass = i === 0 ? 'active' : ''; // 첫 번째 탭에만 'active' 클래스 부여
+        const activeClass = i === 0 ? 'active' : '';
         return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
     }).join('');
 
@@ -255,12 +212,14 @@ function renderTeacherSettings(data) {
         </div>`;
 }
 
-// ... 이 아래로 나머지 모든 함수들이 위치합니다 (생략 없음) ...
+// ... 이 아래로 모든 자바스크립트 함수들이 위치합니다 (생략 없음) ...
 function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
 function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
 async function handleCredentialResponse(response) { if (response && response.credential) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : ''); window.location.href = cleanUrl; } }
 function handleLogout() { localStorage.clear(); google.accounts.id.disableAutoSelect(); location.reload(); }
 function renderUserInfo(user) { const displayEl = document.getElementById('user-display'); if (!displayEl) return; let userInitial = ''; const nameParts = (user.name || '').split(''); if (nameParts.length > 1) { userInitial = nameParts[0] + nameParts[nameParts.length - 1]; } else { userInitial = nameParts[0] || ''; } const userProfileHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `<div class="user-initial">${userInitial}</div>`; displayEl.innerHTML = `<div class="user-display">${userProfileHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`; }
+function renderStudentPortal(data) { return ` <div class="student-header"><div id="user-display"></div></div> <div class="header"> <h1>📢 오늘의 알림</h1> <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div> </div> <div class="content"> ${renderWidgets(data.widgets)} ${renderUnsubmitted(data.unsubmitted)} ${renderStudentClassSchedules(data.classSchedules)} <div class="tabs"> <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button> <button class="tab-button" data-tab="leave-pane" style="${data.user?.studentId ? '' : 'display:none;'}">외출/조퇴</button> <button class="tab-button" data-tab="resource-pane" style="${(data.resources || []).length > 0 ? '' : 'display:none;'}">자료실</button> </div> <div class="tab-content"> <div id="main-pane" class="tab-pane active">${renderItemsSection('notices', data.notices, '📌 중요 공지')} ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}</div> <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div> <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div> </div> </div> `; }
+function renderTeacherDashboard(data) { return ` <div class="teacher-header"><div id="user-display"></div></div> <div class="header"> <h1>💼 업무 대시보드</h1> <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div> </div> <div class="content"> ${renderTeacherRoutines(data.routines)} ${renderClassManagement(data)} ${renderTeacherPersonalTasks(data.teacherPersonalTasks)} ${renderTeacherSettings(data)} </div> `; }
 function renderWidgets(widgets) { if (!widgets || widgets.length === 0) return ''; const widgetHtml = widgets.map(widget => { let contentHtml = widget.내용 || ''; if (widget.위젯종류 === '디데이') { const targetDate = new Date(contentHtml); const today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)); contentHtml = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${-diff}`; } return `<div class="widget"><div class="widget-title">${widget.제목 || ''}</div><div class="widget-content">${contentHtml}</div></div>`; }).join(''); return `<div id="widgets-container">${widgetHtml}</div>`;}
 function renderUnsubmitted(tasks) { if (!tasks || tasks.length === 0) return ''; const listHtml = tasks.map(t => `<li>👌 ${t.제목 || t.내용 || ''}</li>`).join(''); return `<div class="unsubmitted-section"><p>🔔 아직 완료하지 않은 할 일이 있어요!</p><ul style="list-style: none; padding-left: 0; margin-top: 5px;">${listHtml}</ul></div>`;}
 function renderStudentClassSchedules(schedules) { if (!schedules || schedules.length === 0) return ''; const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join(''); return `<div class="section"><h2 class="section-title">🗓️ 학급 일정</h2><div class="grid-container">${schedulesHtml}</div></div>`;}
@@ -282,7 +241,6 @@ async function updatePostStatus(checkbox, rowNum) { const newStatus = checkbox.c
 async function submitNewPost(form) { const formData = new FormData(form); const params = new URLSearchParams({ action: 'createNewPost', ...Object.fromEntries(formData.entries()) }); const submitButton = form.querySelector('button[type="submit"]'); submitButton.textContent = '등록 중...'; submitButton.disabled = true; try { const response = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await response.json(); if (result.status !== 'success') { throw new Error(result.message); } alert(result.message); document.getElementById('new-post-modal').style.display = 'none'; form.reset(); loadData(); } catch (error) { alert('오류: ' + error.message); } finally { submitButton.textContent = '등록하기'; submitButton.disabled = false; } }
 function handleFilterButtonClick(buttonEl) { const container = buttonEl.closest('.post-filter-tabs'); container.querySelectorAll('.post-filter-btn').forEach(btn => btn.classList.remove('active')); buttonEl.classList.add('active'); applyPostFilters(buttonEl.closest('.accordion-content')); }
 function applyPostFilters(containerEl) { const searchTerm = (containerEl.querySelector('.post-search-input') || {value: ''}).value.toLowerCase(); const activeFilter = (containerEl.querySelector('.post-filter-btn.active') || {dataset: {filter: 'all'}}).dataset.filter; const allPosts = containerEl.querySelectorAll('.post-status-card'); let visibleCount = 0; allPosts.forEach(post => { const title = post.dataset.title || ''; const status = post.dataset.status || ''; const matchesSearch = title.includes(searchTerm); const matchesFilter = (activeFilter === 'all' || status === activeFilter); if (matchesSearch && matchesFilter) { post.style.display = 'flex'; visibleCount++; } else { post.style.display = 'none'; } }); const emptyState = containerEl.querySelector('.post-filter-empty'); if (emptyState) { emptyState.style.display = visibleCount === 0 ? 'block' : 'none'; } }
-
 </script>
 </body>
 </html>
