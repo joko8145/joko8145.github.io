@@ -117,6 +117,8 @@
     </div>
 
 <script>
+// [로그인 오류 해결 최종 스크립트]
+
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
@@ -125,17 +127,32 @@ let completedItems = {};
 const urlParams = new URLSearchParams(window.location.search);
 const isTeacherMode = urlParams.get('mode') === 'teacher';
 
+// ★★★ 수정된 window.onload 함수 ★★★
 window.onload = function() {
-    try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); }
+    try { 
+        currentUser = JSON.parse(localStorage.getItem('userInfo')); 
+    } catch (e) { 
+        localStorage.removeItem('userInfo');
+        currentUser = null;
+    }
     loadCompletedItems();
+
     if (currentUser) {
+        // 이미 로그인 정보가 있으면 바로 데이터 로드
         loadData();
     } else {
+        // 로그인 정보가 없으면 구글 로그인 초기화 및 버튼 표시
         google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse, ux_mode: 'redirect',
+            client_id: GOOGLE_CLIENT_ID, 
+            callback: handleCredentialResponse, 
+            ux_mode: 'redirect',
             login_uri: window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '')
         });
-        google.accounts.id.prompt((n) => { if (n.isNotDisplayed()) { google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' }); }});
+        google.accounts.id.prompt((n) => { 
+            if (n.isNotDisplayed()) { 
+                google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' }); 
+            }
+        });
     }
     setupEventListeners();
 };
@@ -223,6 +240,10 @@ function renderTeacherDashboard(data) {
     `;
 }
 
+function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
+function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
+async function handleCredentialResponse(response) { if (response && response.credential) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : ''); window.location.href = cleanUrl; } }
+function handleLogout() { localStorage.clear(); google.accounts.id.disableAutoSelect(); location.reload(); }
 function renderUserInfo(user) { const displayEl = document.getElementById('user-display'); if (!displayEl) return; let userInitial = ''; const nameParts = (user.name || '').split(''); if (nameParts.length > 1) { userInitial = nameParts[0] + nameParts[nameParts.length - 1]; } else { userInitial = nameParts[0] || ''; } const userProfileHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `<div class="user-initial">${userInitial}</div>`; displayEl.innerHTML = `<div class="user-display">${userProfileHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`; }
 function renderWidgets(widgets) { if (!widgets || widgets.length === 0) return ''; const widgetHtml = widgets.map(widget => { let contentHtml = widget.내용 || ''; if (widget.위젯종류 === '디데이') { const targetDate = new Date(contentHtml); const today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)); contentHtml = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${-diff}`; } return `<div class="widget"><div class="widget-title">${widget.제목 || ''}</div><div class="widget-content">${contentHtml}</div></div>`; }).join(''); return `<div id="widgets-container">${widgetHtml}</div>`;}
 function renderUnsubmitted(tasks) { if (!tasks || tasks.length === 0) return ''; const listHtml = tasks.map(t => `<li>👌 ${t.제목 || t.내용 || ''}</li>`).join(''); return `<div class="unsubmitted-section"><p>🔔 아직 완료하지 않은 할 일이 있어요!</p><ul style="list-style: none; padding-left: 0; margin-top: 5px;">${listHtml}</ul></div>`;}
