@@ -117,7 +117,7 @@
     </div>
 
 <script>
-// [로그인 오류 해결 최종 스크립트]
+// [최종 탭 문제 해결 스크립트]
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
@@ -127,32 +127,17 @@ let completedItems = {};
 const urlParams = new URLSearchParams(window.location.search);
 const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-// ★★★ 수정된 window.onload 함수 ★★★
 window.onload = function() {
-    try { 
-        currentUser = JSON.parse(localStorage.getItem('userInfo')); 
-    } catch (e) { 
-        localStorage.removeItem('userInfo');
-        currentUser = null;
-    }
+    try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); }
     loadCompletedItems();
-
     if (currentUser) {
-        // 이미 로그인 정보가 있으면 바로 데이터 로드
         loadData();
     } else {
-        // 로그인 정보가 없으면 구글 로그인 초기화 및 버튼 표시
         google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID, 
-            callback: handleCredentialResponse, 
-            ux_mode: 'redirect',
+            client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse, ux_mode: 'redirect',
             login_uri: window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '')
         });
-        google.accounts.id.prompt((n) => { 
-            if (n.isNotDisplayed()) { 
-                google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' }); 
-            }
-        });
+        google.accounts.id.prompt((n) => { if (n.isNotDisplayed()) { google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' }); }});
     }
     setupEventListeners();
 };
@@ -178,6 +163,7 @@ async function loadData() {
     }
 }
 
+// ★★★ 수정된 setupEventListeners 함수 ★★★
 function setupEventListeners() {
     document.body.addEventListener('click', function(e) {
         const target = e.target;
@@ -185,11 +171,20 @@ function setupEventListeners() {
             const button = target.closest('.tab-button');
             const targetPaneId = button.dataset.tab;
             const tabContainer = button.closest('.tabs');
+            
+            // 모든 탭 버튼의 active 클래스 제거
             tabContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            // 클릭된 버튼에 active 클래스 추가
             button.classList.add('active');
+
             const contentContainer = tabContainer.nextElementSibling;
+            // 모든 탭 콘텐츠를 숨김
             contentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.getElementById(targetPaneId).classList.add('active');
+            // 클릭된 탭에 해당하는 콘텐츠만 보여줌
+            const targetPane = document.getElementById(targetPaneId);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
         }
         if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); const content = target.closest('.accordion-title').nextElementSibling; if (content) { content.style.display = content.style.display === 'block' ? 'none' : 'block'; } }
         if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
@@ -240,6 +235,7 @@ function renderTeacherDashboard(data) {
     `;
 }
 
+// ... 이 아래로 나머지 모든 자바스크립트 함수들은 생략 없이 동일하게 유지됩니다 ...
 function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
 function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
 async function handleCredentialResponse(response) { if (response && response.credential) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : ''); window.location.href = cleanUrl; } }
