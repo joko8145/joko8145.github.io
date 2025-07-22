@@ -112,6 +112,13 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background-color: var(--white-bg); padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; }
     .modal-close-btn { float: right; background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text-light); }
+/* 카드의 날짜/기간 표시를 위한 스타일 */
+.card-date {
+    font-size: 0.8em;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
 </style>
 </head>
 <body>
@@ -257,9 +264,82 @@ function renderStudentPortal(data) { return ` <div class="student-header"><div i
 function renderTeacherDashboard(data) { return ` <div class="teacher-header"><div id="user-display"></div></div> <div class="header"> <h1>💼 업무 대시보드</h1> <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div> </div> <div class="content"> ${renderTeacherRoutines(data.routines)} ${renderClassManagement(data)} ${renderTeacherPersonalTasks(data.teacherPersonalTasks)} ${renderTeacherSettings(data)} </div> `; }
 function renderWidgets(widgets) { if (!widgets || widgets.length === 0) return ''; const widgetHtml = widgets.map(widget => { let contentHtml = widget.내용 || ''; if (widget.위젯종류 === '디데이') { const targetDate = new Date(contentHtml); const today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)); contentHtml = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${-diff}`; } return `<div class="widget"><div class="widget-title">${widget.제목 || ''}</div><div class="widget-content">${contentHtml}</div></div>`; }).join(''); return `<div id="widgets-container">${widgetHtml}</div>`;}
 function renderUnsubmitted(tasks) { if (!tasks || tasks.length === 0) return ''; const listHtml = tasks.map(t => `<li>👌 ${t.제목 || t.내용 || ''}</li>`).join(''); return `<div class="unsubmitted-section"><p>🔔 아직 완료하지 않은 할 일이 있어요!</p><ul style="list-style: none; padding-left: 0; margin-top: 5px;">${listHtml}</ul></div>`;}
-function renderStudentClassSchedules(schedules) { if (!schedules || schedules.length === 0) return ''; const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join(''); return `<div class="section"><h2 class="section-title">🗓️ 학급 일정</h2><div class="grid-container">${schedulesHtml}</div></div>`;}
-function renderItemsSection(type, items, sectionTitle) { const unreadItems = (items || []).filter(item => !completedItems[item.id]); if (unreadItems.length === 0) { return `<div class="section"><h2 class="section-title">${sectionTitle}</h2><div class="empty-state">모두 확인했습니다! 👍</div></div>`; } const itemsHtml = unreadItems.map(item => { const isTask = type === 'tasks'; const actionButton = isTask ? `<a href="${item.링크 || '#'}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">기록하기</a>` : (item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : ''); return `<div class="notice-item card" id="${item.id}"><div style="flex-grow: 1;"><div class="card-title">${item.아이콘 || ''} ${item.제목 || ''}</div><p class="card-description">${item.내용 || ''}</p>${actionButton}</div><button class="complete-btn" onclick="completeItem('${item.id}')">확인</button></div>`; }).join(''); return `<div class="section"><h2 class="section-title">${sectionTitle}</h2>${itemsHtml}</div>`;}
-function completeItem(itemId) { completedItems[itemId] = true; saveCompletedItems(); const itemElement = document.getElementById(itemId); if (itemElement) { itemElement.style.transition = 'opacity 0.3s, transform 0.3s'; itemElement.style.opacity = '0'; itemElement.style.transform = 'translateY(-10px)'; setTimeout(() => { itemElement.remove(); }, 300); } }
+function renderStudentClassSchedules(schedules) {
+    // 일정이 없으면 아무것도 표시하지 않습니다.
+    if (!schedules || schedules.length === 0) return '';
+
+    // ★ 수정 1: 일정을 시작일(오름차순) 기준으로 정렬합니다.
+    schedules.sort((a, b) => new Date(a['일정 시작일']) - new Date(b['일정 시작일']));
+
+    const schedulesHtml = schedules.map(s => {
+        const titleHtml = `<div class="card-title">${s.아이콘 || ''} ${s.제목 || ''}</div>`;
+        const descriptionHtml = s.내용 ? `<p class="card-description">${s.내용}</p>` : '';
+
+        // ★ 수정 2: 기간 표시를 위한 HTML을 생성합니다.
+        let dateHtml = '';
+        const startDate = s['일정 시작일'];
+        const endDate = s['일정 종료일'];
+
+        if (startDate) {
+            let dateString = new Date(startDate).toLocaleDateString('ko-KR');
+            if (endDate && endDate !== startDate) {
+                dateString += ` ~ ${new Date(endDate).toLocaleDateString('ko-KR')}`;
+            }
+            dateHtml = `<p class="card-date">${dateString}</p>`;
+        }
+
+        return `
+            <div class="card">
+                ${titleHtml}
+                ${dateHtml}
+                ${descriptionHtml}
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="section">
+            <h2 class="section-title">🗓️ 학급 일정</h2>
+            <div class="grid-container">${schedulesHtml}</div>
+        </div>`;
+}
+    
+    
+    
+function renderItemsSection(type, items, sectionTitle) {
+    // ★ 수정: 정렬 로직 추가
+    (items || []).sort((a, b) => {
+        // '정렬순서' 값이 있는지 확인하고, 없으면 무한대(Infinity)로 처리하여 맨 뒤로 보냅니다.
+        const orderA = a.정렬순서 !== undefined && a.정렬순서 !== '' ? parseInt(a.정렬순서) : Infinity;
+        const orderB = b.정렬순서 !== undefined && b.정렬순서 !== '' ? parseInt(b.정렬순서) : Infinity;
+
+        // '정렬순서'가 다르면 그에 따라 정렬합니다.
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+
+        // '정렬순서'가 같거나 둘 다 없는 경우, 최신 항목(id가 더 큰 것)이 위로 오도록 2차 정렬합니다.
+        return (b.id || '').localeCompare(a.id || '');
+    });
+    
+    const unreadItems = (items || []).filter(item => !completedItems[item.id]);
+
+    if (unreadItems.length === 0) {
+        return `<div class="section"><h2 class="section-title">${sectionTitle}</h2><div class="empty-state">모두 확인했습니다! 👍</div></div>`;
+    }
+
+    const itemsHtml = unreadItems.map(item => {
+        const isTask = type === 'tasks';
+        const actionButton = isTask ? `<a href="${item.링크 || '#'}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">기록하기</a>` : (item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : '');
+        return `<div class="notice-item card" id="${item.id}"><div style="flex-grow: 1;"><div class="card-title">${item.아이콘 || ''} ${item.제목 || ''}</div><p class="card-description">${item.내용 || ''}</p>${actionButton}</div><button class="complete-btn" onclick="completeItem('${item.id}')">확인</button></div>`;
+    }).join('');
+
+    return `<div class="section"><h2 class="section-title">${sectionTitle}</h2>${itemsHtml}</div>`;
+}
+    
+    
+    
+    
+    function completeItem(itemId) { completedItems[itemId] = true; saveCompletedItems(); const itemElement = document.getElementById(itemId); if (itemElement) { itemElement.style.transition = 'opacity 0.3s, transform 0.3s'; itemElement.style.opacity = '0'; itemElement.style.transform = 'translateY(-10px)'; setTimeout(() => { itemElement.remove(); }, 300); } }
 function renderLeaveSection(requests) { const todayStr = new Date().toISOString().split('T')[0]; const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => { const requestDate = req.희망일자 ? new Date(req.희망일자) : null; const requestDateStr = requestDate ? requestDate.toISOString().split('T')[0] : ''; const certButton = (req.상태 === '승인' && req.신청행번호 && requestDateStr === todayStr) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em; margin: 0;">확인증</a>` : ''; return `<div class="card"><div><strong>${req.신청종류}</strong> (${requestDate ? requestDate.toLocaleDateString() : '날짜 없음'})<br><small>사유: ${req.사유 || ''}</small></div><div style="display: flex; align-items: center; gap: 10px;"><span class="status-badge status-${req.상태}">${req.상태}</span>${certButton}</div></div>`; }).join(''); return `<div class="leave-form"><h2 class="section-title" style="border: none; margin-bottom: 20px;">외출/조퇴 신청하기</h2><form id="leave-request-form"><div class="form-group"><label>신청 종류</label><div class="leave-type-buttons"><button type="button" class="leave-type-btn selected" data-type="외출">외출</button><button type="button" class="leave-type-btn" data-type="조퇴">조퇴</button></div></div><div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div><div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div><div class="form-actions"><button type="submit" class="action-btn">신청 제출</button></div></form></div><div class="section leave-history"><h2 class="section-title">나의 신청 내역</h2>${historyHtml}</div>`;}
 function renderResources(resources) { if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>'; const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join(''); return `<div class="section grid-container">${resourcesHtml}</div>`;}
 async function submitLeaveRequest(form) { const type = form.querySelector('.leave-type-btn.selected')?.dataset.type; if (!type) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; } const params = new URLSearchParams({ action: 'submitLeaveRequest', studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email, type: type, date: form.date.value, reason: form.reason.value }); alert('신청 처리 중...'); try { const res = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await res.json(); alert(result.message); if (result.status === 'success') loadData(); } catch (error) { alert('신청 중 오류: ' + error.message); } }
