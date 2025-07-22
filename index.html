@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/portal-dev/favicon.png">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        :root { --primary-color: #5D78E6; --secondary-color: #A25AF2; --light-bg: #f4f6fc; --white-bg: #ffffff; --text-dark: #212529; --text-light: #6c757d; --border-radius: 12px; --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.06); }
+        :root { --primary-color: #5D78E6; --secondary-color: #A25AF2; --light-bg: #f4f6fc; --white-bg: #ffffff; --text-dark: #212529; --text-light: #6c757d; --border-color: #e9ecef; --border-radius: 12px; --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.06); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--light-bg); min-height: 100vh; padding: 20px; color: var(--text-dark); }
         .container { max-width: 800px; margin: 0 auto; background: var(--white-bg); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
@@ -16,52 +16,96 @@
         .header .date-display { font-size: 1.2em; opacity: 0.9; }
         .content { padding: 30px; }
         .empty-state { text-align: center; padding: 40px; color: var(--text-light); font-size: 1.1em; }
-        .section { margin-bottom: 40px; }
-        .section-title { font-size: 1.6em; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 3px solid var(--primary-color); padding-bottom: 10px; }
-        .card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow-light); border: 1px solid var(--border-color); }
-        .card-title { font-size: 1.25em; font-weight: 600; margin-bottom: 8px; color: var(--primary-color); }
-        .card-description { font-size: 1em; color: var(--text-light); line-height: 1.6; }
-        a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 1.4em; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        .card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow-light); border: 1px solid var(--border-color); }
+        .card-title { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); }
+        .card-description { font-size: 0.95em; color: var(--text-light); line-height: 1.6; }
+        a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s; border-left: 4px solid var(--primary-color); } /* ★★★ 2. 파란 테두리 추가 ★★★ */
         a.card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .action-btn { padding: 10px 18px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; }
+        .action-btn { padding: 8px 16px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; margin-top: 12px; }
+        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 25px; }
+        .tab-button { padding: 12px 18px; cursor: pointer; border: none; background: none; font-size: 1em; font-weight: 500; color: var(--text-light); position: relative; }
+        .tab-button.active { color: var(--primary-color); font-weight: 600; }
+        .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); border-radius: 3px; }
+        .tab-pane { display: none; } .tab-pane.active { display: grid; }
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-profile-image { width: 36px; height: 36px; border-radius: 50%; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; background-color: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .user-name-logout { font-size: 0.9em; text-align: left; }
         .user-name-logout strong { display: block; }
         .user-name-logout a { text-decoration: none; }
-        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 25px; }
-        .tab-button { padding: 12px 18px; cursor: pointer; border: none; background: none; font-size: 1em; font-weight: 500; color: var(--text-light); position: relative; }
-        .tab-button.active { color: var(--primary-color); font-weight: 600; }
-        .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); border-radius: 3px; }
-        .tab-pane { display: none; } .tab-pane.active { display: block; }
-
-        /* 학생용/교사용 공통 스타일 조정 */
-        .auth-container { padding: 0 30px; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
-        .student-view .auth-container { background-color: #fff; border-bottom: 1px solid var(--border-color); }
-        .student-view .user-name-logout { color: var(--text-dark); }
-        .student-view .user-name-logout a { color: var(--text-light); }
-        .teacher-view .auth-container { background-color: #343a40; }
-        .teacher-view .user-name-logout { color: white; }
-        .teacher-view .user-name-logout a { color: #adb5bd; }
-        
-        /* 교사용 UI 스타일 */
+        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .student-header { padding: 0 30px; background-color: #fff; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .student-header .user-name-logout { color: var(--text-dark); }
+        .student-header .user-name-logout a { color: var(--text-light); }
+        #widgets-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .widget { background-color: var(--white-bg); padding: 20px; text-align: center; border-radius: var(--border-radius); box-shadow: var(--shadow-light); border: 1px solid var(--border-color); }
+        .widget-title { font-weight: 500; margin-bottom: 8px; color: var(--text-light); }
+        .widget-content { font-size: 2.2em; font-weight: 700; color: var(--primary-color); }
+        .unsubmitted-section { background-color: #fff9e6; border: 1px solid #ffe7ab; color: #8a6d3b; padding: 15px 20px; margin-bottom: 30px; border-radius: var(--border-radius); }
+        .notice-item { display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary-color); }
+        .complete-btn { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-light); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.9em; flex-shrink: 0; margin-left: 15px; }
+        .leave-form { background: #f8f9fa; padding: 25px; border-radius: var(--border-radius); margin-bottom: 30px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .leave-type-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .leave-type-btn { background-color: #e9ecef; color: #495057; padding: 12px; border: none; border-radius: 8px; cursor: pointer; }
+        .leave-type-btn.selected { background-color: var(--primary-color); color: white; font-weight: 600; }
+        .form-actions { text-align: right; }
+        .form-actions .action-btn { color: white; background-color: var(--primary-color); }
+        .leave-history .card { display: flex; justify-content: space-between; align-items: center; border-left: none; }
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85em; font-weight: 600; color: white; }
+        .status-승인 { background-color: #28a745; } .status-반려 { background-color: #dc3545; } .status-신청 { background-color: #ffc107; }
+        .teacher-header { padding: 0 30px; background-color: #343a40; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
+        .teacher-header .user-name-logout { color: white; }
+        .teacher-header .user-name-logout a { color: #adb5bd; }
         .routine-tasks-container { display: flex; flex-wrap: wrap; gap: 10px; }
-        .routine-item { display: inline-flex; align-items: center; padding: 8px 15px; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 20px; cursor: pointer; }
-        .routine-item.completed { background-color: #e0e7ff; }
+        .routine-item { background: #f1f3f5; border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 15px; display: inline-flex; align-items: center; cursor: pointer; }
+        .routine-item.completed { background-color: #e0e7ff; border-color: var(--primary-color); color: var(--primary-color); font-weight: 500; }
         .routine-checkbox { display: none; }
-        .accordion-title { cursor: pointer; padding: 15px; background: #f8f9fa; border-radius: 8px; font-weight: 600; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-content { display: none; padding: 15px; border: 1px solid #f1f3f5; border-top: none; border-radius: 0 0 8px 8px; }
-        .accordion-title.active + .accordion-content { display: block; }
+        .accordion-item { margin-bottom: 5px; }
+        .accordion-title { background: #f8f9fa; border-radius: 8px; padding: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .accordion-title.active::after { transform: rotate(180deg); }
         .accordion-title::after { content: '▼'; transition: transform 0.2s; }
-        .teacher-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .accordion-content { display: none; padding: 15px; border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; }
+        .teacher-leave-card { display: flex; flex-direction: column; gap: 10px; }
+        .leave-reason-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .leave-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .approve-btn { background: #28a745; } .reject-btn { background: #dc3545; }
+        .post-filter-controls { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .post-search-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .post-filter-tabs { display: flex; }
+        .post-filter-btn { padding: 8px 14px; border: 1px solid #ccc; background-color: var(--white-bg); cursor: pointer; border-radius: 0; }
+        .post-filter-btn:first-child { border-radius: 6px 0 0 6px;} .post-filter-btn:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+        .post-filter-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .teacher-dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: var(--white-bg); padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; }
+        .modal-close-btn { float: right; background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text-light); }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="app-root">
-            <div class="empty-state"><div id="gsi-container"></div></div>
+        <div id="app-root"><div class="empty-state"><div id="gsi-container"></div></div></div>
+    </div>
+    <div id="new-post-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">×</button>
+            <h2>✨ 새 게시물/업무 등록</h2>
+            <form id="new-post-form" style="margin-top: 20px;">
+                <div class="form-group"><label>유형</label><select name="type"><option value="공지">공지</option><option value="할일">할 일</option></select></div>
+                <div class="form-group"><label>제목</label><input type="text" name="title" required></div>
+                <div class="form-group"><label>내용</label><textarea name="content" rows="4"></textarea></div>
+                <div class="form-group"><label>링크 (선택)</label><input type="url" name="link"></div>
+                <div class="form-actions"><button type="submit" class="action-btn">등록하기</button></div>
+            </form>
         </div>
     </div>
 
@@ -69,104 +113,471 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
-let currentUser = null;
-let completedItems = {};
-const urlParams = new URLSearchParams(window.location.search);
-const isTeacherMode = urlParams.get('mode') === 'teacher';
+    let currentUser = null;
+    let completedItems = {};
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTeacherMode = urlParams.get('mode') === 'teacher';
 
-window.onload = function() {
-    try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); }
-    loadCompletedItems();
-    if (currentUser) {
-        loadData();
-    } else {
-        google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse, ux_mode: 'redirect',
-            login_uri: window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '')
-        });
-        google.accounts.id.prompt((n) => { if (n.isNotDisplayed()) { google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' }); }});
-    }
-    setupEventListeners();
-};
-
-async function loadData() {
-    const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
-    const fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}` + (isTeacherMode ? '&mode=teacher' : '');
-    try {
-        const response = await fetch(fullUrl);
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-        currentUser = { ...currentUser, ...data.user };
-        localStorage.setItem('userInfo', JSON.stringify(currentUser));
-        
-        document.body.className = isTeacherMode ? 'teacher-view' : 'student-view';
-        root.innerHTML = isTeacherMode ? renderTeacherDashboard(data) : renderStudentPortal(data);
-        
-        renderUserInfo(currentUser);
-    } catch (error) {
-        root.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
-    }
-}
-
-// ★★★ 수정된 setupEventListeners 함수 ★★★
-function setupEventListeners() {
-    document.body.addEventListener('click', function(e) {
-        const target = e.target;
-        if (target.closest('.accordion-title')) { 
-            target.closest('.accordion-title').classList.toggle('active');
+    window.onload = function() {
+        try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); currentUser = null; }
+        loadCompletedItems();
+        updateDateDisplay();
+        if (currentUser) {
+            renderUserInfo(currentUser);
+            loadData();
+        } else {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                ux_mode: 'redirect',
+                login_uri: 'https://joko8145.github.io/portal-dev' // 이 주소도 본인의 GitHub Pages 주소로 확인해주세요.
+            });
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    google.accounts.id.renderButton(
+                        document.getElementById('gsi-container'),
+                        { theme: 'outline', size: 'large' }
+                    );
+                }
+            });
         }
-        if (target.closest('.tab-button')) {
-            const button = target.closest('.tab-button');
-            const targetPaneId = button.dataset.tab;
-            const tabContainer = button.closest('.tabs');
-            
-            tabContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            const contentContainer = tabContainer.nextElementSibling;
-            if (contentContainer) {
-                contentContainer.querySelectorAll('.tab-pane').forEach(pane => {
-                    pane.classList.toggle('active', pane.id === targetPaneId);
-                });
+        setupEventListeners();
+    };
+    
+    function setupEventListeners() {
+        document.body.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); }
+            if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
+            if (target.classList.contains('modal-close-btn')) {
+                document.getElementById('new-post-modal').style.display = 'none';
+                document.getElementById('new-post-form').reset();
             }
+            if (target.closest('.tab-button')) {
+                const button = target.closest('.tab-button');
+                const container = button.closest('.content, .tab-content');
+                if (container) {
+                    const targetPaneId = button.dataset.tab;
+                    container.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    container.querySelectorAll('.tab-pane').forEach(pane => {
+                        pane.classList.toggle('active', pane.id === targetPaneId);
+                    });
+                }
+            }
+            if (target.classList.contains('leave-type-btn')) {
+                document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected'));
+                target.classList.add('selected');
+                document.getElementById('leave-type-input').value = target.dataset.type;
+            }
+        });
+        document.body.addEventListener('submit', function(e) {
+            if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); }
+            if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); }
+        });
+    }
+
+    function loadCompletedItems() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const storedData = localStorage.getItem('completedItems');
+        if (storedData) {
+            try {
+                const data = JSON.parse(storedData);
+                if (data.date === todayStr) { completedItems = data.items || {}; } 
+                else { localStorage.removeItem('completedItems'); completedItems = {}; }
+            } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; }
         }
-    });
-}
+    }
 
-function renderStudentPortal(data) {
-    // 이 함수는 학생 UI를 그립니다. (생략 없음)
-    // ... 학생 UI HTML 구조 ...
-    return `...`; // 실제로는 긴 HTML 문자열이 반환됩니다.
-}
+    function saveCompletedItems() {
+        localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));
+    }
 
-function renderTeacherDashboard(data) {
-    // 이 함수는 교사 UI를 그립니다. (생략 없음)
-    return `
-        <div class="auth-container"><div id="user-display"></div></div>
-        <div class="header">
-            <h1 id="portal-title">💼 업무 대시보드</h1>
-            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
-        </div>
-        <div class="content">
-            ${renderTeacherRoutines(data.routines)}
-            ${renderClassManagementAccordions(data)}
-            ${renderTeacherPersonalTasks(data.teacherPersonalTasks)}
-            ${renderTeacherSettings(data)}
-        </div>
-    `;
-}
+    async function handleCredentialResponse(response) {
+        if (response && response.credential) {
+            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+            currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture };
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '');
+            window.location.href = cleanUrl;
+        } else { console.error('Credential response is missing or invalid.', response); }
+    }
 
-// --- 이 아래로 모든 헬퍼 함수들이 위치합니다 (생략 없음) ---
-function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
-function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
-async function handleCredentialResponse(response) { if (response && response.credential) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : ''); window.location.href = cleanUrl; } }
-function handleLogout() { localStorage.clear(); google.accounts.id.disableAutoSelect(); location.reload(); }
-function renderUserInfo(user) { const displayEl = document.getElementById('user-display'); if (!displayEl) return; let userInitial = ''; const nameParts = (user.name || '').split(''); if (nameParts.length > 1) { userInitial = nameParts[0] + nameParts[nameParts.length - 1]; } else { userInitial = nameParts[0] || ''; } const userProfileHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `<div class="user-initial">${userInitial}</div>`; displayEl.innerHTML = `<div class="user-display">${userProfileHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`; }
-function renderTeacherRoutines(routines) { if (!routines || routines.length === 0) return ''; const routineHtml = routines.map(r => `<label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}"><input type="checkbox" class="routine-checkbox" onchange="toggleRoutineComplete(this, '${r.rowNum}')" ${completedItems[r.rowNum] ? 'checked' : ''}><span>${r.업무명}</span></label>`).join(''); return `<div class="section"><h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div></div>`;}
-function renderClassManagementAccordions(data) { const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])]; return `<h2 class="section-title">🏠 학급 관리</h2><div class="accordion-item"><div class="accordion-title">⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</div><div class="accordion-content">...</div></div><div class="accordion-item"><div class="accordion-title">📢 알림 포털 게시 현황 (${allPosts.length}건)</div><div class="accordion-content">...</div></div>`; }
-function renderTeacherPersonalTasks(tasks) { if (!tasks || tasks.length === 0) return ''; const tasksHtml = tasks.map(task => `<div class="card"><div class="card-title">${task.내용}</div></div>`).join(''); return `<div class="section"><h2 class="section-title">📋 업무 일지</h2><div class="teacher-dashboard-grid">${tasksHtml}</div></div>`;}
-function renderTeacherSettings(data) { const groupedItems = (data.dashboardItems || []).reduce((acc, item) => { const type = item.종류 || '자료실'; if (!acc[type]) acc[type] = []; acc[type].push(item); return acc; }, {}); const tabs = Object.keys(groupedItems); const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join(''); const tabPanesHtml = tabs.map((tab, i) => { const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join(''); return `<div id="teacher-tab-${i}" class="tab-pane ${i === 0 ? 'active' : ''} teacher-dashboard-grid">${itemsHtml}</div>`; }).join(''); return `<div class="section"><h2 class="section-title">⚙️ 설정</h2><div class="teacher-dashboard-grid">...</div><div class="tabs">${tabButtonsHtml}</div><div class="tab-content">${tabPanesHtml}</div></div>`;}
+    function handleLogout() {
+        localStorage.clear();
+        google.accounts.id.disableAutoSelect();
+        location.reload();
+    }
+
+    function updateDateDisplay() {
+        document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    }
+
+    async function loadData() {
+        const targetEl = isTeacherMode ? document.getElementById('teacher-dashboard') : document.getElementById('student-portal');
+        targetEl.style.display = 'block';
+        targetEl.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+        const fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}` + (isTeacherMode ? '&mode=teacher' : '');
+        try {
+            const response = await fetch(fullUrl);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            currentUser = { ...currentUser, ...data.user };
+            localStorage.setItem('userInfo', JSON.stringify(currentUser));
+            renderUserInfo(currentUser);
+            if (isTeacherMode) { renderTeacherDashboard(data); } 
+            else { renderStudentPortal(data); }
+        } catch (error) {
+            targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
+        }
+    }
+    
+    function renderUserInfo(user) {
+        const displayEl = document.getElementById('user-display');
+        document.getElementById('gsi-container').style.display = 'none';
+        displayEl.style.display = 'flex';
+        let userInfoHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `<div class="user-initial">${user.name.charAt(0)}</div>`;
+        displayEl.innerHTML = `<div class="user-display">${userInfoHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`;
+    }
+
+    function renderTeacherDashboard(data) {
+        document.getElementById('teacher-dashboard').innerHTML = `
+            <div id="routine-tasks-section" class="section"></div>
+            <div id="class-management-section" class="section"></div>
+            <div id="teacher-personal-tasks-section" class="section"></div>
+            <div id="teacher-settings-section" class="section"></div>`;
+        renderTeacherRoutines(data.routines);
+        renderClassManagementAccordions(data);
+        renderTeacherPersonalTasks(data.teacherPersonalTasks);
+        renderTeacherSettings(data);
+    }
+
+    function renderTeacherRoutines(routines) {
+        if (!routines || routines.length === 0) return;
+        const routineHtml = routines.map(r => `
+            <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" for="routine-${r.rowNum}">
+                <input type="checkbox" class="routine-checkbox" id="routine-${r.rowNum}" onchange="toggleRoutineComplete('${r.rowNum}', this)" ${completedItems[r.rowNum] ? 'checked' : ''}>
+                <span>${r.업무명}</span>
+            </label>`).join('');
+        document.getElementById('routine-tasks-section').innerHTML = `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
+    }
+
+    function renderClassManagementAccordions(data) {
+        const container = document.getElementById('class-management-section');
+        container.innerHTML = `<h2 class="section-title">🏠 학급 관리</h2><div id="leave-accordion"></div><div id="assignment-accordion"></div><div id="notice-status-accordion"></div><div id="schedule-accordion"></div>`;
+        document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
+        document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
+        const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
+        document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content" id="post-status-content">${renderPostStatusCards(allPosts)}</div>`;
+        document.getElementById('schedule-accordion').innerHTML = `<div class="accordion-title"><span>📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</span></div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div>`;
+    }
+    
+    function renderLeaveCards(leaves) {
+        if (!leaves || leaves.length === 0) return '<div class="empty-state">신청 내역이 없습니다.</div>';
+        return leaves.map(req => `<div class="teacher-leave-card">
+            <div class="leave-header"><strong>${req.이름 || '정보없음'}(${req.학번 || '정보없음'})</strong><small>${req.신청종류}(${new Date(req.희망일자).toLocaleDateString()})</small></div>
+            <textarea class="leave-reason-input" id="reason-${req.rowNum}">${(req.사유 || '').replace(/"/g, '"')}</textarea>
+            <div class="leave-actions">
+                <button class="action-btn approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'reason-${req.rowNum}')">승인</button>
+                <button class="action-btn reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'reason-${req.rowNum}')">반려</button>
+            </div>
+        </div>`).join('');
+    }
+
+    function renderAssignmentCards(assignments) {
+        if (!assignments || assignments.length === 0) return '<div class="empty-state">관리할 과제가 없습니다.</div>';
+        return assignments.map(a => `<div class="card">${a.title}</div>`).join('');
+    }
+
+    function renderPostStatusCards(posts) {
+        if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
+        const postListHtml = posts.map(item => `
+            <div class="card post-status-card" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}">
+                <span>${item.제목}</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            </div>`).join('');
+        
+        return `
+            <div class="post-filter-controls">
+                <input type="search" id="post-search-input" class="post-search-input" placeholder="제목으로 검색..." oninput="filterPosts()">
+                <div class="post-filter-tabs">
+                    <button class="post-filter-btn active" data-filter="all" onclick="filterPosts(this)">전체</button>
+                    <button class="post-filter-btn" data-filter="Y" onclick="filterPosts(this)">게시중</button>
+                    <button class="post-filter-btn" data-filter="N" onclick="filterPosts(this)">숨김</button>
+                </div>
+            </div>
+            <div id="post-list-container">${postListHtml}</div>
+            <div class="empty-state" id="post-filter-empty" style="display:none;">검색 결과가 없습니다.</div>
+        `;
+    }
+
+    function renderScheduleCards(schedules) {
+        if (!schedules || schedules.length === 0) return '<div class="empty-state">등록된 학급 일정이 없습니다.</div>';
+        return schedules.map(s => `<div class="card">${s.제목}</div>`).join('');
+    }
+
+    function renderTeacherPersonalTasks(tasks) {
+        const container = document.getElementById('teacher-personal-tasks-section');
+        if (!tasks || tasks.length === 0) { container.style.display = 'none'; return; }
+        let tasksHtml = tasks.map(task => `<div class="personal-task-card card">
+            <div class="card-title">${task.내용}</div>
+            ${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color:#007bff; margin-top:10px; display:inline-block;">바로가기</a>` : ''}
+        </div>`).join('');
+        container.innerHTML = `<h2 class="section-title">📋 업무 일지</h2><div class="personal-task-list">${tasksHtml}</div>`;
+    }
+
+    function renderTeacherSettings(data) {
+        const container = document.getElementById('teacher-settings-section');
+        const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
+            const type = item.종류 || '자료실';
+            if (!acc[type]) acc[type] = [];
+            acc[type].push(item);
+            return acc;
+        }, {});
+        const tabs = Object.keys(groupedItems);
+        const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+        const tabPanesHtml = tabs.map((tab, i) => {
+            const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join('');
+            return `<div id="teacher-tab-${i}" class="tab-pane ${i===0 ? 'active' : ''}"><div class="teacher-dashboard-grid">${itemsHtml}</div></div>`;
+        }).join('');
+        container.innerHTML = `
+            <h2 class="section-title">⚙️ 설정</h2>
+            <div class="teacher-dashboard-grid">
+                <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center;"><div class="card-title">✨ 새 게시물/업무 등록</div></div>
+                <a href="${data.sheetUrl}" target="_blank" class="card"><div class="card-title">📊 데이터 시트 수정</div></a>
+            </div>
+            <div class="tabs">${tabButtonsHtml}</div>
+            <div class="tab-content">${tabPanesHtml}</div>`;
+    }
+
+    function renderStudentPortal(data) {
+        const portal = document.getElementById('student-portal');
+        const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
+        const todayNotices = (data.notices || []).filter(item => {
+            const conditions = (item.표시조건 || '').split(',').map(s => s.trim()).filter(c => c);
+            if (conditions.length === 0) return true;
+            return conditions.includes('매일') || conditions.includes(dayOfWeek);
+        });
+        const mainPaneHTML = `${renderItems('notices-section', todayNotices.filter(item => !completedItems[item.id]), '📢 중요 공지')}${renderItems('tasks-section', (data.tasks || []).filter(item => !completedItems[item.id]), '✅ 오늘의 할 일')}`;
+        portal.innerHTML = `
+            ${renderWidgets(data.widgets)}
+            ${renderUnsubmitted(data.unsubmitted)}
+            ${renderStudentClassSchedules(data.classSchedules)}
+            <div class="tabs" id="student-tabs">
+                <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
+                <button class="tab-button" data-tab="leave-pane" style="display:none;">외출/조퇴</button>
+                <button class="tab-button" data-tab="resource-pane" style="display:none;">자료실</button>
+            </div>
+            <div id="main-pane" class="tab-pane active">${mainPaneHTML}</div>
+            <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div>
+            <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div>`;
+        if (data.user?.studentId) portal.querySelector('[data-tab="leave-pane"]').style.display = 'inline-block';
+        if (data.resources && data.resources.length > 0) portal.querySelector('[data-tab="resource-pane"]').style.display = 'inline-block';
+    }
+
+    function renderWidgets(widgets) {
+        if (!widgets || widgets.length === 0) return '';
+        const widgetHtml = widgets.map(widget => {
+            let contentHtml = widget.내용;
+            if (widget.위젯종류 === '디데이') {
+                const diff = Math.ceil((new Date(widget.내용) - new Date()) / (1000 * 60 * 60 * 24));
+                contentHtml = diff === 0 ? 'D-Day' : diff > 0 ? `D-${diff}` : `D+${-diff}`;
+            }
+            return `<div class="widget"><div class="widget-title">${widget.제목}</div><div class="widget-content">${contentHtml}</div></div>`;
+        }).join('');
+        return `<div id="widgets-container">${widgetHtml}</div>`;
+    }
+    
+    function renderUnsubmitted(tasks) {
+        if (!tasks || tasks.length === 0) return '';
+        const listHtml = tasks.map(t => `<li>${t.아이콘||"📌"} ${t.제목||t.내용}</li>`).join('');
+        return `<div id="unsubmitted-container" class="unsubmitted-section"><div style="font-weight: bold; color: #856404; margin-bottom: 10px;">🔔 아직 완료하지 않은 할 일이 있어요!</div><ul style="list-style: none; padding-left: 10px;">${listHtml}</ul></div>`;
+    }
+
+    function renderItems(containerId, items, sectionTitle) {
+        if (!items || items.length === 0) return '';
+        let itemsHtml = items.map(item => {
+            const isCompleted = !!completedItems[item.id];
+            const linkButton = item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color); margin-top: 10px; display: inline-block;">${item.버튼이름 || '바로가기'}</a>` : '';
+            return `<div class="notice-item" id="${item.id}">
+                <button class="complete-btn ${isCompleted ? 'completed' : ''}" onclick="completeItem('${item.id}')">${isCompleted ? '읽음' : '확인'}</button>
+                <div class="card-title">${item.아이콘 || ''} ${item.제목}</div>
+                <div class="card-description">${(item.내용 || '').replace(/\n/g, '<br>')}</div>
+                ${linkButton}
+            </div>`;
+        }).join('');
+        return `<div id="${containerId}" class="section"><h2 class="section-title">${sectionTitle}</h2>${itemsHtml}</div>`;
+    }
+
+    function renderStudentClassSchedules(schedules) {
+        if (!schedules || schedules.length === 0) return '';
+        const schedulesHtml = schedules.map(s => `<div class="card"><div class="card-title">${s.제목}</div><p class="card-description">${s.내용 || ''}</p></div>`).join('');
+        return `<div id="student-schedules-section" class="section"><h2 class="section-title">📅 학급 일정</h2>${schedulesHtml}</div>`;
+    }
+
+    function renderLeaveSection(requests) {
+        const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
+            const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
+            const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
+            const certButton = (req.상태 === '승인' && req.신청행번호) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em;">확인증</a>` : '';
+            return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유}</p></div>`;
+        }).join('');
+        
+        return `
+            <form id="leave-request-form" class="leave-request-form">
+                <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
+                <div class="form-group">
+                    <label>신청 종류</label>
+                    <div style="display:flex; gap:10px;">
+                         <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
+                         <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
+                    </div>
+                    <input type="hidden" name="type" id="leave-type-input" required>
+                </div>
+                <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div>
+                <div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div>
+                <div class="form-actions"><button type="submit" class="action-btn" style="background:var(--primary-color);">신청 제출</button></div>
+            </form>
+            <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0; margin-top:30px;">나의 신청 내역</h3>
+            ${historyHtml}`;
+    }
+
+    function renderResources(resources) {
+        if (!resources || resources.length === 0) return '';
+        const resourcesHtml = resources.map(res => `<a href="${res.링크}" target="_blank" class="card"><div class="card-title">${res.자료명}</div><p class="card-description">${res.설명 || ''}</p></a>`).join('');
+        return `<div class="teacher-dashboard-grid">${resourcesHtml}</div>`;
+    }
+
+    async function submitLeaveRequest(form) {
+        const formData = new FormData(form);
+        if (!formData.get('type')) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; }
+        const params = new URLSearchParams({ 
+            action: 'submitLeaveRequest', 
+            studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email,
+            ...Object.fromEntries(formData.entries()) 
+        });
+        alert('신청 처리 중...');
+        try {
+            const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await res.json();
+            alert(result.message);
+            if (result.status === 'success') loadData();
+        } catch (error) { alert('신청 중 오류: ' + error.message); }
+    }
+
+    async function updateLeaveStatus(rowNum, status, reasonInputId) {
+        const modifiedReason = document.getElementById(reasonInputId)?.value || '';
+        const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, modifiedReason });
+        alert('처리 중...');
+        try {
+            const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await res.json();
+            alert(result.message);
+            if (result.status === 'success') loadData();
+        } catch (error) { alert('처리 중 오류: ' + error.message); }
+    }
+
+    function toggleRoutineComplete(itemId, checkbox) {
+        const label = checkbox.closest('.routine-item');
+        if (checkbox.checked) { completedItems[itemId] = true; label.classList.add('completed'); } 
+        else { delete completedItems[itemId]; label.classList.remove('completed'); }
+        saveCompletedItems();
+    }
+
+    function completeItem(itemId) {
+        completedItems[itemId] = true;
+        saveCompletedItems();
+        const itemElement = document.getElementById(itemId);
+        if (itemElement) {
+            itemElement.style.transition = 'opacity 0.5s, transform 0.5s';
+            itemElement.style.opacity = '0';
+            itemElement.style.transform = 'scale(0.95)';
+            setTimeout(() => { itemElement.style.display = 'none'; }, 500);
+        }
+    }
+    
+    async function updatePostStatus(checkbox, rowNum) {
+        const newStatus = checkbox.checked ? 'Y' : 'N';
+        const card = checkbox.closest('.post-status-card');
+        card.dataset.status = newStatus; // [수정됨] 데이터 속성도 즉시 업데이트
+        card.style.opacity = '0.5';
+        const params = new URLSearchParams({ action: 'updatePostStatus', rowNum, newStatus });
+        try {
+            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message);
+        } catch (error) {
+            alert(`오류: ${error.message}`);
+            checkbox.checked = !checkbox.checked;
+            card.dataset.status = checkbox.checked ? 'Y' : 'N'; // 오류 시 데이터 속성 원상복구
+        } finally {
+            card.style.opacity = '1';
+        }
+    }
+
+    async function submitNewPost(form) {
+        const formData = new FormData(form);
+        const params = new URLSearchParams({
+            action: 'createNewPost',
+            ...Object.fromEntries(formData.entries())
+        });
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.textContent = '등록 중...';
+        submitButton.disabled = true;
+        try {
+            const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+            const result = await response.json();
+            if (result.status !== 'success') { throw new Error(result.message); }
+            alert(result.message);
+            document.getElementById('new-post-modal').style.display = 'none';
+            form.reset();
+            loadData();
+        } catch (error) {
+            alert('오류: ' + error.message);
+        } finally {
+            submitButton.textContent = '등록하기';
+            submitButton.disabled = false;
+        }
+    }
+
+    // [수정됨] 게시물 목록 필터링 함수
+    function filterPosts(button = null) {
+        const container = document.getElementById('post-status-content');
+        if (!container) return;
+        
+        if (button) {
+            container.querySelectorAll('.post-filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        const searchTerm = container.querySelector('#post-search-input').value.toLowerCase();
+        const activeFilter = container.querySelector('.post-filter-btn.active').dataset.filter;
+
+        const allPosts = container.querySelectorAll('.post-status-card');
+        let visibleCount = 0;
+        allPosts.forEach(post => {
+            const title = post.dataset.title || '';
+            const status = post.dataset.status || '';
+
+            const matchesSearch = title.includes(searchTerm);
+            const matchesFilter = (activeFilter === 'all' || status === activeFilter);
+
+            if (matchesSearch && matchesFilter) {
+                post.style.display = 'flex';
+                visibleCount++;
+            } else {
+                post.style.display = 'none';
+            }
+        });
+        
+        const emptyState = container.querySelector('#post-filter-empty');
+        if(emptyState) {
+            emptyState.style.display = (visibleCount === 0 && allPosts.length > 0) ? 'block' : 'none';
+        }
+    }
 </script>
 </body>
 </html>
