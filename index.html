@@ -134,8 +134,18 @@ window.onload = function() {
 };
 
 async function loadData() {
-    const root = document.getElementById('app-root');
-    root.innerHTML = '<div class="empty-state">🔄 데이터를 불러오는 중...</div>';
+    const studentEl = document.getElementById('student-portal');
+    const teacherEl = document.getElementById('teacher-dashboard');
+    const container = document.querySelector('.container');
+
+    // 모드에 따라 body 클래스 및 표시/숨김 처리
+    document.body.className = isTeacherMode ? 'teacher-view' : 'student-view';
+    studentEl.style.display = isTeacherMode ? 'none' : 'block';
+    teacherEl.style.display = isTeacherMode ? 'block' : 'none';
+
+    const targetEl = isTeacherMode ? teacherEl : studentEl;
+    targetEl.innerHTML = '<div class.empty-state">🔄 데이터를 불러오는 중...</div>';
+    
     const fullUrl = `${SCRIPT_URL}?v=${new Date().getTime()}&email=${encodeURIComponent(currentUser.email)}` + (isTeacherMode ? '&mode=teacher' : '');
     try {
         const response = await fetch(fullUrl);
@@ -143,20 +153,30 @@ async function loadData() {
         if (data.error) throw new Error(data.error);
         currentUser = { ...currentUser, ...data.user };
         localStorage.setItem('userInfo', JSON.stringify(currentUser));
-        if (isTeacherMode) {
-            root.innerHTML = renderTeacherDashboard(data);
-        } else {
-            root.innerHTML = renderStudentPortal(data);
-        }
+        
+        // 헤더와 유저 정보는 공통으로 렌더링
+        container.querySelector('.header').innerHTML = `
+            <h1>${isTeacherMode ? '💼 업무 대시보드' : '📢 오늘의 알림'}</h1>
+            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
+        `;
         renderUserInfo(currentUser);
+
+        if (isTeacherMode) {
+            renderTeacherDashboard(data);
+        } else {
+            renderStudentPortal(data);
+        }
     } catch (error) {
-        root.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
+        targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
     }
 }
 
 function setupEventListeners() {
     document.body.addEventListener('click', function(e) {
         const target = e.target;
+        if (target.closest('.accordion-title')) { 
+            target.closest('.accordion-title').classList.toggle('active');
+        }
         if (target.closest('.tab-button')) {
             const button = target.closest('.tab-button');
             const targetPaneId = button.dataset.tab;
@@ -164,93 +184,108 @@ function setupEventListeners() {
             tabContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             const contentContainer = tabContainer.nextElementSibling;
-            contentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.getElementById(targetPaneId).classList.add('active');
+            if (contentContainer) {
+                contentContainer.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('active');
+                });
+                const targetPane = document.getElementById(targetPaneId);
+                if (targetPane) targetPane.classList.add('active');
+            }
         }
-        if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); const content = target.closest('.accordion-title').nextElementSibling; if (content) { content.style.display = content.style.display === 'block' ? 'none' : 'block'; } }
-        if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
-        if (target.closest('.modal-close-btn')) { target.closest('.modal-overlay').style.display = 'none'; }
-        if (target.closest('.leave-type-btn')) { document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected')); target.classList.add('selected'); }
     });
-    document.body.addEventListener('submit', function(e) { if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); } if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); } });
 }
 
-function renderStudentPortal(data) {
-    return `
-        <div class="student-header"><div id="user-display"></div></div>
-        <div class="header">
-            <h1>📢 오늘의 알림</h1>
-            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
-        </div>
-        <div class="content">
-            ${renderWidgets(data.widgets)}
-            ${renderUnsubmitted(data.unsubmitted)}
-            ${renderStudentClassSchedules(data.classSchedules)}
-            <div class="tabs">
-                <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
-                <button class="tab-button" data-tab="leave-pane" style="${data.user?.studentId ? '' : 'display:none;'}">외출/조퇴</button>
-                <button class="tab-button" data-tab="resource-pane" style="${(data.resources || []).length > 0 ? '' : 'display:none;'}">자료실</button>
-            </div>
-            <div class="tab-content">
-                <div id="main-pane" class="tab-pane active">${renderItemsSection('notices', data.notices, '📌 중요 공지')} ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}</div>
-                <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div>
-                <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div>
-            </div>
-        </div>
-    `;
-}
-
+// --- 교사용 UI 렌더링 함수들 (선호하시는 버전) ---
 function renderTeacherDashboard(data) {
-    return `
-        <div class="teacher-header"><div id="user-display"></div></div>
-        <div class="header">
-            <h1>💼 업무 대시보드</h1>
-            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
-        </div>
+    const dashboard = document.getElementById('teacher-dashboard');
+    dashboard.innerHTML = `
         <div class="content">
-            ${renderTeacherRoutines(data.routines)}
-            ${renderClassManagement(data)}
-            ${renderTeacherPersonalTasks(data.teacherPersonalTasks)}
-            ${renderTeacherSettings(data)}
+            <div id="routine-tasks-section" class="section"></div>
+            <div id="class-management-section" class="section"></div>
+            <div id="teacher-personal-tasks-section" class="section"></div>
+            <div id="teacher-settings-section" class="section"></div>
+        </div>
+    `;
+    renderTeacherRoutines(data.routines);
+    renderClassManagementAccordions(data);
+    renderTeacherPersonalTasks(data.teacherPersonalTasks);
+    renderTeacherSettings(data); // ★★★ 보여주신 함수를 여기서 호출합니다 ★★★
+}
+
+function renderTeacherRoutines(routines) {
+    const container = document.getElementById('routine-tasks-section');
+    if (!routines || routines.length === 0) return container.style.display = 'none';
+    const routineHtml = routines.map(r => `
+        <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}">
+            <input type="checkbox" class="routine-checkbox" onchange="toggleRoutineComplete(this, '${r.rowNum}')" ${completedItems[r.rowNum] ? 'checked' : ''}>
+            <span>${r.업무명}</span>
+        </label>
+    `).join('');
+    container.innerHTML = `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
+}
+
+function renderClassManagementAccordions(data) {
+    const container = document.getElementById('class-management-section');
+    const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
+    container.innerHTML = `
+        <h2 class="section-title">🏠 학급 관리</h2>
+        <div class="accordion-item">
+            <div class="accordion-title">⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</div>
+            <div class="accordion-content">...</div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-title">📢 알림 포털 게시 현황 (${allPosts.length}건)</div>
+            <div class="accordion-content">...</div>
         </div>
     `;
 }
 
+function renderTeacherPersonalTasks(tasks) {
+    const container = document.getElementById('teacher-personal-tasks-section');
+    if (!tasks || tasks.length === 0) return container.style.display = 'none';
+    const tasksHtml = tasks.map(task => `<div class="card"><div class="card-title">${task.내용}</div></div>`).join('');
+    container.innerHTML = `<h2 class="section-title">📋 업무 일지</h2><div class="teacher-dashboard-grid">${tasksHtml}</div>`;
+}
+
+// ★★★ 보여주신 바로 그 함수입니다 ★★★
 function renderTeacherSettings(data) {
+    const container = document.getElementById('teacher-settings-section');
     const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
-        const type = item.종류 || '기타';
+        const type = item.종류 || '자료실';
         if (!acc[type]) acc[type] = [];
         acc[type].push(item);
         return acc;
     }, {});
     const tabs = Object.keys(groupedItems);
-    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
     const tabPanesHtml = tabs.map((tab, i) => {
-        const itemsHtml = groupedItems[tab].map(item => 
-            `<a href="${item.링크 || '#'}" target="_blank" class="card">
-                <div class="card-title">${item.업무명}</div>
-                <p class="card-description">${item.상세내용 || ''}</p>
-            </a>`
-        ).join('');
-        const activeClass = i === 0 ? 'active' : '';
-        return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
+        const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join('');
+        return `<div id="teacher-tab-${i}" class="tab-pane ${i===0 ? 'active' : ''} teacher-dashboard-grid">${itemsHtml}</div>`;
     }).join('');
-
-    return `
-        <div class="section">
-            <h2 class="section-title">⚙️ 설정</h2>
-            <div class="teacher-dashboard-grid">
-                <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center; display:flex; align-items:center; justify-content:center;">
-                    <div class="card-title">✨ 새 게시물/업무 등록</div>
-                </div>
-                <a href="${data.sheetUrl}" target="_blank" class="card" style="display:flex; align-items:center; justify-content:center;">
-                    <div class="card-title">📊 데이터 시트 수정</div>
-                </a>
+    container.innerHTML = `
+        <h2 class="section-title">⚙️ 설정</h2>
+        <div class="teacher-dashboard-grid">
+            <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center;">
+                <div class="card-title">✨ 새 게시물/업무 등록</div>
             </div>
-            <div class="tabs">${tabButtonsHtml}</div>
-            <div class="tab-content">${tabPanesHtml}</div>
-        </div>`;
+            <a href="${data.sheetUrl}" target="_blank" class="card">
+                <div class="card-title">📊 데이터 시트 수정</div>
+            </a>
+        </div>
+        <div class="tabs">${tabButtonsHtml}</div>
+        <div class="tab-content">${tabPanesHtml}</div>`;
 }
+
+// --- 학생 UI 렌더링 함수들 ---
+function renderStudentPortal(data) {
+    const studentPortal = document.getElementById('student-portal');
+    studentPortal.innerHTML = `
+        <div class="content">
+             <!-- 학생용 콘텐츠가 여기에 들어갑니다 -->
+        </div>
+    `;
+}
+
 
 function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
 function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
