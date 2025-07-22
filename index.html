@@ -180,6 +180,8 @@ function renderTeacherSettings(data) {
     }, {});
     const tabs = Object.keys(groupedItems);
     const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+    
+    // ★★★ 수정된 부분: 첫 번째 탭에만 'active' 클래스를 부여하도록 수정 ★★★
     const tabPanesHtml = tabs.map((tab, i) => {
         const itemsHtml = groupedItems[tab].map(item => 
             `<a href="${item.링크 || '#'}" target="_blank" class="card">
