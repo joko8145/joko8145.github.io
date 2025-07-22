@@ -238,7 +238,46 @@ function renderAssignmentCards(assignments) { if (!assignments || assignments.le
 function renderPostStatusCards(posts) { if (!posts || posts.length === 0) return '<div class="empty-state" style="padding: 20px;">게시된 알림/할 일이 없습니다.</div>'; const postListHtml = posts.sort((a, b) => b.rowNum - a.rowNum).map(item => `<div class="card post-status-card" style="display:flex; justify-content:space-between; align-items:center;" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}"><span>${item.제목}</span><label class="toggle-switch"><input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}><span class="slider"></span></label></div>`).join(''); return `<div class="post-filter-controls"><input type="search" class="post-search-input" placeholder="제목으로 검색..." oninput="applyPostFilters(this.closest('.accordion-content'))"><div class="post-filter-tabs"><button class="post-filter-btn active" data-filter="all" onclick="handleFilterButtonClick(this)">전체</button><button class="post-filter-btn" data-filter="Y" onclick="handleFilterButtonClick(this)">게시중</button><button class="post-filter-btn" data-filter="N" onclick="handleFilterButtonClick(this)">숨김</button></div></div><div class="post-list-container">${postListHtml}</div><div class="empty-state post-filter-empty" style="display:none; padding: 20px;">검색 결과가 없습니다.</div>`;}
 function renderScheduleCards(schedules) { if (!schedules || schedules.length === 0) return '<div class="empty-state" style="padding: 20px;">등록된 학급 일정이 없습니다.</div>'; return schedules.map(s => `<div class="card">${s.제목}</div>`).join('');}
 function renderTeacherPersonalTasks(tasks) { if (!tasks || tasks.length === 0) return ''; let tasksHtml = tasks.map(task => `<div class="card"><div class="card-title">${task.내용}</div>${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : ''}</div>`).join(''); return `<div class="section"><h2 class="section-title">📋 업무 일지</h2><div class="grid-container">${tasksHtml}</div></div>`;}
-function renderTeacherSettings(data) { const groupedItems = (data.dashboardItems || []).reduce((acc, item) => { const type = item.종류 || '기타'; if (!acc[type]) acc[type] = []; acc[type].push(item); return acc; }, {}); const tabs = Object.keys(groupedItems); const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join(''); const tabPanesHtml = tabs.map((tab, i) => { const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크 || '#'}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join(''); const activeClass = i === 0 ? 'active' : ''; return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`; }).join(''); return `<div class="section"><h2 class="section-title">⚙️ 설정</h2><div class="teacher-dashboard-grid"><div id="new-post-btn" class="card" style="cursor:pointer; text-align:center; display:flex; align-items:center; justify-content:center;"><div class="card-title">✨ 새 게시물/업무 등록</div></div><a href="${data.sheetUrl}" target="_blank" class="card" style="display:flex; align-items:center; justify-content:center;"><div class="card-title">📊 데이터 시트 수정</div></a></div><div class="tabs">${tabButtonsHtml}</div><div class="tab-content">${tabPanesHtml}</div></div>`;}
+// ★★★ 이 함수로 기존 renderTeacherSettings 함수를 교체해주세요 ★★★
+function renderTeacherSettings(data) {
+    const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
+        const type = item.종류 || '기타';
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(item);
+        return acc;
+    }, {});
+    
+    const tabs = Object.keys(groupedItems);
+    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+    
+    const tabPanesHtml = tabs.map((tab, i) => {
+        const itemsHtml = groupedItems[tab].map(item => 
+            `<a href="${item.링크 || '#'}" target="_blank" class="card">
+                <div class="card-title">${item.업무명}</div>
+                <p class="card-description">${item.상세내용 || ''}</p>
+            </a>`
+        ).join('');
+        
+        const activeClass = i === 0 ? 'active' : '';
+        // ★★★ 핵심 수정: tab-pane에 grid-container 클래스를 추가하여 2열 레이아웃을 적용합니다. ★★★
+        return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
+    }).join('');
+
+    return `
+        <div class="section">
+            <h2 class="section-title">⚙️ 설정</h2>
+            <div class="teacher-dashboard-grid">
+                <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center; display:flex; align-items:center; justify-content:center;">
+                    <div class="card-title">✨ 새 게시물/업무 등록</div>
+                </div>
+                <a href="${data.sheetUrl}" target="_blank" class="card" style="display:flex; align-items:center; justify-content:center;">
+                    <div class="card-title">📊 데이터 시트 수정</div>
+                </a>
+            </div>
+            <div class="tabs">${tabButtonsHtml}</div>
+            <div class="tab-content">${tabPanesHtml}</div>
+        </div>`;
+}
 async function updateLeaveStatus(rowNum, status, button) { const reasonInput = button.closest('.teacher-leave-card').querySelector('.leave-reason-input'); const modifiedReason = reasonInput ? reasonInput.value : ''; const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, modifiedReason }); alert('처리 중...'); try { const res = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await res.json(); alert(result.message); if (result.status === 'success') loadData(); } catch (error) { alert('처리 중 오류: ' + error.message); } }
 function toggleRoutineComplete(label, itemId) { const checkbox = label.querySelector('.routine-checkbox'); checkbox.checked = !checkbox.checked; if (checkbox.checked) { completedItems[itemId] = true; label.classList.add('completed'); } else { delete completedItems[itemId]; label.classList.remove('completed'); } saveCompletedItems();}
 async function updatePostStatus(checkbox, rowNum) { const newStatus = checkbox.checked ? 'Y' : 'N'; const card = checkbox.closest('.post-status-card'); card.dataset.status = newStatus; card.style.opacity = '0.5'; const params = new URLSearchParams({ action: 'updatePostStatus', rowNum, newStatus }); try { const response = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await response.json(); if (result.status !== 'success') throw new Error(result.message); } catch (error) { alert(`오류: ${error.message}`); checkbox.checked = !checkbox.checked; card.dataset.status = checkbox.checked ? 'Y' : 'N'; } finally { card.style.opacity = '1'; } }
