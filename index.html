@@ -172,27 +172,36 @@ function setupEventListeners() {
 }
 
 function renderTeacherSettings(data) {
+    // 데이터를 '종류'별로 그룹화합니다. 종류가 없으면 '기타'로 분류합니다.
     const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
         const type = item.종류 || '기타';
         if (!acc[type]) acc[type] = [];
         acc[type].push(item);
         return acc;
     }, {});
+
+    // 그룹화된 데이터의 키(탭 이름)를 가져옵니다.
     const tabs = Object.keys(groupedItems);
-    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
-    
-    // ★★★ 수정된 부분: 첫 번째 탭에만 'active' 클래스를 부여하도록 수정 ★★★
+
+    // 탭 버튼 HTML을 생성합니다. 첫 번째 버튼에만 'active' 클래스를 추가합니다.
+    const tabButtonsHtml = tabs.map((tab, i) =>
+        `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`
+    ).join('');
+
+    // 탭 콘텐츠(창) HTML을 생성합니다.
     const tabPanesHtml = tabs.map((tab, i) => {
-        const itemsHtml = groupedItems[tab].map(item => 
-            `<a href="${item.링크 || '#'}" target="_blank" class="card">
+        const itemsHtml = groupedItems[tab].map(item =>
+            `<a href="${item.링크}" target="_blank" class="card">
                 <div class="card-title">${item.업무명}</div>
                 <p class="card-description">${item.상세내용 || ''}</p>
             </a>`
         ).join('');
-        const activeClass = i === 0 ? 'active' : '';
-        return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
+
+        // ★ 수정된 부분: 첫 번째 탭 콘텐츠에만 'active' 클래스를 동적으로 추가합니다.
+        return `<div id="teacher-tab-${i}" class="tab-pane ${i === 0 ? 'active' : ''}">${itemsHtml}</div>`;
     }).join('');
 
+    // 최종적으로 렌더링할 전체 HTML 구조를 반환합니다.
     return `
         <div class="section">
             <h2 class="section-title">⚙️ 설정</h2>
@@ -208,7 +217,6 @@ function renderTeacherSettings(data) {
             <div class="tab-content">${tabPanesHtml}</div>
         </div>`;
 }
-
 // ... 이 아래로 나머지 모든 자바스크립트 함수들이 위치합니다 (생략 없음) ...
 function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
 function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
