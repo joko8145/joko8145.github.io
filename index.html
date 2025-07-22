@@ -138,9 +138,9 @@
     </div>
 
 <script>
-// [전체 수정된 스크립트 코드]
+// [새 UI 적용 최종 스크립트 코드]
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzM94wpaytaS4jWubBlq369ldKE2wTa0FWJIX29y0AXu4rOdFGHUTQ6sZgcuiLIlh60/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
 let currentUser = null;
@@ -181,35 +181,47 @@ window.onload = function() {
 function setupEventListeners() {
     document.body.addEventListener('click', function(e) {
         const target = e.target;
+
+        // ★★★ 새 UI: 탭 전환 기능 ★★★
+        if (target.closest('.tab-button')) {
+            const button = target.closest('.tab-button');
+            const targetPaneId = button.dataset.tab;
+            
+            // 모든 탭 버튼과 탭 콘텐츠에서 'active' 클래스 제거
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+            // 클릭된 탭 버튼과 해당 콘텐츠에 'active' 클래스 추가
+            button.classList.add('active');
+            document.getElementById(targetPaneId).classList.add('active');
+        }
+        
+        // (기존 코드) 교사 대시보드 아코디언 기능
         if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); }
+        
+        // (기존 코드) 새 게시물 모달 기능
         if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
         if (target.classList.contains('modal-close-btn')) {
             document.getElementById('new-post-modal').style.display = 'none';
             document.getElementById('new-post-form').reset();
         }
-        if (target.closest('.tab-button')) {
-            const button = target.closest('.tab-button');
-            const container = button.closest('.content, .tab-content');
-            if (container) {
-                const targetPaneId = button.dataset.tab;
-                container.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                container.querySelectorAll('.tab-pane').forEach(pane => {
-                    pane.classList.toggle('active', pane.id === targetPaneId);
-                });
-            }
-        }
+
+        // (기존 코드) 외출/조퇴 신청 폼 기능
         if (target.classList.contains('leave-type-btn')) {
             document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected'));
             target.classList.add('selected');
             document.getElementById('leave-type-input').value = target.dataset.type;
         }
     });
+
     document.body.addEventListener('submit', function(e) {
         if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); }
         if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); }
     });
 }
+
+
+// --- 아래부터는 기존과 동일한 함수들입니다 ---
 
 function loadCompletedItems() {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -265,199 +277,147 @@ async function loadData() {
         targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
     }
 }
-
+    
 function renderUserInfo(user) {
     const displayEl = document.getElementById('user-display');
     document.getElementById('gsi-container').style.display = 'none';
     displayEl.style.display = 'flex';
-    let userInfoHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `<div class="user-initial">${user.name.charAt(0)}</div>`;
+    let userInfoHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile" style="border-radius: 50%;">` : `<div class="user-initial">${user.name.charAt(0)}</div>`;
     displayEl.innerHTML = `<div class="user-display">${userInfoHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`;
 }
 
-function renderTeacherDashboard(data) {
-    document.getElementById('teacher-dashboard').innerHTML = `
-        <div id="routine-tasks-section" class="section"></div>
-        <div id="class-management-section" class="section"></div>
-        <div id="teacher-personal-tasks-section" class="section"></div>
-        <div id="teacher-settings-section" class="section"></div>`;
-    renderTeacherRoutines(data.routines);
-    renderClassManagementAccordions(data);
-    renderTeacherPersonalTasks(data.teacherPersonalTasks);
-    renderTeacherSettings(data);
-}
 
-function renderTeacherRoutines(routines) {
-    if (!routines || routines.length === 0) return;
-    const routineHtml = routines.map(r => `
-        <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" for="routine-${r.rowNum}">
-            <input type="checkbox" class="routine-checkbox" id="routine-${r.rowNum}" onchange="toggleRoutineComplete('${r.rowNum}', this)" ${completedItems[r.rowNum] ? 'checked' : ''}>
-            <span>${r.업무명}</span>
-        </label>`).join('');
-    document.getElementById('routine-tasks-section').innerHTML = `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
-}
+// --- ★★★ 이 아래의 함수들이 새 UI를 그리는 핵심입니다 ★★★ ---
 
-function renderClassManagementAccordions(data) {
-    const container = document.getElementById('class-management-section');
-    container.innerHTML = `<h2 class="section-title">🏠 학급 관리</h2><div id="leave-accordion"></div><div id="assignment-accordion"></div><div id="notice-status-accordion"></div><div id="schedule-accordion"></div>`;
-    document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
-    document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
-    const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
-    document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content" id="post-status-content">${renderPostStatusCards(allPosts)}</div>`;
-    document.getElementById('schedule-accordion').innerHTML = `<div class="accordion-title"><span>📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</span></div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div>`;
-}
-
-function renderLeaveCards(leaves) {
-    if (!leaves || leaves.length === 0) return '<div class="empty-state">신청 내역이 없습니다.</div>';
-    return leaves.map(req => `<div class="teacher-leave-card">
-        <div class="leave-header"><strong>${req.이름 || '정보없음'}(${req.학번 || '정보없음'})</strong><small>${req.신청종류}(${new Date(req.희망일자).toLocaleDateString()})</small></div>
-        <textarea class="leave-reason-input" id="reason-${req.rowNum}">${(req.사유 || '').replace(/"/g, '"')}</textarea>
-        <div class="leave-actions">
-            <button class="action-btn approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'reason-${req.rowNum}')">승인</button>
-            <button class="action-btn reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'reason-${req.rowNum}')">반려</button>
-        </div>
-    </div>`).join('');
-}
-
-function renderAssignmentCards(assignments) {
-    if (!assignments || assignments.length === 0) return '<div class="empty-state">관리할 과제가 없습니다.</div>';
-    return assignments.map(a => `<div class="card">${a.title}</div>`).join('');
-}
-
-function renderPostStatusCards(posts) {
-    if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
-    const postListHtml = posts.map(item => `
-        <div class="card post-status-card" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}">
-            <span>${item.제목}</span>
-            <label class="toggle-switch">
-                <input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}>
-                <span class="slider"></span>
-            </label>
-        </div>`).join('');
-    
-    return `
-        <div class="post-filter-controls">
-            <input type="search" id="post-search-input" class="post-search-input" placeholder="제목으로 검색..." oninput="filterPosts()">
-            <div class="post-filter-tabs">
-                <button class="post-filter-btn active" data-filter="all" onclick="filterPosts(this)">전체</button>
-                <button class="post-filter-btn" data-filter="Y" onclick="filterPosts(this)">게시중</button>
-                <button class="post-filter-btn" data-filter="N" onclick="filterPosts(this)">숨김</button>
-            </div>
-        </div>
-        <div id="post-list-container">${postListHtml}</div>
-        <div class="empty-state" id="post-filter-empty" style="display:none;">검색 결과가 없습니다.</div>
-    `;
-}
-
-function renderScheduleCards(schedules) {
-    if (!schedules || schedules.length === 0) return '<div class="empty-state">등록된 학급 일정이 없습니다.</div>';
-    return schedules.map(s => `<div class="card">${s.제목}</div>`).join('');
-}
-
-function renderTeacherPersonalTasks(tasks) {
-    const container = document.getElementById('teacher-personal-tasks-section');
-    if (!tasks || tasks.length === 0) { container.style.display = 'none'; return; }
-    let tasksHtml = tasks.map(task => `<div class="personal-task-card card">
-        <div class="card-title">${task.내용}</div>
-        ${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color:#007bff; margin-top:10px; display:inline-block;">바로가기</a>` : ''}
-    </div>`).join('');
-    container.innerHTML = `<h2 class="section-title">📋 업무 일지</h2><div class="personal-task-list">${tasksHtml}</div>`;
-}
-
-function renderTeacherSettings(data) {
-    const container = document.getElementById('teacher-settings-section');
-    const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
-        const type = item.종류 || '자료실';
-        if (!acc[type]) acc[type] = [];
-        acc[type].push(item);
-        return acc;
-    }, {});
-    const tabs = Object.keys(groupedItems);
-    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
-    const tabPanesHtml = tabs.map((tab, i) => {
-        const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join('');
-        return `<div id="teacher-tab-${i}" class="tab-pane ${i===0 ? 'active' : ''}"><div class="teacher-dashboard-grid">${itemsHtml}</div></div>`;
-    }).join('');
-    container.innerHTML = `
-        <h2 class="section-title">⚙️ 설정</h2>
-        <div class="teacher-dashboard-grid">
-            <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center;"><div class="card-title">✨ 새 게시물/업무 등록</div></div>
-            <a href="${data.sheetUrl}" target="_blank" class="card"><div class="card-title">📊 데이터 시트 수정</div></a>
-        </div>
-        <div class="tabs">${tabButtonsHtml}</div>
-        <div class="tab-content">${tabPanesHtml}</div>`;
-}
-
+// ★★★ 1. 학생 포털 전체 구조를 그리는 메인 함수 ★★★
 function renderStudentPortal(data) {
     const portal = document.getElementById('student-portal');
-    const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
-    const todayNotices = (data.notices || []).filter(item => {
-        const conditions = (item.표시조건 || '').split(',').map(s => s.trim()).filter(c => c);
-        if (conditions.length === 0) return true;
-        return conditions.includes('매일') || conditions.includes(dayOfWeek);
-    });
-    const mainPaneHTML = `${renderItems('notices-section', todayNotices.filter(item => !completedItems[item.id]), '📢 중요 공지')}${renderItems('tasks-section', (data.tasks || []).filter(item => !completedItems[item.id]), '✅ 오늘의 할 일')}`;
+    
+    // 탭과 탭 콘텐츠를 포함한 전체 HTML 구조
     portal.innerHTML = `
         ${renderWidgets(data.widgets)}
         ${renderUnsubmitted(data.unsubmitted)}
         ${renderStudentClassSchedules(data.classSchedules)}
+
         <div class="tabs" id="student-tabs">
             <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
             <button class="tab-button" data-tab="leave-pane" style="display:none;">외출/조퇴</button>
             <button class="tab-button" data-tab="resource-pane" style="display:none;">자료실</button>
         </div>
-        <div id="main-pane" class="tab-pane active">${mainPaneHTML}</div>
-        <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div>
-        <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div>`;
-    if (data.user?.studentId) portal.querySelector('[data-tab="leave-pane"]').style.display = 'inline-block';
-    if (data.resources && data.resources.length > 0) portal.querySelector('[data-tab="resource-pane"]').style.display = 'inline-block';
+
+        <div class="tab-content">
+            <div id="main-pane" class="tab-pane active">
+                ${renderItemsSection('notices', data.notices, '📌 중요 공지')}
+                ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}
+            </div>
+            <div id="leave-pane" class="tab-pane">
+                ${renderLeaveSection(data.leaveRequests)}
+            </div>
+            <div id="resource-pane" class="tab-pane">
+                ${renderResources(data.resources)}
+            </div>
+        </div>
+    `;
+
+    // 학생 정보가 있을 때만 외출/조퇴 탭 보이기
+    if (data.user?.studentId) {
+        portal.querySelector('[data-tab="leave-pane"]').style.display = 'inline-block';
+    }
+    // 자료실 데이터가 있을 때만 자료실 탭 보이기
+    if (data.resources && data.resources.length > 0) {
+        portal.querySelector('[data-tab="resource-pane"]').style.display = 'inline-block';
+    }
 }
 
-// ★★★ 수정된 함수: renderWidgets ★★★
+// ★★★ 2. D-Day 위젯을 그리는 함수 ★★★
 function renderWidgets(widgets) {
     if (!widgets || widgets.length === 0) return '';
     const widgetHtml = widgets.map(widget => {
-        const title = widget.제목 || '';
         let contentHtml = widget.내용 || '';
         if (widget.위젯종류 === '디데이') {
-            const diff = Math.ceil((new Date(widget.내용) - new Date()) / (1000 * 60 * 60 * 24));
+            const targetDate = new Date(contentHtml);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
             contentHtml = diff === 0 ? 'D-Day' : diff > 0 ? `D-${diff}` : `D+${-diff}`;
         }
-        return `<div class="widget"><div class="widget-title">${title}</div><div class="widget-content">${contentHtml}</div></div>`;
+        return `<div class="widget">
+                    <div class="widget-title">${widget.제목 || ''}</div>
+                    <div class="widget-content">${contentHtml}</div>
+                </div>`;
     }).join('');
     return `<div id="widgets-container">${widgetHtml}</div>`;
 }
-
-// ★★★ 수정된 함수: renderUnsubmitted ★★★
+    
+// ★★★ 3. 미제출 과제 배너를 그리는 함수 ★★★
 function renderUnsubmitted(tasks) {
     if (!tasks || tasks.length === 0) return '';
-    const listHtml = tasks.map(t => `<li>${t.제목 || t.내용 || ''}</li>`).join('');
-    return `<div id="unsubmitted-container" class="unsubmitted-section"><div style="font-weight: bold; color: #856404; margin-bottom: 10px;">🔔 아직 완료하지 않은 할 일이 있어요!</div><ul style="list-style: none; padding-left: 10px;">${listHtml}</ul></div>`;
+    const listHtml = tasks.map(t => `<li>👌 ${t.제목 || t.내용 || '알 수 없는 과제'}</li>`).join('');
+    return `<div class="unsubmitted-section">
+                <p>🔔 아직 완료하지 않은 할 일이 있어요!</p>
+                <ul style="list-style: none; padding-left: 0; margin-top: 5px;">${listHtml}</ul>
+            </div>`;
 }
 
-// ★★★ 수정된 함수: renderItems ★★★
-function renderItems(containerId, items, sectionTitle) {
-    if (!items || items.length === 0) return '';
-    let itemsHtml = items.map(item => {
-        const isCompleted = !!completedItems[item.id];
-        const linkButton = (item.링크 || '') ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color); margin-top: 10px; display: inline-block;">${item.버튼이름 || '바로가기'}</a>` : '';
-        return `<div class="notice-item" id="${item.id}">
-            <button class="complete-btn ${isCompleted ? 'completed' : ''}" onclick="completeItem('${item.id}')">${isCompleted ? '읽음' : '확인'}</button>
-            <div class="card-title">${item.아이콘 || ''} ${item.제목 || ''}</div>
-            <div class="card-description">${(item.내용 || '').replace(/\n/g, '<br>')}</div>
-            ${linkButton}
-        </div>`;
-    }).join('');
-    return `<div id="${containerId}" class="section"><h2 class="section-title">${sectionTitle}</h2>${itemsHtml}</div>`;
-}
-
-// ★★★ 추가된 함수: renderStudentClassSchedules ★★★
+// ★★★ 4. 학급 일정을 그리는 함수 ★★★
 function renderStudentClassSchedules(schedules) {
     if (!schedules || schedules.length === 0) return '';
-    const schedulesHtml = schedules.map(s => `<div class="card"><div class="card-title">${s.제목 || ''}</div><p class="card-description">${s.내용 || ''}</p></div>`).join('');
-    return `<div id="student-schedules-section" class="section"><h2 class="section-title">📅 학급 일정</h2>${schedulesHtml}</div>`;
+    const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join('');
+    return `<div class="section">
+                <h2 class="section-title">🗓️ 학급 일정</h2>
+                ${schedulesHtml}
+            </div>`;
 }
 
-// ★★★ 추가된 함수: renderLeaveSection ★★★
+// ★★★ 5. 공지/할 일 섹션 전체를 그리는 함수 ★★★
+function renderItemsSection(type, items, sectionTitle) {
+    if (!items || items.length === 0) {
+        return `<div class="section"><h2 class="section-title">${sectionTitle}</h2><div class="empty-state">내용이 없습니다.</div></div>`;
+    }
+    
+    // 읽지 않은 항목만 필터링
+    const unreadItems = items.filter(item => !completedItems[item.id]);
+
+    if (unreadItems.length === 0) {
+        return `<div class="section"><h2 class="section-title">${sectionTitle}</h2><div class="empty-state">모두 확인했습니다! 👍</div></div>`;
+    }
+
+    const itemsHtml = unreadItems.map(item => {
+        const actionButton = type === 'tasks'
+            ? `<a href="${item.링크 || '#'}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">기록하기</a>`
+            : (item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : '');
+
+        return `
+            <div class="notice-item" id="${item.id}">
+                <div>
+                    <div class="card-title">${item.아이콘 || ''} ${item.제목 || ''}</div>
+                    <p class="card-description">${item.내용 || ''}</p>
+                    ${actionButton}
+                </div>
+                <button class="complete-btn" onclick="completeItem('${item.id}')">확인</button>
+            </div>`;
+    }).join('');
+
+    return `<div class="section">
+                <h2 class="section-title">${sectionTitle}</h2>
+                ${itemsHtml}
+            </div>`;
+}
+
+function completeItem(itemId) {
+    completedItems[itemId] = true;
+    saveCompletedItems();
+    const itemElement = document.getElementById(itemId);
+    if (itemElement) {
+        itemElement.style.transition = 'opacity 0.3s, transform 0.3s';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateY(-10px)';
+        setTimeout(() => { itemElement.style.display = 'none'; }, 300);
+    }
+}
+
+// --- 나머지 함수들은 기존과 동일합니다 (외출/조퇴, 자료실, 교사 대시보드 등) ---
+
 function renderLeaveSection(requests) {
     const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
         const statusMap = { '신청': '#ffc107', '승인': '#28a745', '반려': '#dc3545' };
@@ -466,26 +426,24 @@ function renderLeaveSection(requests) {
         return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><span>${req.신청종류 || ''} (${requestDate ? requestDate.toLocaleDateString() : '날짜오류'})</span><div style="display:flex; align-items:center; gap:10px;"><span style="background:${statusMap[req.상태] || '#6c757d'}; color:white; padding: 2px 8px; border-radius:10px; font-size:0.8em;">${req.상태 || ''}</span>${certButton}</div></div><p style="margin-top:10px;">사유: ${req.사유 || ''}</p></div>`;
     }).join('');
     
-    return `
-        <form id="leave-request-form" class="leave-request-form">
-            <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
-            <div class="form-group">
-                <label>신청 종류</label>
-                <div style="display:flex; gap:10px;">
-                     <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
-                     <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
+    return `<form id="leave-request-form" class="leave-request-form">
+                <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0;">외출/조퇴 신청하기</h3>
+                <div class="form-group">
+                    <label>신청 종류</label>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="action-btn leave-type-btn" data-type="외출">외출</button>
+                        <button type="button" class="action-btn leave-type-btn" data-type="조퇴">조퇴</button>
+                    </div>
+                    <input type="hidden" name="type" id="leave-type-input" required>
                 </div>
-                <input type="hidden" name="type" id="leave-type-input" required>
-            </div>
-            <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div>
-            <div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div>
-            <div class="form-actions"><button type="submit" class="action-btn" style="background:var(--primary-color);">신청 제출</button></div>
-        </form>
-        <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0; margin-top:30px;">나의 신청 내역</h3>
-        ${historyHtml}`;
+                <div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div>
+                <div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div>
+                <div class="form-actions"><button type="submit" class="action-btn" style="background:var(--primary-color);">신청 제출</button></div>
+            </form>
+            <h3 class="section-title" style="font-size:1.2em; border:none; padding-bottom:0; margin-top:30px;">나의 신청 내역</h3>
+            ${historyHtml}`;
 }
 
-// ★★★ 수정된 함수: renderResources ★★★
 function renderResources(resources) {
     if (!resources || resources.length === 0) return '<div class="empty-state" style="grid-column: 1 / -1;">등록된 자료가 없습니다.</div>';
     const resourcesHtml = resources.map(res => `<a href="${res.링크 || '#'}" target="_blank" class="card"><div class="card-title">${res.자료명 || ''}</div><p class="card-description">${res.설명 || ''}</p></a>`).join('');
@@ -526,18 +484,6 @@ function toggleRoutineComplete(itemId, checkbox) {
     if (checkbox.checked) { completedItems[itemId] = true; label.classList.add('completed'); } 
     else { delete completedItems[itemId]; label.classList.remove('completed'); }
     saveCompletedItems();
-}
-
-function completeItem(itemId) {
-    completedItems[itemId] = true;
-    saveCompletedItems();
-    const itemElement = document.getElementById(itemId);
-    if (itemElement) {
-        itemElement.style.transition = 'opacity 0.5s, transform 0.5s';
-        itemElement.style.opacity = '0';
-        itemElement.style.transform = 'scale(0.95)';
-        setTimeout(() => { itemElement.style.display = 'none'; }, 500);
-    }
 }
 
 async function updatePostStatus(checkbox, rowNum) {
@@ -617,6 +563,119 @@ function filterPosts(button = null) {
     if(emptyState) {
         emptyState.style.display = (visibleCount === 0 && allPosts.length > 0) ? 'block' : 'none';
     }
+}
+
+
+// --- 아래는 교사 대시보드 관련 함수들로, 수정하지 않았습니다 ---
+
+function renderTeacherDashboard(data) {
+    document.getElementById('teacher-dashboard').innerHTML = `
+        <div id="routine-tasks-section" class="section"></div>
+        <div id="class-management-section" class="section"></div>
+        <div id="teacher-personal-tasks-section" class="section"></div>
+        <div id="teacher-settings-section" class="section"></div>`;
+    renderTeacherRoutines(data.routines);
+    renderClassManagementAccordions(data);
+    renderTeacherPersonalTasks(data.teacherPersonalTasks);
+    renderTeacherSettings(data);
+}
+
+function renderTeacherRoutines(routines) {
+    if (!routines || routines.length === 0) return;
+    const routineHtml = routines.map(r => `
+        <label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" for="routine-${r.rowNum}">
+            <input type="checkbox" class="routine-checkbox" id="routine-${r.rowNum}" onchange="toggleRoutineComplete('${r.rowNum}', this)" ${completedItems[r.rowNum] ? 'checked' : ''}>
+            <span>${r.업무명}</span>
+        </label>`).join('');
+    document.getElementById('routine-tasks-section').innerHTML = `<h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div>`;
+}
+
+function renderClassManagementAccordions(data) {
+    const container = document.getElementById('class-management-section');
+    container.innerHTML = `<h2 class="section-title">🏠 학급 관리</h2><div id="leave-accordion"></div><div id="assignment-accordion"></div><div id="notice-status-accordion"></div><div id="schedule-accordion"></div>`;
+    document.getElementById('leave-accordion').innerHTML = `<div class="accordion-title"><span>⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</span></div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div>`;
+    document.getElementById('assignment-accordion').innerHTML = `<div class="accordion-title"><span>📝 과제별 제출 현황 (${(data.assignments || []).length}건)</span></div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div>`;
+    const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])];
+    document.getElementById('notice-status-accordion').innerHTML = `<div class="accordion-title"><span>📢 알림 포털 게시 현황 (${allPosts.length}건)</span></div><div class="accordion-content" id="post-status-content">${renderPostStatusCards(allPosts)}</div>`;
+    document.getElementById('schedule-accordion').innerHTML = `<div class="accordion-title"><span>📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</span></div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div>`;
+}
+    
+function renderLeaveCards(leaves) {
+    if (!leaves || leaves.length === 0) return '<div class="empty-state">신청 내역이 없습니다.</div>';
+    return leaves.map(req => `<div class="teacher-leave-card">
+        <div class="leave-header"><strong>${req.이름 || '정보없음'}(${req.학번 || '정보없음'})</strong><small>${req.신청종류}(${new Date(req.희망일자).toLocaleDateString()})</small></div>
+        <textarea class="leave-reason-input" id="reason-${req.rowNum}">${(req.사유 || '').replace(/"/g, '"')}</textarea>
+        <div class="leave-actions">
+            <button class="action-btn approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', 'reason-${req.rowNum}')">승인</button>
+            <button class="action-btn reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', 'reason-${req.rowNum}')">반려</button>
+        </div>
+    </div>`).join('');
+}
+
+function renderAssignmentCards(assignments) {
+    if (!assignments || assignments.length === 0) return '<div class="empty-state">관리할 과제가 없습니다.</div>';
+    return assignments.map(a => `<div class="card">${a.title}</div>`).join('');
+}
+
+function renderPostStatusCards(posts) {
+    if (!posts || posts.length === 0) return '<div class="empty-state">게시된 알림/할 일이 없습니다.</div>';
+    const postListHtml = posts.map(item => `
+        <div class="card post-status-card" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}">
+            <span>${item.제목}</span>
+            <label class="toggle-switch">
+                <input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}>
+                <span class="slider"></span>
+            </label>
+        </div>`).join('');
+    
+    return `<div class="post-filter-controls">
+                <input type="search" id="post-search-input" class="post-search-input" placeholder="제목으로 검색..." oninput="filterPosts()">
+                <div class="post-filter-tabs">
+                    <button class="post-filter-btn active" data-filter="all" onclick="filterPosts(this)">전체</button>
+                    <button class="post-filter-btn" data-filter="Y" onclick="filterPosts(this)">게시중</button>
+                    <button class="post-filter-btn" data-filter="N" onclick="filterPosts(this)">숨김</button>
+                </div>
+            </div>
+            <div id="post-list-container">${postListHtml}</div>
+            <div class="empty-state" id="post-filter-empty" style="display:none;">검색 결과가 없습니다.</div>`;
+}
+
+function renderScheduleCards(schedules) {
+    if (!schedules || schedules.length === 0) return '<div class="empty-state">등록된 학급 일정이 없습니다.</div>';
+    return schedules.map(s => `<div class="card">${s.제목}</div>`).join('');
+}
+
+function renderTeacherPersonalTasks(tasks) {
+    const container = document.getElementById('teacher-personal-tasks-section');
+    if (!tasks || tasks.length === 0) { container.style.display = 'none'; return; }
+    let tasksHtml = tasks.map(task => `<div class="personal-task-card card">
+        <div class="card-title">${task.내용}</div>
+        ${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color:#007bff; margin-top:10px; display:inline-block;">바로가기</a>` : ''}
+    </div>`).join('');
+    container.innerHTML = `<h2 class="section-title">📋 업무 일지</h2><div class="personal-task-list">${tasksHtml}</div>`;
+}
+
+function renderTeacherSettings(data) {
+    const container = document.getElementById('teacher-settings-section');
+    const groupedItems = (data.dashboardItems || []).reduce((acc, item) => {
+        const type = item.종류 || '자료실';
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(item);
+        return acc;
+    }, {});
+    const tabs = Object.keys(groupedItems);
+    const tabButtonsHtml = tabs.map((tab, i) => `<button class="tab-button ${i===0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`).join('');
+    const tabPanesHtml = tabs.map((tab, i) => {
+        const itemsHtml = groupedItems[tab].map(item => `<a href="${item.링크}" target="_blank" class="card"><div class="card-title">${item.업무명}</div><p class="card-description">${item.상세내용 || ''}</p></a>`).join('');
+        return `<div id="teacher-tab-${i}" class="tab-pane ${i===0 ? 'active' : ''}"><div class="teacher-dashboard-grid">${itemsHtml}</div></div>`;
+    }).join('');
+    container.innerHTML = `<h2 class="section-title">⚙️ 설정</h2>
+        <div class="teacher-dashboard-grid">
+            <div id="new-post-btn" class="card" style="cursor:pointer; text-align:center;"><div class="card-title">✨ 새 게시물/업무 등록</div></div>
+            <a href="${data.sheetUrl}" target="_blank" class="card"><div class="card-title">📊 데이터 시트 수정</div></a>
+        </div>
+        <div class="tabs">${tabButtonsHtml}</div>
+        <div class="tab-content">${tabPanesHtml}</div>`;
 }
 </script>
 </body>
