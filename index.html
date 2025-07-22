@@ -344,7 +344,14 @@ function renderUnsubmitted(tasks) {
 function renderStudentClassSchedules(schedules) {
     if (!schedules || schedules.length === 0) return '';
     const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join('');
-    return `<div class="section"><h2 class="section-title">🗓️ 학급 일정</h2>${schedulesHtml}</div>`;
+// 수정 후 코드
+function renderStudentClassSchedules(schedules) {
+    if (!schedules || schedules.length === 0) return '';
+    const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join('');
+    return `<div class="section">
+                <h2 class="section-title">🗓️ 학급 일정</h2>
+                <div class="grid-container">${schedulesHtml}</div>
+            </div>`;
 }
 
 function renderItemsSection(type, items, sectionTitle) {
@@ -432,7 +439,11 @@ function renderLeaveSection(requests) {
 function renderResources(resources) {
     if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>';
     const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join('');
-    return `<div class="section">${resourcesHtml}</div>`;
+// 수정 후 코드
+function renderResources(resources) {
+    if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>';
+    const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join('');
+    return `<div class="section grid-container">${resourcesHtml}</div>`;
 }
 
 async function submitLeaveRequest(form) {
