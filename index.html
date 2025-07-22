@@ -119,6 +119,29 @@
     color: var(--text-light);
     margin-bottom: 8px;
 }
+    /* 이 CSS 코드를 <style> 태그 안쪽에 추가하세요. */
+
+.unsubmitted-header {
+    font-weight: 600; /* 제목 텍스트를 약간 굵게 */
+    margin-bottom: 12px; /* 제목과 목록 사이의 간격 */
+}
+
+.unsubmitted-list {
+    list-style: none; /* 목록 앞의 기본 점(•) 제거 */
+    padding-left: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 각 할 일 항목 사이의 간격 */
+}
+
+.unsubmitted-list-item {
+    background-color: rgba(255, 255, 255, 0.5); /* 반투명한 흰색 배경 */
+    padding: 8px 12px;
+    border-radius: 8px; /* 모서리를 둥글게 */
+    font-size: 0.95em;
+    color: #7d5a00; /* 텍스트 색상을 약간 진하게 조정 */
+}
 </style>
 </head>
 <body>
@@ -263,8 +286,28 @@ function renderUserInfo(user) { const displayEl = document.getElementById('user-
 function renderStudentPortal(data) { return ` <div class="student-header"><div id="user-display"></div></div> <div class="header"> <h1>📢 오늘의 알림</h1> <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div> </div> <div class="content"> ${renderWidgets(data.widgets)} ${renderUnsubmitted(data.unsubmitted)} ${renderStudentClassSchedules(data.classSchedules)} <div class="tabs"> <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button> <button class="tab-button" data-tab="leave-pane" style="${data.user?.studentId ? '' : 'display:none;'}">외출/조퇴</button> <button class="tab-button" data-tab="resource-pane" style="${(data.resources || []).length > 0 ? '' : 'display:none;'}">자료실</button> </div> <div class="tab-content"> <div id="main-pane" class="tab-pane active">${renderItemsSection('notices', data.notices, '📌 중요 공지')} ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}</div> <div id="leave-pane" class="tab-pane">${renderLeaveSection(data.leaveRequests)}</div> <div id="resource-pane" class="tab-pane">${renderResources(data.resources)}</div> </div> </div> `; }
 function renderTeacherDashboard(data) { return ` <div class="teacher-header"><div id="user-display"></div></div> <div class="header"> <h1>💼 업무 대시보드</h1> <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div> </div> <div class="content"> ${renderTeacherRoutines(data.routines)} ${renderClassManagement(data)} ${renderTeacherPersonalTasks(data.teacherPersonalTasks)} ${renderTeacherSettings(data)} </div> `; }
 function renderWidgets(widgets) { if (!widgets || widgets.length === 0) return ''; const widgetHtml = widgets.map(widget => { let contentHtml = widget.내용 || ''; if (widget.위젯종류 === '디데이') { const targetDate = new Date(contentHtml); const today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)); contentHtml = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${-diff}`; } return `<div class="widget"><div class="widget-title">${widget.제목 || ''}</div><div class="widget-content">${contentHtml}</div></div>`; }).join(''); return `<div id="widgets-container">${widgetHtml}</div>`;}
-function renderUnsubmitted(tasks) { if (!tasks || tasks.length === 0) return ''; const listHtml = tasks.map(t => `<li>👌 ${t.제목 || t.내용 || ''}</li>`).join(''); return `<div class="unsubmitted-section"><p>🔔 아직 완료하지 않은 할 일이 있어요!</p><ul style="list-style: none; padding-left: 0; margin-top: 5px;">${listHtml}</ul></div>`;}
-function renderStudentClassSchedules(schedules) {
+// 이 코드로 기존 renderUnsubmitted 함수 전체를 교체하세요.
+function renderUnsubmitted(tasks) {
+    if (!tasks || tasks.length === 0) return '';
+
+    // ★★★ 수정된 부분 ★★★
+    // 각 할 일 항목을 <li> 태그로 만들고, 고유의 아이콘을 사용하도록 개선합니다.
+    const listHtml = tasks.map(task => 
+        `<li class="unsubmitted-list-item">${task.아이콘 || '👉'} ${task.제목 || task.내용}</li>`
+    ).join('');
+
+    // 제목과 목록에 각각 클래스를 부여하여 CSS로 디자인을 제어하기 쉽게 만듭니다.
+    return `
+        <div class="unsubmitted-section">
+            <p class="unsubmitted-header">🔔 아직 완료하지 않은 할 일이 있어요!</p>
+            <ul class="unsubmitted-list">${listHtml}</ul>
+        </div>
+    `;
+}
+    
+    
+    
+    function renderStudentClassSchedules(schedules) {
     // 일정이 없으면 아무것도 표시하지 않습니다.
     if (!schedules || schedules.length === 0) return '';
 
