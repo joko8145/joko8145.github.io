@@ -140,7 +140,7 @@
     </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDwHlr42EaMdC3r4XWTe3L1I8PZnoRi5jvdPC7SMBbfKDkbX_RQgSRRPsR9LLv36wr/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlM_uuJgNqbB3dU7n2x6L5pzmKXWTAmE7lcYcks8V9QB5ld56q43G1GEc0geo1yRBA/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
 let currentUser = null;
@@ -305,19 +305,15 @@ function renderStudentClassSchedules(schedules) {
     
     
     
+// 이 코드로 기존 renderItemsSection 함수 전체를 교체하세요.
 function renderItemsSection(type, items, sectionTitle) {
-    // ★ 수정: 정렬 로직 추가
+    // 정렬 로직 (기존 코드 유지)
     (items || []).sort((a, b) => {
-        // '정렬순서' 값이 있는지 확인하고, 없으면 무한대(Infinity)로 처리하여 맨 뒤로 보냅니다.
         const orderA = a.정렬순서 !== undefined && a.정렬순서 !== '' ? parseInt(a.정렬순서) : Infinity;
         const orderB = b.정렬순서 !== undefined && b.정렬순서 !== '' ? parseInt(b.정렬순서) : Infinity;
-
-        // '정렬순서'가 다르면 그에 따라 정렬합니다.
         if (orderA !== orderB) {
             return orderA - orderB;
         }
-
-        // '정렬순서'가 같거나 둘 다 없는 경우, 최신 항목(id가 더 큰 것)이 위로 오도록 2차 정렬합니다.
         return (b.id || '').localeCompare(a.id || '');
     });
     
@@ -328,9 +324,26 @@ function renderItemsSection(type, items, sectionTitle) {
     }
 
     const itemsHtml = unreadItems.map(item => {
-        const isTask = type === 'tasks';
-        const actionButton = isTask ? `<a href="${item.링크 || '#'}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">기록하기</a>` : (item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : '');
-        return `<div class="notice-item card" id="${item.id}"><div style="flex-grow: 1;"><div class="card-title">${item.아이콘 || ''} ${item.제목 || ''}</div><p class="card-description">${item.내용 || ''}</p>${actionButton}</div><button class="complete-btn" onclick="completeItem('${item.id}')">확인</button></div>`;
+        // ★★★ 수정된 부분 ★★★
+        // '기록여부'가 'Y'인지에 따라 isTask 변수를 설정합니다.
+        const isTask = item.기록여부 === 'Y'; 
+        
+        const actionButton = isTask 
+            ? `<a href="${item.링크 || '#'}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">기록하기</a>` 
+            : (item.링크 ? `<a href="${item.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : '');
+        
+        // '확인' 버튼 클릭 시 completeItem 함수에 isTask 값을 함께 넘겨줍니다.
+        const completeButton = `<button class="complete-btn" onclick="completeItem('${item.id}', ${isTask})">확인</button>`;
+
+        return `
+            <div class="notice-item card" id="${item.id}">
+                <div style="flex-grow: 1;">
+                    <div class="card-title">${item.아이콘 || ''} ${item.제목 || ''}</div>
+                    <p class="card-description">${item.내용 || ''}</p>
+                    ${actionButton}
+                </div>
+                ${completeButton}
+            </div>`;
     }).join('');
 
     return `<div class="section"><h2 class="section-title">${sectionTitle}</h2>${itemsHtml}</div>`;
@@ -339,8 +352,46 @@ function renderItemsSection(type, items, sectionTitle) {
     
     
     
-    function completeItem(itemId) { completedItems[itemId] = true; saveCompletedItems(); const itemElement = document.getElementById(itemId); if (itemElement) { itemElement.style.transition = 'opacity 0.3s, transform 0.3s'; itemElement.style.opacity = '0'; itemElement.style.transform = 'translateY(-10px)'; setTimeout(() => { itemElement.remove(); }, 300); } }
-function renderLeaveSection(requests) {
+// 이 코드로 기존 completeItem 함수 전체를 교체하세요.
+async function completeItem(itemId, isTask = false) {
+    const itemElement = document.getElementById(itemId);
+
+    // 학생 화면에서 즉시 숨김 처리 (사용자 경험 향상)
+    if (itemElement) {
+        itemElement.style.transition = 'opacity 0.3s, transform 0.3s';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateY(-10px)';
+        setTimeout(() => { itemElement.remove(); }, 300);
+    }
+    
+    // 로컬 저장소에도 확인 기록을 저장합니다.
+    completedItems[itemId] = true; 
+    saveCompletedItems();
+
+    // ★★★ 추가된 부분 ★★★
+    // isTask가 true일 경우 ('기록하기'가 가능한 과제일 경우) 서버로 제출 기록을 전송합니다.
+    if (isTask && currentUser && currentUser.studentId) {
+        try {
+            const params = new URLSearchParams({
+                action: 'recordSubmission', // 새로운 액션 이름
+                studentId: currentUser.studentId,
+                name: currentUser.name,
+                taskId: itemId
+            });
+            // 백그라운드에서 조용히 전송합니다. (성공 여부를 학생에게 알리지 않음)
+            await fetch(`${SCRIPT_URL}?${params.toString()}`);
+        } catch (error) {
+            console.error('제출 기록 전송 실패:', error);
+            // 필요하다면 나중에 재전송하는 로직을 추가할 수 있습니다.
+        }
+    }
+}
+    
+    
+    
+    
+    
+    function renderLeaveSection(requests) {
     // ★ 수정된 부분: UTC 기준이 아닌, 사용자의 현지 시간을 기준으로 오늘 날짜(YYYY-MM-DD)를 생성합니다.
     const today = new Date();
     const year = today.getFullYear();
