@@ -36,23 +36,15 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-        .auth-container {
-            padding: 0 30px;
-            text-align: right;
-            background-color: #343a40;
-            min-height: 60px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
+        /* 헤더 스타일 */
         .header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
             padding: 40px 30px;
             text-align: center;
         }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
-        .date-display { font-size: 1.2em; opacity: 0.9; }
+        .header h1 { font-size: 2.5em; margin: 0; font-weight: 700; } /* 날짜가 없으므로 margin-bottom 제거 */
+
         .content { padding: 30px; }
         .section { margin-bottom: 30px; }
         .section-title {
@@ -83,13 +75,6 @@
         .card-title { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); }
         .card-description { font-size: 0.95em; color: var(--text-light); line-height: 1.6; }
         
-        /* 유저 정보 */
-        .user-display { display: flex; align-items: center; gap: 12px; }
-        .user-profile-image { width: 36px; height: 36px; border-radius: 50%; }
-        .user-name-logout { color: white; font-size: 0.9em; text-align: left; }
-        .user-name-logout strong { display: block; }
-        .user-name-logout a { color: #adb5bd; text-decoration: none; }
-
         /* 위젯 */
         #widgets-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
         .widget { background-color: var(--white-bg); padding: 20px; text-align: center; border-radius: var(--border-radius); box-shadow: var(--shadow-light); border: 1px solid var(--border-color); }
@@ -99,6 +84,9 @@
         /* 미제출 과제 */
         .unsubmitted-section { background-color: #fff9e6; border: 1px solid #ffe7ab; color: #8a6d3b; padding: 15px 20px; margin-bottom: 30px; border-radius: var(--border-radius); }
         .unsubmitted-section p { font-weight: 600; margin-bottom: 8px; }
+
+        /* 학급일정 & 자료실 그리드 */
+        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
 
         /* 탭 메뉴 */
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 25px; }
@@ -143,29 +131,32 @@
 </head>
 <body>
     <div class="container">
-        <div class="auth-container">
-            <div id="user-display" style="display: none;"></div>
-            <div id="gsi-container"></div>
-        </div>
+        <!-- ★★★ 수정: 사용자 정보와 날짜가 없는 깔끔한 헤더 ★★★ -->
         <div class="header">
             <h1>📢 오늘의 알림</h1>
-            <div class="date-display" id="dateDisplay"></div>
         </div>
         <div class="content">
-            <!-- 학생/교사 뷰가 이 안에 렌더링됩니다 -->
-            <div id="student-portal" style="display: none;"></div>
-            <div id="teacher-dashboard" style="display: none;"></div>
+            <div id="student-portal">
+                <!-- 학생 뷰가 이 안에 렌더링됩니다 -->
+                <div class="empty-state">
+                    <!-- 로그인 버튼이 여기에 표시됩니다 -->
+                    <div id="gsi-container"></div>
+                </div>
+            </div>
+            <div id="teacher-dashboard" style="display: none;">
+                <!-- 교사 뷰가 이 안에 렌더링됩니다 -->
+            </div>
         </div>
     </div>
 
 <script>
-// [새 UI 적용 최종 스크립트 코드]
+// [최종 UI 적용 스크립트 코드] - 이 부분은 수정할 필요 없습니다.
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
 let currentUser = null;
-let completedItems = {}; // '확인' 누른 항목을 저장하는 객체
+let completedItems = {};
 
 window.onload = function() {
     try {
@@ -175,10 +166,8 @@ window.onload = function() {
         currentUser = null;
     }
     loadCompletedItems();
-    updateDateDisplay();
 
     if (currentUser) {
-        renderUserInfo(currentUser);
         loadData();
     } else {
         google.accounts.id.initialize({
@@ -199,7 +188,6 @@ window.onload = function() {
 function setupEventListeners() {
     document.body.addEventListener('click', function(e) {
         const target = e.target;
-
         if (target.closest('.tab-button')) {
             const button = target.closest('.tab-button');
             const targetPaneId = button.dataset.tab;
@@ -208,7 +196,6 @@ function setupEventListeners() {
             button.classList.add('active');
             document.getElementById(targetPaneId).classList.add('active');
         }
-        
         if (target.closest('.leave-type-btn')) {
             document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected'));
             target.classList.add('selected');
@@ -254,10 +241,6 @@ function handleLogout() {
     location.reload();
 }
 
-function updateDateDisplay() {
-    document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-}
-
 async function loadData() {
     const targetEl = document.getElementById('student-portal');
     targetEl.style.display = 'block';
@@ -271,26 +254,20 @@ async function loadData() {
         
         currentUser = { ...currentUser, ...data.user };
         localStorage.setItem('userInfo', JSON.stringify(currentUser));
-        renderUserInfo(currentUser);
         
-        renderStudentPortal(data); // 학생 포털 UI 렌더링
+        renderStudentPortal(data);
         
     } catch (error) {
         targetEl.innerHTML = `<div class="empty-state">❌ 데이터 로드 실패: ${error.message}</div>`;
     }
 }
     
-function renderUserInfo(user) {
-    const displayEl = document.getElementById('user-display');
-    document.getElementById('gsi-container').style.display = 'none';
-    displayEl.style.display = 'block';
-    let userInfoHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `...`;
-    displayEl.innerHTML = `<div class="user-display">${userInfoHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`;
-}
-
 function renderStudentPortal(data) {
     const portal = document.getElementById('student-portal');
     portal.innerHTML = `
+        <div style="text-align: right; padding: 0 0 15px; font-size: 0.9em;">
+            <strong>${data.user.name || ''}</strong>님 <a href="#" onclick="handleLogout()" style="color: var(--text-light);">로그아웃</a>
+        </div>
         ${renderWidgets(data.widgets)}
         ${renderUnsubmitted(data.unsubmitted)}
         ${renderStudentClassSchedules(data.classSchedules)}
@@ -344,14 +321,7 @@ function renderUnsubmitted(tasks) {
 function renderStudentClassSchedules(schedules) {
     if (!schedules || schedules.length === 0) return '';
     const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join('');
-// 수정 후 코드
-function renderStudentClassSchedules(schedules) {
-    if (!schedules || schedules.length === 0) return '';
-    const schedulesHtml = schedules.map(s => `<div class="card"><p>${s.제목 || ''}</p></div>`).join('');
-    return `<div class="section">
-                <h2 class="section-title">🗓️ 학급 일정</h2>
-                <div class="grid-container">${schedulesHtml}</div>
-            </div>`;
+    return `<div class="section"><h2 class="section-title">🗓️ 학급 일정</h2><div class="grid-container">${schedulesHtml}</div></div>`;
 }
 
 function renderItemsSection(type, items, sectionTitle) {
@@ -436,10 +406,6 @@ function renderLeaveSection(requests) {
             </div>`;
 }
 
-function renderResources(resources) {
-    if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>';
-    const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join('');
-// 수정 후 코드
 function renderResources(resources) {
     if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>';
     const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join('');
