@@ -7,12 +7,7 @@
     <link rel="icon" type="image/png" href="/portal-dev/favicon.png">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* [공통 스타일] */
-        :root {
-            --primary-color: #5D78E6; --secondary-color: #A25AF2; --light-bg: #f4f6fc;
-            --white-bg: #ffffff; --text-dark: #212529; --text-light: #6c757d;
-            --border-color: #e9ecef; --border-radius: 12px; --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.06);
-        }
+        :root { --primary-color: #5D78E6; --secondary-color: #A25AF2; --light-bg: #f4f6fc; --white-bg: #ffffff; --text-dark: #212529; --text-light: #6c757d; --border-color: #e9ecef; --border-radius: 12px; --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.06); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: var(--light-bg); min-height: 100vh; padding: 20px; color: var(--text-dark); }
         .container { max-width: 800px; margin: 0 auto; background: var(--white-bg); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
@@ -34,19 +29,13 @@
         .tab-button.active { color: var(--primary-color); font-weight: 600; }
         .tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background-color: var(--primary-color); border-radius: 3px; }
         .tab-pane { display: none; } .tab-pane.active { display: block; }
-
-        /* [공통 유저 정보 스타일] */
         .user-display { display: flex; align-items: center; gap: 12px; }
         .user-profile-image { width: 36px; height: 36px; border-radius: 50%; }
         .user-initial { width: 36px; height: 36px; border-radius: 50%; background-color: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .user-name-logout { font-size: 0.9em; text-align: left; }
         .user-name-logout strong { display: block; }
         .user-name-logout a { text-decoration: none; }
-        
-        /* [가로 2열 그리드 스타일] */
         .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-
-        /* [학생용 UI 스타일] */
         .student-header { padding: 0 30px; background-color: #fff; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; border-bottom: 1px solid var(--border-color); }
         .student-header .user-name-logout { color: var(--text-dark); }
         .student-header .user-name-logout a { color: var(--text-light); }
@@ -68,8 +57,6 @@
         .leave-history .card { display: flex; justify-content: space-between; align-items: center; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85em; font-weight: 600; color: white; }
         .status-승인 { background-color: #28a745; } .status-반려 { background-color: #dc3545; } .status-신청 { background-color: #ffc107; }
-
-        /* [교사용 UI 스타일] */
         .teacher-header { padding: 0 30px; background-color: #343a40; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
         .teacher-header .user-name-logout { color: white; }
         .teacher-header .user-name-logout a { color: #adb5bd; }
@@ -99,8 +86,6 @@
         input:checked + .slider { background-color: var(--primary-color); }
         input:checked + .slider:before { transform: translateX(22px); }
         .teacher-dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
-        /* [새 게시물 모달 스타일] */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background-color: var(--white-bg); padding: 30px; border-radius: var(--border-radius); width: 90%; max-width: 500px; }
         .modal-close-btn { float: right; background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text-light); }
@@ -127,7 +112,7 @@
     </div>
 
 <script>
-// [최종 UI 문제 해결 스크립트]
+// [최종 UI 문제 해결 스크립트 - 생략 없음]
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
@@ -173,27 +158,6 @@ async function loadData() {
     }
 }
 
-function setupEventListeners() {
-    document.body.addEventListener('click', function(e) {
-        const target = e.target;
-        if (target.closest('.tab-button')) {
-            const button = target.closest('.tab-button');
-            const targetPaneId = button.dataset.tab;
-            const tabContainer = button.closest('.tabs');
-            tabContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            const contentContainer = tabContainer.nextElementSibling;
-            contentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            document.getElementById(targetPaneId).classList.add('active');
-        }
-        if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); const content = target.closest('.accordion-title').nextElementSibling; if (content) { content.style.display = content.style.display === 'block' ? 'none' : 'block'; } }
-        if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
-        if (target.closest('.modal-close-btn')) { target.closest('.modal-overlay').style.display = 'none'; }
-        if (target.closest('.leave-type-btn')) { document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected')); target.classList.add('selected'); }
-    });
-    document.body.addEventListener('submit', function(e) { if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); } if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); } });
-}
-
 function renderStudentPortal(data) {
     return `
         <div class="student-header"><div id="user-display"></div></div>
@@ -235,6 +199,30 @@ function renderTeacherDashboard(data) {
     `;
 }
 
+function setupEventListeners() {
+    document.body.addEventListener('click', function(e) {
+        const target = e.target;
+        if (target.closest('.tab-button')) {
+            const button = target.closest('.tab-button');
+            const targetPaneId = button.dataset.tab;
+            const tabContainer = button.closest('.tabs');
+            tabContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            const contentContainer = tabContainer.nextElementSibling;
+            contentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(targetPaneId).classList.add('active');
+        }
+        if (target.closest('.accordion-title')) { target.closest('.accordion-title').classList.toggle('active'); const content = target.closest('.accordion-title').nextElementSibling; if (content) { content.style.display = content.style.display === 'block' ? 'none' : 'block'; } }
+        if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
+        if (target.closest('.modal-close-btn')) { target.closest('.modal-overlay').style.display = 'none'; }
+        if (target.closest('.leave-type-btn')) { document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected')); target.classList.add('selected'); }
+    });
+    document.body.addEventListener('submit', function(e) { if (e.target.id === 'leave-request-form') { e.preventDefault(); submitLeaveRequest(e.target); } if (e.target.id === 'new-post-form') { e.preventDefault(); submitNewPost(e.target); } });
+}
+function loadCompletedItems() { const todayStr = new Date().toISOString().split('T')[0]; const storedData = localStorage.getItem('completedItems'); if (storedData) { try { const data = JSON.parse(storedData); if (data.date === todayStr) { completedItems = data.items || {}; } else { localStorage.removeItem('completedItems'); completedItems = {}; } } catch (e) { localStorage.removeItem('completedItems'); completedItems = {}; } } }
+function saveCompletedItems() { localStorage.setItem('completedItems', JSON.stringify({ date: new Date().toISOString().split('T')[0], items: completedItems }));}
+async function handleCredentialResponse(response) { if (response && response.credential) { const userObject = JSON.parse(atob(response.credential.split('.')[1])); currentUser = { name: userObject.name, email: userObject.email, picture: userObject.picture }; localStorage.setItem('userInfo', JSON.stringify(currentUser)); const cleanUrl = window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : ''); window.location.href = cleanUrl; } }
+function handleLogout() { localStorage.clear(); google.accounts.id.disableAutoSelect(); location.reload(); }
 function renderUserInfo(user) { const displayEl = document.getElementById('user-display'); if (!displayEl) return; let userInitial = ''; const nameParts = (user.name || '').split(''); if (nameParts.length > 1) { userInitial = nameParts[0] + nameParts[nameParts.length - 1]; } else { userInitial = nameParts[0] || ''; } const userProfileHtml = user.picture ? `<img src="${user.picture}" class="user-profile-image" alt="profile">` : `<div class="user-initial">${userInitial}</div>`; displayEl.innerHTML = `<div class="user-display">${userProfileHtml}<div class="user-name-logout"><strong>${user.name}</strong><a href="#" onclick="handleLogout()">로그아웃</a></div></div>`; }
 function renderWidgets(widgets) { if (!widgets || widgets.length === 0) return ''; const widgetHtml = widgets.map(widget => { let contentHtml = widget.내용 || ''; if (widget.위젯종류 === '디데이') { const targetDate = new Date(contentHtml); const today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)); contentHtml = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${-diff}`; } return `<div class="widget"><div class="widget-title">${widget.제목 || ''}</div><div class="widget-content">${contentHtml}</div></div>`; }).join(''); return `<div id="widgets-container">${widgetHtml}</div>`;}
 function renderUnsubmitted(tasks) { if (!tasks || tasks.length === 0) return ''; const listHtml = tasks.map(t => `<li>👌 ${t.제목 || t.내용 || ''}</li>`).join(''); return `<div class="unsubmitted-section"><p>🔔 아직 완료하지 않은 할 일이 있어요!</p><ul style="list-style: none; padding-left: 0; margin-top: 5px;">${listHtml}</ul></div>`;}
