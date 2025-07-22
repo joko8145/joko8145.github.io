@@ -21,7 +21,7 @@
         .card { background: var(--white-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: var(--shadow-light); border: 1px solid var(--border-color); }
         .card-title { font-size: 1.1em; font-weight: 600; margin-bottom: 8px; color: var(--text-dark); }
         .card-description { font-size: 0.95em; color: var(--text-light); line-height: 1.6; }
-        a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s; }
+        a.card { text-decoration: none; color: inherit; display: block; transition: transform 0.2s; border-left: 4px solid var(--primary-color); } /* ★★★ 2. 파란 테두리 추가 ★★★ */
         a.card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .action-btn { padding: 8px 16px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; margin-top: 12px; }
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 25px; }
@@ -54,7 +54,7 @@
         .leave-type-btn.selected { background-color: var(--primary-color); color: white; font-weight: 600; }
         .form-actions { text-align: right; }
         .form-actions .action-btn { color: white; background-color: var(--primary-color); }
-        .leave-history .card { display: flex; justify-content: space-between; align-items: center; }
+        .leave-history .card { display: flex; justify-content: space-between; align-items: center; border-left: none; }
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.85em; font-weight: 600; color: white; }
         .status-승인 { background-color: #28a745; } .status-반려 { background-color: #dc3545; } .status-신청 { background-color: #ffc107; }
         .teacher-header { padding: 0 30px; background-color: #343a40; min-height: 60px; display: flex; justify-content: flex-end; align-items: center; }
@@ -235,7 +235,6 @@ function renderTeacherSettings(data) {
             </a>`
         ).join('');
         
-        // 첫 번째 탭에만 'active' 클래스를 부여하도록 수정
         const activeClass = i === 0 ? 'active' : '';
         return `<div id="teacher-tab-${i}" class="tab-pane ${activeClass} grid-container">${itemsHtml}</div>`;
     }).join('');
