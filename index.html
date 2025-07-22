@@ -150,7 +150,7 @@
     </div>
 
 <script>
-// [최종 완성본 스크립트 코드 - 학생/교사 모드 완전 지원]
+// [최종 UI 오류 수정 스크립트 코드]
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
@@ -168,10 +168,10 @@ window.onload = function() {
         currentUser = null;
     }
     loadCompletedItems();
-    updateDateDisplay();
+    // ★★★ 수정: updateDateDisplay() 함수 호출 삭제 ★★★
 
     if (currentUser) {
-        renderUserInfo(currentUser);
+        // renderUserInfo(currentUser); // loadData 안에서 호출되므로 중복 호출 방지
         loadData();
     } else {
         google.accounts.id.initialize({
@@ -193,21 +193,20 @@ function setupEventListeners() {
     document.body.addEventListener('click', function(e) {
         const target = e.target;
 
-        // 공통 기능: 탭 전환
         if (target.closest('.tab-button')) {
             const button = target.closest('.tab-button');
             const targetPaneId = button.dataset.tab;
-            
             const tabContainer = button.closest('.tabs');
             tabContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            
             const contentContainer = tabContainer.nextElementSibling;
-            contentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.style.display = 'none');
-            document.getElementById(targetPaneId).style.display = 'block';
+            if (contentContainer) {
+                contentContainer.querySelectorAll('.tab-pane').forEach(pane => pane.style.display = 'none');
+                const targetPane = document.getElementById(targetPaneId);
+                if (targetPane) targetPane.style.display = 'block';
+            }
         }
 
-        // 교사 기능: 아코디언
         if (target.closest('.accordion-title')) {
             target.closest('.accordion-title').classList.toggle('active');
             const content = target.closest('.accordion-title').nextElementSibling;
@@ -216,15 +215,8 @@ function setupEventListeners() {
             }
         }
         
-        // 교사 기능: 새 게시물 모달
-        if (target.closest('#new-post-btn')) {
-            document.getElementById('new-post-modal').style.display = 'flex';
-        }
-        if (target.closest('.modal-close-btn')) {
-            target.closest('.modal-overlay').style.display = 'none';
-        }
-
-        // 학생 기능: 외출/조퇴 타입 선택
+        if (target.closest('#new-post-btn')) { document.getElementById('new-post-modal').style.display = 'flex'; }
+        if (target.closest('.modal-close-btn')) { target.closest('.modal-overlay').style.display = 'none'; }
         if (target.closest('.leave-type-btn')) {
             document.querySelectorAll('.leave-type-btn').forEach(btn => btn.classList.remove('selected'));
             target.classList.add('selected');
@@ -269,16 +261,13 @@ function handleLogout() {
     location.reload();
 }
 
-function updateDateDisplay() {
-    const el = document.getElementById('dateDisplay');
-    if (el) el.textContent = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-}
+// ★★★ 수정: updateDateDisplay() 함수 완전 삭제 ★★★
 
 async function loadData() {
     const studentEl = document.getElementById('student-portal');
     const teacherEl = document.getElementById('teacher-dashboard');
-
     const targetEl = isTeacherMode ? teacherEl : studentEl;
+
     if (studentEl) studentEl.style.display = isTeacherMode ? 'none' : 'block';
     if (teacherEl) teacherEl.style.display = isTeacherMode ? 'block' : 'none';
 
@@ -292,8 +281,6 @@ async function loadData() {
         
         currentUser = { ...currentUser, ...data.user };
         localStorage.setItem('userInfo', JSON.stringify(currentUser));
-        
-        renderUserInfo(currentUser);
         
         if (isTeacherMode) {
             renderTeacherDashboard(data);
@@ -309,7 +296,10 @@ async function loadData() {
 function renderUserInfo(user) {
     const displayEl = document.getElementById('user-display');
     if (!displayEl) return;
-    document.getElementById('gsi-container').style.display = 'none';
+    
+    const gsiContainer = document.getElementById('gsi-container');
+    if(gsiContainer) gsiContainer.style.display = 'none';
+
     displayEl.style.display = 'flex';
     
     let userInitial = '';
@@ -331,14 +321,22 @@ function renderUserInfo(user) {
 
 function renderTeacherDashboard(data) {
     const dashboard = document.getElementById('teacher-dashboard');
-    document.getElementById('portal-title').textContent = '💼 업무 대시보드';
-
+    // ★★★ 수정: portal-title 수정 코드 삭제 ★★★
+    
     dashboard.innerHTML = `
-        ${renderTeacherRoutines(data.routines)}
-        ${renderClassManagement(data)}
-        ${renderTeacherPersonalTasks(data.teacherPersonalTasks)}
-        ${renderTeacherSettings(data)}
+        <div class="auth-container"><div id="user-display"></div></div>
+        <div class="header">
+            <h1>💼 업무 대시보드</h1>
+            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
+        </div>
+        <div class="content">
+            ${renderTeacherRoutines(data.routines)}
+            ${renderClassManagement(data)}
+            ${renderTeacherPersonalTasks(data.teacherPersonalTasks)}
+            ${renderTeacherSettings(data)}
+        </div>
     `;
+    renderUserInfo(currentUser); // 대시보드가 그려진 후 유저 정보 렌더링
 }
 
 function renderTeacherRoutines(routines) {
@@ -549,37 +547,44 @@ function filterPosts(button, filter) {
     }
 }
 
-
 // --- 학생 포털 UI를 그리는 함수들 ---
 
 function renderStudentPortal(data) {
     const portal = document.getElementById('student-portal');
-    document.getElementById('portal-title').textContent = '📢 오늘의 알림';
+    // ★★★ 수정: portal-title 수정 코드 삭제 ★★★
 
     portal.innerHTML = `
-        <div class="auth-container">
-            <div id="user-display"></div>
+        <div class="header">
+            <h1>📢 오늘의 알림</h1>
+            <div class="date-display">${new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</div>
         </div>
-        ${renderWidgets(data.widgets)}
-        ${renderUnsubmitted(data.unsubmitted)}
-        ${renderStudentClassSchedules(data.classSchedules)}
-        <div class="tabs">
-            <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
-            <button class="tab-button" data-tab="leave-pane" style="display:none;">외출/조퇴</button>
-            <button class="tab-button" data-tab="resource-pane" style="display:none;">자료실</button>
-        </div>
-        <div class="tab-content">
-            <div id="main-pane" class="tab-pane active" style="display:block;">
-                ${renderItemsSection('notices', data.notices, '📌 중요 공지')}
-                ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}
+        <div class="content">
+            <div class="auth-container" style="justify-content: flex-end; padding: 10px 0;">
+                <div id="user-display"></div>
             </div>
-            <div id="leave-pane" class="tab-pane" style="display:none;">${renderLeaveSection(data.leaveRequests)}</div>
-            <div id="resource-pane" class="tab-pane" style="display:none;">${renderResources(data.resources)}</div>
+            ${renderWidgets(data.widgets)}
+            ${renderUnsubmitted(data.unsubmitted)}
+            ${renderStudentClassSchedules(data.classSchedules)}
+            <div class="tabs">
+                <button class="tab-button active" data-tab="main-pane">알림 & 할 일</button>
+                <button class="tab-button" data-tab="leave-pane" style="display:none;">외출/조퇴</button>
+                <button class="tab-button" data-tab="resource-pane" style="display:none;">자료실</button>
+            </div>
+            <div class="tab-content">
+                <div id="main-pane" class="tab-pane active" style="display:block;">
+                    ${renderItemsSection('notices', data.notices, '📌 중요 공지')}
+                    ${renderItemsSection('tasks', data.tasks, '✅ 오늘의 할 일')}
+                </div>
+                <div id="leave-pane" class="tab-pane" style="display:none;">${renderLeaveSection(data.leaveRequests)}</div>
+                <div id="resource-pane" class="tab-pane" style="display:none;">${renderResources(data.resources)}</div>
+            </div>
         </div>
     `;
 
     if (data.user?.studentId) portal.querySelector('[data-tab="leave-pane"]').style.display = 'inline-block';
     if (data.resources && data.resources.length > 0) portal.querySelector('[data-tab="resource-pane"]').style.display = 'inline-block';
+    
+    renderUserInfo(currentUser);
 }
 
 function renderWidgets(widgets) {
