@@ -140,7 +140,7 @@
     </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgr1HhCTgNnbj1umxlhVPOavO-BCTJOCZN2AZgMtAXiwwCeZFYcsmLOA4-8rR7fCeE/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDwHlr42EaMdC3r4XWTe3L1I8PZnoRi5jvdPC7SMBbfKDkbX_RQgSRRPsR9LLv36wr/exec';
 const GOOGLE_CLIENT_ID = '209932065927-v6kg2bd8gmgfdrksaqrhb7lqo12j6vrf.apps.googleusercontent.com';
 
 let currentUser = null;
@@ -346,14 +346,83 @@ async function submitLeaveRequest(form) { const type = form.querySelector('.leav
 function renderTeacherRoutines(routines) { if (!routines || routines.length === 0) return ''; const routineHtml = routines.map(r => `<label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" onclick="toggleRoutineComplete(this, '${r.rowNum}')"><input type="checkbox" class="routine-checkbox" ${completedItems[r.rowNum] ? 'checked' : ''}><span>${r.업무명}</span></label>`).join(''); return `<div class="section"><h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div></div>`;}
 function renderClassManagement(data) { const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])]; return `<div class="section"><h2 class="section-title">🏠 학급 관리</h2><div class="accordion-item"><div class="accordion-title">⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div></div><div class="accordion-item"><div class="accordion-title">📝 과제별 제출 현황 (${(data.assignments || []).length}건)</div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div></div><div class="accordion-item"><div class="accordion-title">📢 알림 포털 게시 현황 (${allPosts.length}건)</div><div class="accordion-content">${renderPostStatusCards(allPosts)}</div></div><div class="accordion-item"><div class="accordion-title">📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div></div></div>`;}
 function renderLeaveCards(leaves) { if (!leaves || leaves.length === 0) return '<div class="empty-state" style="padding: 20px;">신청 내역이 없습니다.</div>'; return leaves.map(req => `<div class="teacher-leave-card card"><div class="leave-header" style="display:flex; justify-content:space-between; align-items:center;"><strong>${req.이름 || ''}(${req.학번 || ''})</strong><small>${req.신청종류}(${new Date(req.희망일자).toLocaleDateString()})</small></div><textarea class="leave-reason-input">${req.사유 || ''}</textarea><div class="leave-actions"><button class="action-btn approve-btn" onclick="updateLeaveStatus(${req.rowNum}, '승인', this)">승인</button><button class="action-btn reject-btn" onclick="updateLeaveStatus(${req.rowNum}, '반려', this)">반려</button></div></div>`).join('');}
-function renderAssignmentCards(assignments) { if (!assignments || assignments.length === 0) return '<div class="empty-state" style="padding: 20px;">관리할 과제가 없습니다.</div>'; return assignments.map(a => `<div class="card">${a.title}</div>`).join('');}
-function renderPostStatusCards(posts) { if (!posts || posts.length === 0) return '<div class="empty-state" style="padding: 20px;">게시된 알림/할 일이 없습니다.</div>'; const postListHtml = posts.sort((a, b) => b.rowNum - a.rowNum).map(item => `<div class="card post-status-card" style="display:flex; justify-content:space-between; align-items:center;" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}"><span>${item.제목}</span><label class="toggle-switch"><input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}><span class="slider"></span></label></div>`).join(''); return `<div class="post-filter-controls"><input type="search" class="post-search-input" placeholder="제목으로 검색..." oninput="applyPostFilters(this.closest('.accordion-content'))"><div class="post-filter-tabs"><button class="post-filter-btn active" data-filter="all" onclick="handleFilterButtonClick(this)">전체</button><button class="post-filter-btn" data-filter="Y" onclick="handleFilterButtonClick(this)">게시중</button><button class="post-filter-btn" data-filter="N" onclick="handleFilterButtonClick(this)">숨김</button></div></div><div class="post-list-container">${postListHtml}</div><div class="empty-state post-filter-empty" style="display:none; padding: 20px;">검색 결과가 없습니다.</div>`;}
-function renderScheduleCards(schedules) { if (!schedules || schedules.length === 0) return '<div class="empty-state" style="padding: 20px;">등록된 학급 일정이 없습니다.</div>'; return schedules.map(s => `<div class="card">${s.제목}</div>`).join('');}
-function renderTeacherPersonalTasks(tasks) { if (!tasks || tasks.length === 0) return ''; let tasksHtml = tasks.map(task => `<div class="card"><div class="card-title">${task.내용}</div>${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : ''}</div>`).join(''); return `<div class="section"><h2 class="section-title">📋 업무 일지</h2><div class="grid-container">${tasksHtml}</div></div>`;}
+function renderAssignmentCards(assignments) {
+    if (!assignments || assignments.length === 0) return '<div class="empty-state" style="padding: 20px;">관리할 과제가 없습니다.</div>';
+
+    // ★ 수정된 부분: 게시 여부 토글 스위치가 포함된 카드로 만듭니다.
+    const assignmentHtml = assignments.map(a => `
+        <div class="card post-status-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${a.title}</span>
+            <label class="toggle-switch">
+                <input type="checkbox" onchange="updateSheetItemStatus(this, ${a.rowNum}, 'Assignments')" ${a.게시여부 === 'Y' ? 'checked' : ''}>
+                <span class="slider"></span>
+            </label>
+        </div>
+    `).join('');
+    
+    return `<div class="post-list-container">${assignmentHtml}</div>`;
+}
+    
+    
+    
+    function renderPostStatusCards(posts) { if (!posts || posts.length === 0) return '<div class="empty-state" style="padding: 20px;">게시된 알림/할 일이 없습니다.</div>'; const postListHtml = posts.sort((a, b) => b.rowNum - a.rowNum).map(item => `<div class="card post-status-card" style="display:flex; justify-content:space-between; align-items:center;" data-title="${(item.제목 || '').toLowerCase()}" data-status="${item.게시여부}"><span>${item.제목}</span><label class="toggle-switch"><input type="checkbox" onchange="updatePostStatus(this, ${item.rowNum})" ${item.게시여부 === 'Y' ? 'checked' : ''}><span class="slider"></span></label></div>`).join(''); return `<div class="post-filter-controls"><input type="search" class="post-search-input" placeholder="제목으로 검색..." oninput="applyPostFilters(this.closest('.accordion-content'))"><div class="post-filter-tabs"><button class="post-filter-btn active" data-filter="all" onclick="handleFilterButtonClick(this)">전체</button><button class="post-filter-btn" data-filter="Y" onclick="handleFilterButtonClick(this)">게시중</button><button class="post-filter-btn" data-filter="N" onclick="handleFilterButtonClick(this)">숨김</button></div></div><div class="post-list-container">${postListHtml}</div><div class="empty-state post-filter-empty" style="display:none; padding: 20px;">검색 결과가 없습니다.</div>`;}
+function renderScheduleCards(schedules) {
+    if (!schedules || schedules.length === 0) return '<div class="empty-state" style="padding: 20px;">등록된 학급 일정이 없습니다.</div>';
+
+    // ★ 수정된 부분: 게시 여부 토글 스위치가 포함된 카드로 만듭니다.
+    const scheduleHtml = schedules.map(s => `
+        <div class="card post-status-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${s.제목}</span>
+            <label class="toggle-switch">
+                <input type="checkbox" onchange="updateSheetItemStatus(this, ${s.rowNum}, 'ClassSchedules')" ${s.게시여부 === 'Y' ? 'checked' : ''}>
+                <span class="slider"></span>
+            </label>
+        </div>
+    `).join('');
+
+    return `<div class="post-list-container">${scheduleHtml}</div>`;
+}
+    
+    
+    
+    function renderTeacherPersonalTasks(tasks) { if (!tasks || tasks.length === 0) return ''; let tasksHtml = tasks.map(task => `<div class="card"><div class="card-title">${task.내용}</div>${task.링크 ? `<a href="${task.링크}" target="_blank" class="action-btn" style="background-color: var(--primary-color);">바로가기</a>` : ''}</div>`).join(''); return `<div class="section"><h2 class="section-title">📋 업무 일지</h2><div class="grid-container">${tasksHtml}</div></div>`;}
 async function updateLeaveStatus(rowNum, status, button) { const reasonInput = button.closest('.teacher-leave-card').querySelector('.leave-reason-input'); const modifiedReason = reasonInput ? reasonInput.value : ''; const params = new URLSearchParams({ action: 'updateLeaveStatus', rowNum, status, modifiedReason }); alert('처리 중...'); try { const res = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await res.json(); alert(result.message); if (result.status === 'success') loadData(); } catch (error) { alert('처리 중 오류: ' + error.message); } }
 function toggleRoutineComplete(label, itemId) { const checkbox = label.querySelector('.routine-checkbox'); checkbox.checked = !checkbox.checked; if (checkbox.checked) { completedItems[itemId] = true; label.classList.add('completed'); } else { delete completedItems[itemId]; label.classList.remove('completed'); } saveCompletedItems();}
 async function updatePostStatus(checkbox, rowNum) { const newStatus = checkbox.checked ? 'Y' : 'N'; const card = checkbox.closest('.post-status-card'); card.dataset.status = newStatus; card.style.opacity = '0.5'; const params = new URLSearchParams({ action: 'updatePostStatus', rowNum, newStatus }); try { const response = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await response.json(); if (result.status !== 'success') throw new Error(result.message); } catch (error) { alert(`오류: ${error.message}`); checkbox.checked = !checkbox.checked; card.dataset.status = checkbox.checked ? 'Y' : 'N'; } finally { card.style.opacity = '1'; } }
-async function submitNewPost(form) { const formData = new FormData(form); const params = new URLSearchParams({ action: 'createNewPost', ...Object.fromEntries(formData.entries()) }); const submitButton = form.querySelector('button[type="submit"]'); submitButton.textContent = '등록 중...'; submitButton.disabled = true; try { const response = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await response.json(); if (result.status !== 'success') { throw new Error(result.message); } alert(result.message); document.getElementById('new-post-modal').style.display = 'none'; form.reset(); loadData(); } catch (error) { alert('오류: ' + error.message); } finally { submitButton.textContent = '등록하기'; submitButton.disabled = false; } }
+/**
+ * 지정된 시트의 항목 게시 상태를 업데이트하는 범용 함수
+ * @param {HTMLInputElement} checkbox - 클릭된 체크박스 요소
+ * @param {number} rowNum - 구글 시트의 행 번호
+ * @param {string} sheetName - 상태를 변경할 시트의 이름 (예: 'Assignments', 'ClassSchedules')
+ */
+async function updateSheetItemStatus(checkbox, rowNum, sheetName) {
+    const newStatus = checkbox.checked ? 'Y' : 'N';
+    const card = checkbox.closest('.post-status-card');
+    card.style.opacity = '0.5'; // 처리 중임을 시각적으로 표시
+
+    const params = new URLSearchParams({
+        action: 'updateSheetItemStatus', // 새로운 액션 이름
+        rowNum,
+        sheetName,
+        newStatus
+    });
+
+    try {
+        const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+        const result = await response.json();
+        if (result.status !== 'success') {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        alert(`오류: ${error.message}`);
+        checkbox.checked = !checkbox.checked; // 실패 시 토글 원위치
+    } finally {
+        card.style.opacity = '1'; // 처리 완료 후 시각적 효과 제거
+    }
+}
+    
+    
+    async function submitNewPost(form) { const formData = new FormData(form); const params = new URLSearchParams({ action: 'createNewPost', ...Object.fromEntries(formData.entries()) }); const submitButton = form.querySelector('button[type="submit"]'); submitButton.textContent = '등록 중...'; submitButton.disabled = true; try { const response = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await response.json(); if (result.status !== 'success') { throw new Error(result.message); } alert(result.message); document.getElementById('new-post-modal').style.display = 'none'; form.reset(); loadData(); } catch (error) { alert('오류: ' + error.message); } finally { submitButton.textContent = '등록하기'; submitButton.disabled = false; } }
 function handleFilterButtonClick(buttonEl) { const container = buttonEl.closest('.post-filter-tabs'); container.querySelectorAll('.post-filter-btn').forEach(btn => btn.classList.remove('active')); buttonEl.classList.add('active'); applyPostFilters(buttonEl.closest('.accordion-content')); }
 function applyPostFilters(containerEl) { const searchTerm = (containerEl.querySelector('.post-search-input') || {value: ''}).value.toLowerCase(); const activeFilter = (containerEl.querySelector('.post-filter-btn.active') || {dataset: {filter: 'all'}}).dataset.filter; const allPosts = containerEl.querySelectorAll('.post-status-card'); let visibleCount = 0; allPosts.forEach(post => { const title = post.dataset.title || ''; const status = post.dataset.status || ''; const matchesSearch = title.includes(searchTerm); const matchesFilter = (activeFilter === 'all' || status === activeFilter); if (matchesSearch && matchesFilter) { post.style.display = 'flex'; visibleCount++; } else { post.style.display = 'none'; } }); const emptyState = containerEl.querySelector('.post-filter-empty'); if (emptyState) { emptyState.style.display = visibleCount === 0 ? 'block' : 'none'; } }
 </script>
