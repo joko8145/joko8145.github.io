@@ -340,8 +340,72 @@ function renderItemsSection(type, items, sectionTitle) {
     
     
     function completeItem(itemId) { completedItems[itemId] = true; saveCompletedItems(); const itemElement = document.getElementById(itemId); if (itemElement) { itemElement.style.transition = 'opacity 0.3s, transform 0.3s'; itemElement.style.opacity = '0'; itemElement.style.transform = 'translateY(-10px)'; setTimeout(() => { itemElement.remove(); }, 300); } }
-function renderLeaveSection(requests) { const todayStr = new Date().toISOString().split('T')[0]; const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => { const requestDate = req.희망일자 ? new Date(req.희망일자) : null; const requestDateStr = requestDate ? requestDate.toISOString().split('T')[0] : ''; const certButton = (req.상태 === '승인' && req.신청행번호 && requestDateStr === todayStr) ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em; margin: 0;">확인증</a>` : ''; return `<div class="card"><div><strong>${req.신청종류}</strong> (${requestDate ? requestDate.toLocaleDateString() : '날짜 없음'})<br><small>사유: ${req.사유 || ''}</small></div><div style="display: flex; align-items: center; gap: 10px;"><span class="status-badge status-${req.상태}">${req.상태}</span>${certButton}</div></div>`; }).join(''); return `<div class="leave-form"><h2 class="section-title" style="border: none; margin-bottom: 20px;">외출/조퇴 신청하기</h2><form id="leave-request-form"><div class="form-group"><label>신청 종류</label><div class="leave-type-buttons"><button type="button" class="leave-type-btn selected" data-type="외출">외출</button><button type="button" class="leave-type-btn" data-type="조퇴">조퇴</button></div></div><div class="form-group"><label>희망 일자</label><input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required></div><div class="form-group"><label>사유</label><textarea name="reason" rows="3" required></textarea></div><div class="form-actions"><button type="submit" class="action-btn">신청 제출</button></div></form></div><div class="section leave-history"><h2 class="section-title">나의 신청 내역</h2>${historyHtml}</div>`;}
-function renderResources(resources) { if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>'; const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join(''); return `<div class="section grid-container">${resourcesHtml}</div>`;}
+function renderLeaveSection(requests) {
+    // ★ 수정된 부분: UTC 기준이 아닌, 사용자의 현지 시간을 기준으로 오늘 날짜(YYYY-MM-DD)를 생성합니다.
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1, 두 자리로 맞춤
+    const day = String(today.getDate()).padStart(2, '0');        // 일자를 두 자리로 맞춤
+    const localTodayStr = `${year}-${month}-${day}`;
+
+    const historyHtml = (!requests || requests.length === 0) ? '<div class="empty-state">신청 내역이 없습니다.</div>' : requests.map(req => {
+        const requestDate = req.희망일자 ? new Date(req.희망일자) : null;
+        const requestDateStr = requestDate ? requestDate.toISOString().split('T')[0] : '';
+        
+        // ★ 수정된 부분: 확인증 버튼 표시 조건을 현지 시간 기준으로 변경합니다.
+        const certButton = (req.상태 === '승인' && req.신청행번호 && requestDateStr === localTodayStr) 
+            ? `<a href="${SCRIPT_URL}?action=getCertificate&rowNum=${req.신청행번호}" target="_blank" class="action-btn" style="background-color:#17a2b8; padding: 5px 10px; font-size: 0.8em; margin: 0;">확인증</a>` 
+            : '';
+
+        // 카드 제목에 표시될 날짜 포맷
+        const displayDate = requestDate ? `${requestDate.getFullYear()}. ${requestDate.getMonth() + 1}. ${requestDate.getDate()}.` : '날짜 없음';
+
+        return `
+            <div class="card">
+                <div>
+                    <strong>${req.신청종류}</strong> (${displayDate})<br>
+                    <small>사유: ${req.사유 || ''}</small>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="status-badge status-${req.상태}">${req.상태}</span>
+                    ${certButton}
+                </div>
+            </div>`;
+    }).join('');
+
+    return `
+        <div class="leave-form">
+            <h2 class="section-title" style="border: none; margin-bottom: 20px;">외출/조퇴 신청하기</h2>
+            <form id="leave-request-form">
+                <div class="form-group">
+                    <label>신청 종류</label>
+                    <div class="leave-type-buttons">
+                        <button type="button" class="leave-type-btn selected" data-type="외출">외출</button>
+                        <button type="button" class="leave-type-btn" data-type="조퇴">조퇴</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>희망 일자</label>
+                    {/* ★ 수정된 부분: 날짜 기본값을 현지 시간 기준으로 변경합니다. */}
+                    <input type="date" name="date" value="${localTodayStr}" required>
+                </div>
+                <div class="form-group">
+                    <label>사유</label>
+                    <textarea name="reason" rows="3" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="action-btn">신청 제출</button>
+                </div>
+            </form>
+        </div>
+        <div class="section leave-history">
+            <h2 class="section-title">나의 신청 내역</h2>
+            ${historyHtml}
+        </div>`;
+}
+    
+    
+    function renderResources(resources) { if (!resources || resources.length === 0) return '<div class="empty-state">등록된 자료가 없습니다.</div>'; const resourcesHtml = resources.map(res => `<div class="card"><a href="${res.링크 || '#'}" target="_blank" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${res.자료명 || ''}</a></div>`).join(''); return `<div class="section grid-container">${resourcesHtml}</div>`;}
 async function submitLeaveRequest(form) { const type = form.querySelector('.leave-type-btn.selected')?.dataset.type; if (!type) { alert('신청 종류(외출 또는 조퇴)를 선택해주세요.'); return; } const params = new URLSearchParams({ action: 'submitLeaveRequest', studentId: currentUser.studentId, name: currentUser.name, email: currentUser.email, type: type, date: form.date.value, reason: form.reason.value }); alert('신청 처리 중...'); try { const res = await fetch(`${SCRIPT_URL}?${params.toString()}`); const result = await res.json(); alert(result.message); if (result.status === 'success') loadData(); } catch (error) { alert('신청 중 오류: ' + error.message); } }
 function renderTeacherRoutines(routines) { if (!routines || routines.length === 0) return ''; const routineHtml = routines.map(r => `<label class="routine-item ${completedItems[r.rowNum] ? 'completed' : ''}" onclick="toggleRoutineComplete(this, '${r.rowNum}')"><input type="checkbox" class="routine-checkbox" ${completedItems[r.rowNum] ? 'checked' : ''}><span>${r.업무명}</span></label>`).join(''); return `<div class="section"><h2 class="section-title">☀️ 오늘의 루틴 업무</h2><div class="routine-tasks-container">${routineHtml}</div></div>`;}
 function renderClassManagement(data) { const allPosts = [...(data.allNotices || []), ...(data.allTasks || [])]; return `<div class="section"><h2 class="section-title">🏠 학급 관리</h2><div class="accordion-item"><div class="accordion-title">⏰ 외출/조퇴 신청 (${(data.pendingLeaveRequests || []).length}건)</div><div class="accordion-content">${renderLeaveCards(data.pendingLeaveRequests)}</div></div><div class="accordion-item"><div class="accordion-title">📝 과제별 제출 현황 (${(data.assignments || []).length}건)</div><div class="accordion-content">${renderAssignmentCards(data.assignments)}</div></div><div class="accordion-item"><div class="accordion-title">📢 알림 포털 게시 현황 (${allPosts.length}건)</div><div class="accordion-content">${renderPostStatusCards(allPosts)}</div></div><div class="accordion-item"><div class="accordion-title">📅 전체 학급 일정 (${(data.classSchedules || []).length}건)</div><div class="accordion-content">${renderScheduleCards(data.classSchedules)}</div></div></div>`;}
