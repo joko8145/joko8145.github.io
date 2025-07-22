@@ -183,7 +183,7 @@ function renderTeacherSettings(data) {
     // 그룹화된 데이터의 키(탭 이름)를 가져옵니다.
     const tabs = Object.keys(groupedItems);
 
-    // 탭 버튼 HTML을 생성합니다. 첫 번째 버튼에만 'active' 클래스를 추가합니다.
+    // 탭 버튼 HTML을 생성합니다.
     const tabButtonsHtml = tabs.map((tab, i) =>
         `<button class="tab-button ${i === 0 ? 'active' : ''}" data-tab="teacher-tab-${i}">${tab}</button>`
     ).join('');
@@ -197,8 +197,11 @@ function renderTeacherSettings(data) {
             </a>`
         ).join('');
 
-        // ★ 수정된 부분: 첫 번째 탭 콘텐츠에만 'active' 클래스를 동적으로 추가합니다.
-        return `<div id="teacher-tab-${i}" class="tab-pane ${i === 0 ? 'active' : ''}">${itemsHtml}</div>`;
+        // ★ 수정된 부분: 각 탭의 콘텐츠를 'teacher-dashboard-grid' 클래스로 감싸줍니다.
+        return `
+            <div id="teacher-tab-${i}" class="tab-pane ${i === 0 ? 'active' : ''}">
+                <div class="teacher-dashboard-grid">${itemsHtml}</div>
+            </div>`;
     }).join('');
 
     // 최종적으로 렌더링할 전체 HTML 구조를 반환합니다.
