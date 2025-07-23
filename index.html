@@ -121,8 +121,8 @@
 }
 /* 이 코드로 기존 unsubmitted 관련 CSS를 모두 교체하세요. */
 
-/* 이제 unsubmitted-section은 다른 section과 동일하지만, 제목 디자인만 다르게 합니다. */
-.unsubmitted-section .section-title {
+/* 미제출 섹션의 제목에만 특별한 색상을 부여합니다. */
+.unsubmitted-section-wrapper .section-title {
     color: #b38600; /* 주목도를 높이는 차분한 황금색 계열 */
     border-bottom-color: #ffeeba; /* 제목 아래 밑줄 색상 */
 }
@@ -138,11 +138,13 @@
     display: block; /* a 태그를 블록 요소처럼 보이게 */
     text-decoration: none; /* 밑줄 제거 */
     font-weight: 500;
-    color: #634e2c;
-    /* 카드의 기본 스타일을 그대로 사용하되, 배경색과 왼쪽 테두리 색만 살짝 변경하여 강조 */
-    background-color: #fffaf0; /* 매우 연한 크림색 배경 */
+    color: #634e2c; /* 글자색 */
+    
+    /* ★★★ 핵심 ★★★ */
+    /* 기본 카드 스타일은 그대로 쓰되, 배경색과 왼쪽 테두리 색만 변경하여 강조 */
+    background-color: #fffde7; /* 매우 연한 크림색 배경 */
     border-left-color: #ffc107; /* 노란색 왼쪽 테두리 */
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .unsubmitted-task-card:hover {
@@ -308,8 +310,9 @@ function renderUnsubmitted(tasks) {
     ).join('');
 
     // 이제 이 섹션은 다른 섹션들과 동일한 구조를 가집니다.
+    // 가장 바깥의 노란색 배경을 가진 div를 없애고, 표준 section 구조를 사용합니다.
     return `
-        <div class="section unsubmitted-section">
+        <div class="section unsubmitted-section-wrapper">
             <h2 class="section-title">🔔 아직 완료하지 않은 할 일이 있어요!</h2>
             <div class="unsubmitted-grid">${listHtml}</div>
         </div>
