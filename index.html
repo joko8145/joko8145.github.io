@@ -119,28 +119,35 @@
     color: var(--text-light);
     margin-bottom: 8px;
 }
-    /* 이 CSS 코드를 <style> 태그 안쪽에 추가하세요. */
+/* 이 코드로 기존 unsubmitted 관련 CSS를 모두 교체하세요. */
 
-.unsubmitted-header {
-    font-weight: 600; /* 제목 텍스트를 약간 굵게 */
-    margin-bottom: 12px; /* 제목과 목록 사이의 간격 */
+/* 이제 unsubmitted-section은 다른 section과 동일하지만, 제목 디자인만 다르게 합니다. */
+.unsubmitted-section .section-title {
+    color: #b38600; /* 주목도를 높이는 차분한 황금색 계열 */
+    border-bottom-color: #ffeeba; /* 제목 아래 밑줄 색상 */
 }
 
-.unsubmitted-list {
-    list-style: none; /* 목록 앞의 기본 점(•) 제거 */
-    padding-left: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* 각 할 일 항목 사이의 간격 */
+/* 미제출 할 일 카드들을 담는 그리드 컨테이너 */
+.unsubmitted-grid {
+    display: grid;
+    gap: 10px; /* 각 카드 사이의 간격 */
 }
 
-.unsubmitted-list-item {
-    background-color: rgba(255, 255, 255, 0.5); /* 반투명한 흰색 배경 */
-    padding: 8px 12px;
-    border-radius: 8px; /* 모서리를 둥글게 */
-    font-size: 0.95em;
-    color: #7d5a00; /* 텍스트 색상을 약간 진하게 조정 */
+/* 미제출 할 일 카드 개별 스타일 */
+.unsubmitted-task-card {
+    display: block; /* a 태그를 블록 요소처럼 보이게 */
+    text-decoration: none; /* 밑줄 제거 */
+    font-weight: 500;
+    color: #634e2c;
+    /* 카드의 기본 스타일을 그대로 사용하되, 배경색과 왼쪽 테두리 색만 살짝 변경하여 강조 */
+    background-color: #fffaf0; /* 매우 연한 크림색 배경 */
+    border-left-color: #ffc107; /* 노란색 왼쪽 테두리 */
+    transition: transform 0.2s;
+}
+
+.unsubmitted-task-card:hover {
+    transform: translateY(-2px); /* 마우스를 올리면 살짝 떠오르는 효과 */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 </style>
 </head>
@@ -288,19 +295,23 @@ function renderTeacherDashboard(data) { return ` <div class="teacher-header"><di
 function renderWidgets(widgets) { if (!widgets || widgets.length === 0) return ''; const widgetHtml = widgets.map(widget => { let contentHtml = widget.내용 || ''; if (widget.위젯종류 === '디데이') { const targetDate = new Date(contentHtml); const today = new Date(); today.setHours(0, 0, 0, 0); const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)); contentHtml = diff === 0 ? "D-Day" : diff > 0 ? `D-${diff}` : `D+${-diff}`; } return `<div class="widget"><div class="widget-title">${widget.제목 || ''}</div><div class="widget-content">${contentHtml}</div></div>`; }).join(''); return `<div id="widgets-container">${widgetHtml}</div>`;}
 // 이 코드로 기존 renderUnsubmitted 함수 전체를 교체하세요.
 function renderUnsubmitted(tasks) {
+    // 할 일이 없으면 아무것도 표시하지 않습니다.
     if (!tasks || tasks.length === 0) return '';
 
     // ★★★ 수정된 부분 ★★★
-    // 각 할 일 항목을 <li> 태그로 만들고, 고유의 아이콘을 사용하도록 개선합니다.
+    // 각 할 일을 개별적인 '카드'로 만듭니다.
+    // 카드를 클릭하면 페이지 내의 해당 할 일 위치로 이동하도록 링크(#id)를 추가합니다.
     const listHtml = tasks.map(task => 
-        `<li class="unsubmitted-list-item">${task.아이콘 || '👉'} ${task.제목 || task.내용}</li>`
+        `<a href="#${task.id}" class="card unsubmitted-task-card">
+            ${task.아이콘 || '👉'} ${task.제목 || task.내용}
+        </a>`
     ).join('');
 
-    // 제목과 목록에 각각 클래스를 부여하여 CSS로 디자인을 제어하기 쉽게 만듭니다.
+    // 이제 이 섹션은 다른 섹션들과 동일한 구조를 가집니다.
     return `
-        <div class="unsubmitted-section">
-            <p class="unsubmitted-header">🔔 아직 완료하지 않은 할 일이 있어요!</p>
-            <ul class="unsubmitted-list">${listHtml}</ul>
+        <div class="section unsubmitted-section">
+            <h2 class="section-title">🔔 아직 완료하지 않은 할 일이 있어요!</h2>
+            <div class="unsubmitted-grid">${listHtml}</div>
         </div>
     `;
 }
