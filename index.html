@@ -180,18 +180,49 @@ let completedItems = {};
 const urlParams = new URLSearchParams(window.location.search);
 const isTeacherMode = urlParams.get('mode') === 'teacher';
 
+// 파일: index.html
+// 함수: window.onload
+// 역할: 페이지 로딩 시 사용자 상태 확인 및 로그인/앱 콘텐츠 렌더링.
+//       로그아웃 시 Google 로그인 버튼이 항상 표시되도록 개선.
+
 window.onload = function() {
     try { currentUser = JSON.parse(localStorage.getItem('userInfo')); } catch (e) { localStorage.removeItem('userInfo'); }
-    loadCompletedItems();
+    loadCompletedItems(); // (참고: 이 함수는 completedItems를 로드하며, currentUser와 무관하게 호출됩니다.)
+
     if (currentUser) {
+        // 로그인 상태일 때: 데이터 로드 및 대시보드/포털 렌더링
         loadData();
     } else {
+        // ★★★ 로그아웃 상태일 때: 로그인 안내 메시지 및 Google 로그인 버튼 명확히 표시 ★★★
+        const root = document.getElementById('app-root');
+        root.innerHTML = `
+            <div class="empty-state" style="padding-top: 50px;">
+                <p style="margin-bottom: 25px; font-size: 1.1em; color: var(--text-light);">로그인 후 서비스를 이용해주세요.</p>
+                <div id="gsi-container" style="display: flex; justify-content: center; align-items: center; min-height: 50px;"></div>
+            </div>
+        `;
+
+        // Google Sign-In 라이브러리 초기화
         google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse, ux_mode: 'redirect',
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+            ux_mode: 'redirect', // 로그인 성공 후 지정된 URL로 리다이렉트
             login_uri: window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '')
         });
-        google.accounts.id.prompt((n) => { if (n.isNotDisplayed()) { google.accounts.id.renderButton(document.getElementById('gsi-container'), { theme: 'outline', size: 'large' }); }});
+
+        // 명시적으로 Google Sign-In 버튼을 렌더링합니다.
+        // prompt()는 원탭 로그인 UI를 띄우는 것이고, renderButton()은 명시적인 버튼을 띄우는 것입니다.
+        // prompt()가 실패할 경우를 대비하여 renderButton()을 항상 호출하여 버튼을 보장합니다.
+        google.accounts.id.renderButton(
+            document.getElementById('gsi-container'),
+            { theme: 'outline', size: 'large', text: 'signin_with', width: '250' } // 버튼 스타일 및 텍스트 설정
+        );
+
+        // (선택 사항: 원탭 로그인 UI도 원하면 아래 라인을 추가)
+        // google.accounts.id.prompt(); 
     }
+    
+    // 이벤트 리스너 설정 (변동 없음)
     setupEventListeners();
 };
 
