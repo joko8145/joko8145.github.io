@@ -204,11 +204,11 @@ window.onload = function() {
 
         // Google Sign-In 라이브러리 초기화
         google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse,
-            ux_mode: 'redirect', // 로그인 성공 후 지정된 URL로 리다이렉트
-            login_uri: window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '')
-        });
+    client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse, ux_mode: 'redirect',
+    // ★★★ 수정된 부분: login_uri를 현재 Origin으로만 설정합니다. ★★★
+    login_uri: window.location.origin // 이렇게만 설정합니다.
+    // 기존: window.location.origin + window.location.pathname + (isTeacherMode ? '?mode=teacher' : '')
+});
 
         // 명시적으로 Google Sign-In 버튼을 렌더링합니다.
         // prompt()는 원탭 로그인 UI를 띄우는 것이고, renderButton()은 명시적인 버튼을 띄우는 것입니다.
